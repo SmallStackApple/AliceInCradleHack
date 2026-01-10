@@ -1,5 +1,12 @@
-# 中文 
+# 摇篮中的爱丽丝黑壳 (AliceInCradleHack)
+
+![Build Status](https://img.shields.io/github/actions/workflow/status/SmallStackApple/AliceInCradleHack/build.yml?branch=main&style=plastic&logo=githubactions&logoColor=white)
+![License](https://img.shields.io/github/license/SmallStackApple/AliceInCradleHack?style=plastic&color=blue)
+
+An injection hack for Alice In Cradle
+
 [English](#English)
+# 中文
 ## 免责声明
 本项目（AliceInCradleHack）仅为技术研究与学习交流目的开发，**非游戏官方授权工具**，与 Alice in Cradle 游戏开发者及版权方无任何关联。使用本项目前，请务必仔细阅读并遵守以下条款：
 
