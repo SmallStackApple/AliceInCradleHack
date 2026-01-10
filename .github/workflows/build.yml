@@ -33,5 +33,5 @@ jobs:
       with:
         name: release-build
         path: |
-          AliceInCradleHack/bin/x64/Release*.dll
+          AliceInCradleHack/bin/x64/Release/*.dll
         retention-days: 7
