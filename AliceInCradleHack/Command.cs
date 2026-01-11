@@ -21,7 +21,7 @@ namespace AliceInCradleHack
         private readonly Thread commandThread;
         public string Prompt { get; set; } = "> ";
 
-        public static readonly CommandManager Instance = new();
+        public static readonly CommandManager Instance = new CommandManager();
 
 
         private CommandManager() 
@@ -66,7 +66,7 @@ namespace AliceInCradleHack
         {
             try
             {
-                string[] parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                string[] parts = input.Split(' ');
                 if (parts.Length == 0) return;
                 
                 string commandName = parts[0];
