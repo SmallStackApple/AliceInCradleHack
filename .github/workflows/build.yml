@@ -35,3 +35,13 @@ jobs:
         path: |
           AliceInCradleHack/bin/x64/Release/*.dll
         retention-days: 7
+
+    - name: Create release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: release-build
+        tag: ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }}
+        draft: false
+        prerelease: ${{ startsWith(github.ref_name, 'prerelease') }}

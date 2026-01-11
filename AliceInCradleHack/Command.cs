@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,12 +16,12 @@ namespace AliceInCradleHack
 
     public class CommandManager
     {
-        private readonly Hashtable commands = new Hashtable();
+        private readonly Dictionary<string, Command> commands = new Dictionary<string, Command>(StringComparer.OrdinalIgnoreCase);
         private bool Inited = false;
         private readonly Thread commandThread;
         public string Prompt { get; set; } = "> ";
 
-        public static readonly CommandManager Instance = new CommandManager();
+        public static readonly CommandManager Instance = new();
 
 
         private CommandManager() 
@@ -29,6 +29,10 @@ namespace AliceInCradleHack
             commandThread = new Thread(new ThreadStart(CommandLoop));
         }
 
+        /// <summary>
+        /// Initializes the command manager by registering initial commands.
+        /// This method can only be called once.
+        /// </summary>
         public void Initialize()
         {
             if (Inited) return;
@@ -45,52 +49,93 @@ namespace AliceInCradleHack
             Inited = true;
         }
 
+        /// <summary>
+        /// Registers a new command with the command manager.
+        /// </summary>
+        /// <param name="command">The command to register</param>
         public void RegisterCommand(Command command) 
         {
             commands.Add(command.Name, command);
         }
 
+        /// <summary>
+        /// Executes a command based on the input string.
+        /// </summary>
+        /// <param name="input">The input string containing command name and arguments</param>
         public void ExecuteCommand(string input) 
         {
-            string[] parts = input.Split(' ');
-            string commandName = parts[0];
-            string[] args = parts.Length > 1 ? parts.Skip(1).ToArray() : new string[0];
-            if (commands.ContainsKey(commandName))
+            try
             {
-                Command command = (Command)commands[commandName];
-                command.Execute(args);
+                string[] parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length == 0) return;
+                
+                string commandName = parts[0];
+                string[] args = parts.Length > 1 ? parts.Skip(1).ToArray() : new string[0];
+                
+                if (commands.TryGetValue(commandName, out Command command))
+                {
+                    try
+                    {
+                        command.Execute(args);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error executing command '{commandName}': {ex.Message}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"Command '{commandName}' not found.");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine($"Command '{commandName}' not found.");
+                Console.WriteLine($"Error processing command: {ex.Message}");
             }
         }
 
+        /// <summary>
+        /// Gets all registered commands.
+        /// </summary>
+        /// <returns>An enumerable collection of commands</returns>
         public IEnumerable<Command> GetAllCommands() 
         {
-            foreach (DictionaryEntry entry in commands)
+            foreach (var command in commands.Values)
             {
-                yield return (Command)entry.Value;
+                yield return command;
             }
         }
 
-        public void RunCommandLoop()
-        {
-            commandThread.Start();
-        }
-
-        public void CommandLoop()
+        /// <summary>
+        /// The main command loop that reads user input and executes commands.
+        /// </summary>
+        private void CommandLoop()
         {
             while (true)
             {
-                Console.Write(Prompt);
-                string input = Console.ReadLine();
-                if (input.ToLower() == "exit")
+                try
                 {
-                    break;
+                    Console.Write(Prompt);
+                    string input = Console.ReadLine();
+                    if (input.ToLower() == "exit")
+                    {
+                        break;
+                    }
+                    ExecuteCommand(input);
                 }
-                ExecuteCommand(input);
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error in command loop: {ex.Message}");
+                }
             }
+        }
+
+        /// <summary>
+        /// Starts the command loop in a new thread.
+        /// </summary>
+        public void RunCommandLoop()
+        {
+            commandThread.Start();
         }
     }
 }
