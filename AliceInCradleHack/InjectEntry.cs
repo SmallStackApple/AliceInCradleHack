@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace AliceInCradleHack
@@ -13,42 +15,69 @@ namespace AliceInCradleHack
 
         static void Inject()
         {
-            AllocConsole();
-            //redirect input and output
-            Console.SetOut(new System.IO.StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
-            Console.SetIn(new System.IO.StreamReader(Console.OpenStandardInput()));
-            
-            //cancel ctrl+c handling to avoid terminating the host process
-            Console.CancelKeyPress += (sender, e) => {
-                e.Cancel = true;
-            };
-
-            Console.ForegroundColor = ConsoleColor.Green;
-            //splash :P
-            Console.WriteLine(
-                "           _ _          _____        _____               _ _      _    _            _    \r\n"+
-                "     /\\   | (_)        |_   _|      / ____|             | | |    | |  | |          | |   \r\n"+
-                "    /  \\  | |_  ___ ___  | |  _ __ | |     _ __ __ _  __| | | ___| |__| | __ _  ___| | __\r\n"+
-                "   / /\\ \\ | | |/ __/ _ \\ | | | '_ \\| |    | '__/ _` |/ _` | |/ _ \\  __  |/ _` |/ __| |/ /\r\n"+
-                "  / ____ \\| | | (_|  __/_| |_| | | | |____| | | (_| | (_| | |  __/ |  | | (_| | (__|   < \r\n"+
-                " /_/    \\_\\_|_|\\___\\___|_____|_| |_|\\_____|_|  \\__,_|\\__,_|_|\\___|_|  |_|\\__,_|\\___|_|\\_\\\r\n"+
-                "                                                                                         \r\n"+
-                "                                                                                         "
-            );
-            
-            Console.WriteLine("Initializing...");
-
-            Console.WriteLine("-CommandManager...");
             CommandManager commandManager = CommandManager.Instance;
-            commandManager.Initialize();
-            Console.WriteLine("done");
+            ModuleManager moduleManager = ModuleManager.Instance;
+            try
+            {
+                AllocConsole();
+                //redirect input and output
+                Console.SetOut(new System.IO.StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
+                Console.SetIn(new System.IO.StreamReader(Console.OpenStandardInput()));
+            
+                //cancel ctrl+c handling to avoid terminating the host process
+                Console.CancelKeyPress += (sender, e) => {
+                    e.Cancel = true;
+                };
 
-            Console.WriteLine("Initialization complete.");
+                Console.ForegroundColor = ConsoleColor.Green;
+                //splash :P
+                Console.WriteLine(
+                    "           _ _          _____        _____               _ _      _    _            _    \r\n"+
+                    "     /\\   | (_)        |_   _|      / ____|             | | |    | |  | |          | |   \r\n"+
+                    "    /  \\  | |_  ___ ___  | |  _ __ | |     _ __ __ _  __| | | ___| |__| | __ _  ___| | __\r\n"+
+                    "   / /\\ \\ | | |/ __/ _ \\ | | | '_ \\| |    | '__/ _` |/ _` | |/ _ \\  __  |/ _` |/ __| |/ /\r\n"+
+                    "  / ____ \\| | | (_|  __/_| |_| | | | |____| | | (_| | (_| | |  __/ |  | | (_| | (__|   < \r\n"+
+                    " /_/    \\_\\_|_|\\___\\___|_____|_| |_|\\_____|_|  \\__,_|\\__,_|_|\\___|_|  |_|\\__,_|\\___|_|\\_\\\r\n"+
+                    "                                                                                         \r\n"+
+                    "                                                                                         "
+                );
+            
+                Console.WriteLine("Initializing...");
 
-            Console.WriteLine("Injection successful!");
-            Console.ResetColor();
+                Console.WriteLine("-Dependency...");
+                AppDomain.CurrentDomain.AssemblyResolve += (sender, args) => {
+                    // Load dependencies from C:\AliceInCradleHack\lib
+                    string assemblyName = new AssemblyName(args.Name).Name + ".dll";
+                    string assemblyPath = Path.Combine("C:\\AliceInCradleHack\\lib", assemblyName);
 
-            commandManager.RunCommandLoop();
+                    if (File.Exists(assemblyPath))
+                    {
+                        return Assembly.LoadFrom(assemblyPath);
+                    }
+                    return null;
+                };
+
+                Console.WriteLine("-CommandManager...");
+                commandManager.Initialize();
+                Console.WriteLine("done");
+
+                Console.WriteLine("-ModuleManager...");
+                moduleManager.Initialize();
+                Console.WriteLine("done");
+
+                Console.WriteLine("Initialization complete.");
+
+                Console.WriteLine("Injection successful!");
+                Console.ResetColor();
+                commandManager.RunCommandLoop();
+            }
+            catch (Exception ex) {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Injection failed: " + ex.Message);
+                Console.WriteLine(ex.StackTrace);
+                Console.WriteLine("Please eject the DLL.");
+                Console.ResetColor();
+            }
         }
 
         // Actually ,it will be crashed if we use SharpInjector to eject the dll.

@@ -40,6 +40,7 @@ namespace AliceInCradleHack
             List<Command> initialCommands = new List<Command>
             {
                 new Commands.CommandCommandManager(),
+                new Commands.CommandMosaicRemove(),
                 // Add other command instances here
             };
             foreach (var command in initialCommands)
