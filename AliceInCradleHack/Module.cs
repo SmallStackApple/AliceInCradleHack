@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Collections;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,8 +12,12 @@ namespace AliceInCradleHack
     {
         public abstract string Name { get; }
         public abstract string Description { get; }
+        public abstract string Author { get; }
         public abstract string Version { get; }
         public abstract bool IsEnabled { get; set; }
+        public virtual string Category { get; } = "General";
+
+        public abstract ArrayList Settings { get; set;}
 
         // Do not block these methods
         public abstract void Initialize();
@@ -29,6 +35,8 @@ namespace AliceInCradleHack
         {
             List<Module> modules = new List<Module>
             {
+                new Modules.ModuleMosaicRemove(),
+                // Add other module instances here
             };
             foreach (var module in modules)
             {
@@ -38,7 +46,7 @@ namespace AliceInCradleHack
 
         public void RegisterModuleFromAssemblyFile(string assemblyPath)
         {
-            try 
+            try
             {
                 var assembly = System.Reflection.Assembly.LoadFrom(assemblyPath);
                 var moduleTypes = assembly.GetTypes().Where(t => t.IsSubclassOf(typeof(Module)) && !t.IsAbstract);
@@ -47,8 +55,8 @@ namespace AliceInCradleHack
                     var moduleInstance = (Module)Activator.CreateInstance(type);
                     RegisterModule(moduleInstance);
                 }
-            } 
-            catch (Exception ex) 
+            }
+            catch (Exception ex)
             {
                 Console.WriteLine($"Failed to load modules from assembly {assemblyPath}: {ex.Message}");
             }
@@ -108,6 +116,36 @@ namespace AliceInCradleHack
                     EnableModule(moduleName);
                 }
             }
+        }
+
+        public Module GetModuleByName(string moduleName)
+        {
+            Modules.TryGetValue(moduleName, out var module);
+            return module;
+        }
+
+        public IEnumerable<Module> GetModulesByCategory(string category)
+        {
+            return Modules.Values.Where(m => m.Category.Equals(category, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public IEnumerable<Module> GetEnabledModules()
+        {
+            return Modules.Values.Where(m => m.IsEnabled);
+        }
+
+        public IEnumerable<Module> GetDisabledModules()
+        {
+            return Modules.Values.Where(m => !m.IsEnabled);
+        }
+
+        public bool IsModuleEnabled(string moduleName)
+        {
+            if (Modules.ContainsKey(moduleName))
+            {
+                return Modules[moduleName].IsEnabled;
+            }
+            return false;
         }
     }
 }
