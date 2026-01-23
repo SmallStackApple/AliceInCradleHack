@@ -57,6 +57,12 @@
       <HintPath>..\packages\Lib.Harmony.2.4.2\lib\net472\0Harmony.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
+    <Reference Include="DiscordRPC, Version=1.6.1.70, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiscordRichPresence.1.6.1.70\lib\net45\DiscordRPC.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -80,4 +86,15 @@
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="MoveNuGetDependenciesToLibFolder" AfterTargets="AfterBuild">
+    <PropertyGroup>
+      <OutputDir>$(OutputPath)</OutputDir>
+      <LibDir>$(OutputDir)lib\</LibDir>
+    </PropertyGroup>
+    <MakeDir Directories="$(LibDir)" Condition="!Exists('$(LibDir)')" />
+    <ItemGroup>
+      <NuGetDependenciesToMove Include="$(OutputDir)*.dll" Exclude="$(OutputDir)$(TargetFileName);$(OutputDir)*.exe;$(OutputDir)*.pdb;$(OutputDir)*.xml" />
+    </ItemGroup>
+    <Move SourceFiles="@(NuGetDependenciesToMove)" DestinationFolder="$(LibDir)" OverwriteReadOnlyFiles="true" Condition="@(NuGetDependenciesToMove) != ''" />
+  </Target>
 </Project>
