@@ -2,6 +2,7 @@
 using HarmonyLib;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace AliceInCradleHack.Modules
 {
@@ -12,7 +13,7 @@ namespace AliceInCradleHack.Modules
         public override string Author => "SmallStackApple";
         public override string Version => "1.0.0";
         public override bool IsEnabled { get; set; } = false;
-        public override ArrayList Settings { get; set; } = new ArrayList();
+        public override Dictionary<string, object> Settings { get; set; } = new Dictionary<string, object>();
         public override string Category { get; } = "Visuals";
 
         private const string NamespaceName = "aliceincradlehack.modules.mosaicremove";

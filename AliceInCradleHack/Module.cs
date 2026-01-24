@@ -17,7 +17,7 @@ namespace AliceInCradleHack
         public abstract bool IsEnabled { get; set; }
         public virtual string Category { get; } = "General";
 
-        public abstract ArrayList Settings { get; set;}
+        public abstract Dictionary<string,object> Settings { get; set;}
 
         // Do not block these methods
         public abstract void Initialize();
@@ -36,6 +36,7 @@ namespace AliceInCradleHack
             List<Module> modules = new List<Module>
             {
                 new Modules.ModuleMosaicRemove(),
+                new Modules.ModuleDiscordRPC(),
                 // Add other module instances here
             };
             foreach (var module in modules)
@@ -145,6 +146,41 @@ namespace AliceInCradleHack
                 return Modules[moduleName].IsEnabled;
             }
             return false;
+        }
+
+        public String[] GetSettings(string moduleName)
+        {
+            if (Modules.ContainsKey(moduleName))
+            {
+                var module = Modules[moduleName];
+                return module.Settings.Keys.Select(k => k.ToString()).ToArray();
+            }
+            return new String[] { };
+        }
+
+        public object GetSettingValue(string moduleName, string settingKey)
+        {
+            if (Modules.ContainsKey(moduleName))
+            {
+                var module = Modules[moduleName];
+                if (module.Settings.ContainsKey(settingKey))
+                {
+                    return module.Settings[settingKey];
+                }
+            }
+            return null;
+        }
+
+        public void SetSettingValue(string moduleName, string settingKey, object value)
+        {
+            if (Modules.ContainsKey(moduleName))
+            {
+                var module = Modules[moduleName];
+                if (module.Settings.ContainsKey(settingKey))
+                {
+                    module.Settings[settingKey] = value;
+                }
+            }
         }
     }
 }
