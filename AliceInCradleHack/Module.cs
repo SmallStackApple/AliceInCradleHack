@@ -120,8 +120,7 @@ namespace AliceInCradleHack
 
         public Module GetModuleByName(string moduleName)
         {
-            Modules.TryGetValue(moduleName, out var module);
-            return module;
+            return Modules.ContainsKey(moduleName) ? Modules[moduleName] : null;
         }
 
         public IEnumerable<Module> GetModulesByCategory(string category)
