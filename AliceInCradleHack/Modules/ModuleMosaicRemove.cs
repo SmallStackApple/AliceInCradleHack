@@ -7,7 +7,7 @@ namespace AliceInCradleHack.Modules
 {
     public class ModuleMosaicRemove : Module
     {
-        public override string Name => "Mosaic Remove";
+        public override string Name => "MosaicRemove";
         public override string Description => "Removes mosaic from the game.";
         public override string Author => "SmallStackApple";
         public override string Version => "1.0.0";
@@ -15,7 +15,9 @@ namespace AliceInCradleHack.Modules
         public override ArrayList Settings { get; set; } = new ArrayList();
         public override string Category { get; } = "Visuals";
 
-        private readonly Harmony harmony = new Harmony("aliceincradlehack.modules.mosaicremove");
+        private const string NamespaceName = "aliceincradlehack.modules.mosaicremove";
+
+        private readonly Harmony harmony = new Harmony(NamespaceName);
         public override void Initialize(){}
         public override void Enable()
         {
@@ -28,7 +30,7 @@ namespace AliceInCradleHack.Modules
         public override void Disable()
         {
             // Logic to disable mosaic removal
-            harmony.UnpatchAll("aliceincradlehack.modules.modulemosaicremove");
+            harmony.UnpatchAll(NamespaceName);
             IsEnabled = false;
         }
 
