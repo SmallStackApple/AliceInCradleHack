@@ -76,7 +76,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Command.cs" />
-    <Compile Include="Commands\CommandListCommands.cs" />
+    <Compile Include="Commands\CommandCommandManager.cs" />
+    <Compile Include="Commands\CommandModuleManager.cs" />
     <Compile Include="InjectEntry.cs" />
     <Compile Include="Module.cs" />
     <Compile Include="Modules\ModuleMosaicRemove.cs" />

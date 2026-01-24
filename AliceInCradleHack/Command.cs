@@ -40,6 +40,7 @@ namespace AliceInCradleHack
             List<Command> initialCommands = new List<Command>
             {
                 new Commands.CommandCommandManager(),
+                new Commands.CommandModuleManager(),
                 // Add other command instances here
             };
             foreach (var command in initialCommands)
@@ -80,7 +81,10 @@ namespace AliceInCradleHack
                     }
                     catch (Exception ex)
                     {
+                        Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine($"Error executing command '{commandName}': {ex.Message}");
+                        Console.WriteLine(ex.StackTrace);
+                        Console.ResetColor();
                     }
                 }
                 else
