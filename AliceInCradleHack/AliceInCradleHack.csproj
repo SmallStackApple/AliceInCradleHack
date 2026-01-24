@@ -80,6 +80,7 @@
     <Compile Include="Commands\CommandModuleManager.cs" />
     <Compile Include="InjectEntry.cs" />
     <Compile Include="Module.cs" />
+    <Compile Include="Modules\ModuleDiscordRPC.cs" />
     <Compile Include="Modules\ModuleMosaicRemove.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
