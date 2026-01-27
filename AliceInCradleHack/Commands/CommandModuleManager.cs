@@ -16,7 +16,8 @@ namespace AliceInCradleHack.Commands
             "help - Show this help message\n"+
             "toggle [module_name] - Toggle a module on or off\n"+
             "info [module_name] - Show information about a module\n"+
-            "set [module_name] [setting_key] [setting_value] - Set a module's setting";
+            "set [module_name] [setting_key] [setting_value] - Set a module's setting\n"+
+            "listsettings [module_name] - List all settings of a module";
 
         private ModuleManager ModuleManager => ModuleManager.Instance;
         private readonly Dictionary<string, Action<string[]>> SubCommands;
@@ -29,7 +30,8 @@ namespace AliceInCradleHack.Commands
                 { "help", args => GetHelp() },
                 { "toggle", args => ToggleModule(args) },
                 { "info", args => ModuleInfo(args.Length > 0 ? args[0] : null) },
-                { "set", args => SetSetting(args) }
+                { "set", args => SetModuleSetting(args) },
+                { "listsettings", args => ListModuleSettings(args.Length > 0 ? args[0] : null) },
             };
         }
 
@@ -96,7 +98,7 @@ namespace AliceInCradleHack.Commands
             Console.WriteLine($"Enabled: {module.IsEnabled}");
         }
 
-        private void SetSetting(string[] args)
+        private void SetModuleSetting(string[] args)
         {
             if (args.Length < 3)
             {
@@ -105,21 +107,34 @@ namespace AliceInCradleHack.Commands
             }
             string moduleName = args[0];
             string settingKey = args[1];
-            string settingValue = args[2];
+            string settingValue = string.Join(" ", args.Skip(2));
             var module = ModuleManager.GetModuleByName(moduleName);
             if (module == null)
             {
                 Console.WriteLine($"Module '{moduleName}' not found.");
                 return;
             }
-            if (!module.Settings.ContainsKey(settingKey))
+            if(module.Settings.GetNodeByPath(settingKey) == null)
             {
                 Console.WriteLine($"Setting '{settingKey}' not found in module '{moduleName}'.");
                 return;
             }
-            // Assuming all settings are of type string for simplicity
-            module.Settings[settingKey] = settingValue;
-            Console.WriteLine($"Setting '{settingKey}' of module '{moduleName}' updated to '{settingValue}'.");
+            module.Settings.SetValueByPath(settingKey, settingValue);
+            Console.WriteLine($"Setting '{settingKey}' of module '{moduleName}' set to '{settingValue}'.");
+        }
+
+        private void ListModuleSettings(string moduleName)
+        {
+            var module = ModuleManager.GetModuleByName(moduleName);
+            if (module == null)
+            {
+                Console.WriteLine($"Module '{moduleName}' not found.");
+                return;
+            }
+            module.Settings.GetAllLeafValues().ToList().ForEach(setting =>
+            {
+                Console.WriteLine($"{setting.Key} : {Convert.ToString(setting.Value)}");
+            });
         }
     }
 }
