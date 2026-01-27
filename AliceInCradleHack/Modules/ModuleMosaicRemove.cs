@@ -12,8 +12,8 @@ namespace AliceInCradleHack.Modules
         public override string Description => "Removes mosaic from the game.";
         public override string Author => "SmallStackApple";
         public override string Version => "1.0.0";
-        public override bool IsEnabled { get; set; } = false;
-        public override Dictionary<string, object> Settings { get; set; } = new Dictionary<string, object>();
+        public override bool IsEnabled { get;set; } = false;
+        public override SettingNode Settings { get; } = new SettingNode();
         public override string Category { get; } = "Visuals";
 
         private const string NamespaceName = "aliceincradlehack.modules.mosaicremove";

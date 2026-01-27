@@ -15,7 +15,13 @@ namespace AliceInCradleHack.Modules
         public override string Author => "SmallStackApple";
         public override string Version => "1.0.0";
         public override bool IsEnabled { get; set; } = false;
-        public override Dictionary<string, object> Settings { get; set; } = new Dictionary<string, object>();
+
+        public override SettingNode Settings { get; } = 
+            new SettingBuilder()
+            .Add("Details", "The details line of the Discord Rich Presence.","Playing Alice in Cradle")
+            .Add("State", "The state line of the Discord Rich Presence.","In Bug Wall")
+            .Build();
+
         public override string Category { get; } = "Misc";
 
         private const string DiscordApplicationId = "1462025663203774514";
@@ -24,15 +30,14 @@ namespace AliceInCradleHack.Modules
         public override void Initialize()
         {
             RPCClient.Initialize();
-            Settings.Add("Ditails", "Playing Alice in Cradle");
-            Settings.Add("State", "In Bug Wall");
         }
+
         public override void Enable()
         {
             RPCClient.SetPresence(new RichPresence()
             {
-                Details = Settings["Ditails"].ToString(),
-                State = Settings["State"].ToString(),
+                Details = (string)Settings.GetValueByPath("Details"),
+                State = (string)Settings.GetValueByPath("State")
             });
             IsEnabled = true;
         }
