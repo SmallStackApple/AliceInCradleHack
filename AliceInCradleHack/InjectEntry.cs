@@ -2,7 +2,7 @@
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
+using System.Threading;
 
 namespace AliceInCradleHack
 {
@@ -13,8 +13,16 @@ namespace AliceInCradleHack
 
         [DllImport("kernel32.dll")]
         public static extern bool FreeConsole();
-        
+
+        static Thread InjectThread = new Thread(new ThreadStart(InjectTask));
+
         static void Inject()
+        {
+            InjectThread.SetApartmentState(ApartmentState.STA);
+            InjectThread.Start();
+        }
+
+        static void InjectTask()
         {
             CommandManager commandManager = CommandManager.Instance;
             ModuleManager moduleManager = ModuleManager.Instance;
@@ -59,6 +67,10 @@ namespace AliceInCradleHack
                     }
                     return null;
                 };
+                Console.WriteLine("done");
+
+                Console.WriteLine("-EventManager...");
+                eventManager.Initialize();
                 Console.WriteLine("done");
 
                 Console.WriteLine("-CommandManager...");
