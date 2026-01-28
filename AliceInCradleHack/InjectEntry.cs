@@ -17,7 +17,8 @@ namespace AliceInCradleHack
         static void Inject()
         {
             CommandManager commandManager = CommandManager.Instance;
-                ModuleManager moduleManager = ModuleManager.Instance;
+            ModuleManager moduleManager = ModuleManager.Instance;
+            EventManager eventManager = EventManager.Instance;
             try
             {
                 AllocConsole();
