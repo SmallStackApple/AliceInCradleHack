@@ -2,6 +2,7 @@
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace AliceInCradleHack
 {
@@ -12,23 +13,24 @@ namespace AliceInCradleHack
 
         [DllImport("kernel32.dll")]
         public static extern bool FreeConsole();
-
+        
         static void Inject()
         {
             CommandManager commandManager = CommandManager.Instance;
-            ModuleManager moduleManager = ModuleManager.Instance;
+                ModuleManager moduleManager = ModuleManager.Instance;
             try
             {
                 AllocConsole();
                 //redirect input and output
                 Console.SetOut(new System.IO.StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
                 Console.SetIn(new System.IO.StreamReader(Console.OpenStandardInput()));
-            
+                Console.Title = "AliceInCradleHack Console";
+
                 //cancel ctrl+c handling to avoid terminating the host process
                 Console.CancelKeyPress += (sender, e) => {
                     e.Cancel = true;
                 };
-
+                
                 Console.ForegroundColor = ConsoleColor.Green;
                 //splash :P
                 Console.WriteLine(
@@ -56,6 +58,7 @@ namespace AliceInCradleHack
                     }
                     return null;
                 };
+                Console.WriteLine("done");
 
                 Console.WriteLine("-CommandManager...");
                 commandManager.Initialize();

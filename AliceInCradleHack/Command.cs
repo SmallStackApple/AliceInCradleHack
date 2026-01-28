@@ -21,9 +21,8 @@ namespace AliceInCradleHack
         private readonly Thread commandThread;
         public string Prompt { get; set; } = "> ";
 
-        public static readonly Lazy<CommandManager> __lazyInstance = new Lazy<CommandManager>(() => new CommandManager());
-
-        public static CommandManager Instance => __lazyInstance.Value;
+        private static readonly Lazy<CommandManager> __lazyInstance = new Lazy<CommandManager>(() => new CommandManager());
+        public static CommandManager Instance { get; } = __lazyInstance.Value;
 
         private CommandManager() 
         {
@@ -42,6 +41,7 @@ namespace AliceInCradleHack
             {
                 new Commands.CommandCommandManager(),
                 new Commands.CommandModuleManager(),
+                new Commands.CommandNotify(),
                 // Add other command instances here
             };
             foreach (var command in initialCommands)
