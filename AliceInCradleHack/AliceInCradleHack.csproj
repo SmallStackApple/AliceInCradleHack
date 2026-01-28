@@ -81,6 +81,7 @@
     <Compile Include="Commands\CommandModuleManager.cs" />
     <Compile Include="EventManager.cs" />
     <Compile Include="Events\Event.cs" />
+    <Compile Include="Events\EventPlayerDamaged.cs" />
     <Compile Include="InjectEntry.cs" />
     <Compile Include="ModuleManager.cs" />
     <Compile Include="Modules\Module.cs" />

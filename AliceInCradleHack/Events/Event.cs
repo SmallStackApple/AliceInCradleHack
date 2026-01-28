@@ -6,9 +6,17 @@ using System.Threading.Tasks;
 
 namespace AliceInCradleHack
 {
-    public abstract class Event
+    // Utility container for event related helpers
+    public static class Event
     {
-        public abstract event EventHandler Handler;
-        public abstract void Initialize();
+        // Common EventArgs for integer events
+        public class IntEventArg : EventArgs
+        {
+            public int Value { get; private set; }
+            public IntEventArg(int value)
+            {
+                Value = value;
+            }
+        }
     }
 }
