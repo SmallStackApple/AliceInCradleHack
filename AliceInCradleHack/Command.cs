@@ -122,9 +122,9 @@ namespace AliceInCradleHack
                 {
                     Console.Write(Prompt);
                     string input = Console.ReadLine();
-                    if (input.ToLower() == "exit")
+                    if (string.IsNullOrEmpty(input))
                     {
-                        break;
+                        continue;
                     }
                     ExecuteCommand(input);
                 }
