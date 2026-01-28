@@ -365,7 +365,7 @@ namespace AliceInCradleHack
         /// <summary>
         /// 模块管理器单例实例 | Module Manager singleton instance
         /// </summary>
-        public static ModuleManager Instance => _lazyInstance.Value;
+        public static ModuleManager Instance { get; } = _lazyInstance.Value;
 
         /// <summary>
         /// 初始化内置模块 | Initialize built-in modules

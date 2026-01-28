@@ -76,12 +76,14 @@
   <ItemGroup>
     <Compile Include="Command.cs" />
     <Compile Include="Commands\CommandCommandManager.cs" />
+    <Compile Include="Commands\CommandNotify.cs" />
     <Compile Include="Commands\CommandModuleManager.cs" />
     <Compile Include="InjectEntry.cs" />
     <Compile Include="Module.cs" />
     <Compile Include="Modules\ModuleDiscordRPC.cs" />
     <Compile Include="Modules\ModuleMosaicRemove.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils\Notification.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
