@@ -1,18 +1,11 @@
+using AliceInCradleHack.Commands;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
 namespace AliceInCradleHack
 {
-    public abstract class Command
-    {
-        public abstract string Name { get; }
-        public abstract string Description { get; }
-        public abstract string Usage { get; }
-        public abstract void Execute(string[] args);
-    }
 
     public class CommandManager
     {
