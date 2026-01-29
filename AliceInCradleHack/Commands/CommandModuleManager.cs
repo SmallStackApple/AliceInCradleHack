@@ -131,9 +131,8 @@ namespace AliceInCradleHack.Commands
                 Console.WriteLine($"Module '{moduleName}' not found.");
                 return;
             }
-            module.Settings.GetAllLeafValues().ToList().ForEach(setting =>
-            {
-                Console.WriteLine($"{setting.Key} : {Convert.ToString(setting.Value)}");
+            module.Settings.GetAllLeafNodes().ForEach(node => {
+                Console.WriteLine($"{node.GetPath()} : {Convert.ToString(node.Value)} - {node.Description}");
             });
         }
     }

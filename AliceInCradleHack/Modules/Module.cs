@@ -250,6 +250,36 @@ namespace AliceInCradleHack.Modules
 
             return result;
         }
+
+        public List<SettingNode> GetAllLeafNodes()
+        {
+            var leafNodes = new List<SettingNode>();
+            // 叶子节点
+            if (Children.Count == 0)
+            {
+                leafNodes.Add(this);
+                return leafNodes;
+            }
+            // 非叶子节点，递归遍历子节点 | Non-leaf node, recursively traverse child nodes
+            foreach (var child in Children.Values)
+            {
+                leafNodes.AddRange(child.GetAllLeafNodes());
+            }
+            return leafNodes;
+        }
+
+        public string GetPath()
+        {
+            var segments = new List<string>();
+            var currentNode = this;
+            while (currentNode != null)
+            {
+                segments.Add(currentNode.Name);
+                currentNode = currentNode.Parent;
+            }
+            segments.Reverse();
+            return string.Join(".", segments);
+        }
     }
 
     /// <summary>
