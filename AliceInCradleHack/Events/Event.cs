@@ -18,5 +18,14 @@ namespace AliceInCradleHack
                 Value = value;
             }
         }
+
+        public class ObjectListEventArg : EventArgs
+        {
+            public List<object> Objects { get; private set; }
+            public ObjectListEventArg(List<object> objects)
+            {
+                Objects = objects;
+            }
+        }
     }
 }

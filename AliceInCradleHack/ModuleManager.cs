@@ -5,12 +5,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Windows.Forms;
 using Module = AliceInCradleHack.Modules.Module;
 
 namespace AliceInCradleHack
 {
-
-
     /// <summary>
     /// 模块管理器（单例模式） | Module Manager (Singleton Pattern)
     /// 负责模块的注册、初始化、启用/禁用等管理操作 | Responsible for module registration, initialization, enable/disable and other management operations
@@ -19,6 +18,9 @@ namespace AliceInCradleHack
     {
         // 线程安全的模块字典 | Thread-safe module dictionary
         private readonly ConcurrentDictionary<string, Module> _modules = new ConcurrentDictionary<string, Module>();
+
+        // 按键绑定的模块字典 | Key-bind modules dictionary
+        private readonly ConcurrentDictionary<string, Module> _keyBindModules = new ConcurrentDictionary<string, Module>();
 
         /// <summary>
         /// 懒加载单例（线程安全） | Lazy singleton (thread-safe)
@@ -38,8 +40,8 @@ namespace AliceInCradleHack
         {
             var builtInModules = new List<Module>
             {
-                new Modules.ModuleMosaicRemove(),
-                new Modules.ModuleDiscordRPC(),
+                new ModuleMosaicRemove(),
+                new ModuleDiscordRPC(),
                 // 在此处添加其他模块实例 | Add other module instances here
             };
 
@@ -47,6 +49,8 @@ namespace AliceInCradleHack
             {
                 RegisterModule(module);
             }
+
+            
         }
 
         /// <summary>

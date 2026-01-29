@@ -14,7 +14,7 @@ namespace AliceInCradleHack
         [DllImport("kernel32.dll")]
         public static extern bool FreeConsole();
 
-        static Thread InjectThread = new Thread(new ThreadStart(InjectTask));
+        private static readonly Thread InjectThread = new Thread(new ThreadStart(InjectTask));
 
         static void Inject()
         {
@@ -31,8 +31,8 @@ namespace AliceInCradleHack
             {
                 AllocConsole();
                 //redirect input and output
-                Console.SetOut(new System.IO.StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
-                Console.SetIn(new System.IO.StreamReader(Console.OpenStandardInput()));
+                Console.SetOut(new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
+                Console.SetIn(new StreamReader(Console.OpenStandardInput()));
                 Console.Title = "AliceInCradleHack Console";
 
                 //cancel ctrl+c handling to avoid terminating the host process
