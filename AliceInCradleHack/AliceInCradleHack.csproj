@@ -81,12 +81,14 @@
     <Compile Include="Commands\CommandModuleManager.cs" />
     <Compile Include="EventManager.cs" />
     <Compile Include="Events\Event.cs" />
+    <Compile Include="Events\EventNotPlayerDamaged.cs" />
     <Compile Include="Events\EventPlayerDamaged.cs" />
     <Compile Include="InjectEntry.cs" />
     <Compile Include="ModuleManager.cs" />
     <Compile Include="Modules\Module.cs" />
     <Compile Include="Modules\ModuleDiscordRPC.cs" />
     <Compile Include="Modules\ModuleGApple.cs" />
+    <Compile Include="Modules\ModuleKillSound.cs" />
     <Compile Include="Modules\ModuleMosaicRemove.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\Notification.cs" />

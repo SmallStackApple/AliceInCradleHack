@@ -25,9 +25,6 @@ namespace AliceInCradleHack.Modules
             .Add("MinHP","Minimum HP percentage to activate GApple.", 50)
             .Add("Delay","Delay between GApple uses in seconds.", 2d)
             .Build();
-        
-        private static readonly int playerHp = (int)Type.GetType("nel.PRNoel, Assembly-CSharp").GetProperty("hp", System.Reflection.BindingFlags.NonPublic).GetValue(null);
-
 
         public override void Disable()
         {
