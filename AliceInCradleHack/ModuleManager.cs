@@ -42,6 +42,7 @@ namespace AliceInCradleHack
             {
                 new ModuleMosaicRemove(),
                 new ModuleDiscordRPC(),
+                new ModuleKillSound(),
                 // 在此处添加其他模块实例 | Add other module instances here
             };
 
@@ -65,8 +66,34 @@ namespace AliceInCradleHack
                 throw new ArgumentNullException(nameof(assemblyPath), "Assembly file path cannot be null or empty");
             }
 
+            if (!File.Exists(assemblyPath))
+            {
+                throw new FileNotFoundException("Assembly file not found", assemblyPath);
+            }
+
+            if (!assemblyPath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("Invalid assembly file type. Only .dll are supported.", nameof(assemblyPath));
+            }
+
             try
             {
+
+                // 加载目录下的lib中的依赖项 | Load dependencies from lib folder in the same directory
+                if (Directory.Exists(Path.Combine(Path.GetDirectoryName(assemblyPath), "lib")))
+                {
+                    AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+                    {
+                        var assemblyName = new AssemblyName(args.Name).Name + ".dll";
+                        var libPath = Path.Combine(Path.GetDirectoryName(assemblyPath), "lib", assemblyName);
+                        if (File.Exists(libPath))
+                        {
+                            return Assembly.LoadFrom(libPath);
+                        }
+                        return null;
+                    };
+                }
+
                 // 加载程序集 | Load assembly
                 var assembly = Assembly.LoadFrom(assemblyPath);
 

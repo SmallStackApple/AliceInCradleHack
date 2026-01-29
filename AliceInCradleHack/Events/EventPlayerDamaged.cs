@@ -19,13 +19,13 @@ namespace AliceInCradleHack.Events
         private static void PostFix(object __instance, ref int __result)
         {
             if (__result > 0 && __instance.GetType() == targetClass)
-                Handler.Invoke(
+                Handler?.Invoke(
                     __instance, 
                     new Event.ObjectListEventArg(
                         new List<object>
                         {
-                            __result ,
-                            targetClass.GetField("hp", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(__instance) 
+                            __result,
+                            __instance.GetType().GetField("hp", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(__instance) 
                         }
                     )
                 );
