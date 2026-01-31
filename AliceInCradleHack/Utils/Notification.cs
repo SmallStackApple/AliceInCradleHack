@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -10,14 +10,82 @@ namespace AliceInCradleHack.Utils
     public static class Notification
     {
         // Using reflection to access the game's UI log system
-        private static readonly Type uiLogRowType = Type.GetType("nel.UILogRow, Assembly-CSharp");
-        private static readonly Type uiLogRowTypeEnum = uiLogRowType.GetNestedType("TYPE", BindingFlags.Public);
+        private static Type _uiLogRowType;
+        private static Type _uiLogRowTypeEnum;
+        private static FieldInfo _uiLogInstanceField;
+        private static MethodInfo _addAlertMethod;
+
+        public static Type uiLogRowType
+        {
+            get
+            {
+                if (_uiLogRowType == null)
+                {
+                    _uiLogRowType = Type.GetType("nel.UILogRow, Assembly-CSharp");
+                }
+                return _uiLogRowType;
+            }
+        }
+
+        public static Type uiLogRowTypeEnum
+        {
+            get
+            {
+                if (_uiLogRowTypeEnum == null && uiLogRowType != null)
+                {
+                    _uiLogRowTypeEnum = uiLogRowType.GetNestedType("TYPE", BindingFlags.Public);
+                }
+                return _uiLogRowTypeEnum;
+            }
+        }
+
+        public static FieldInfo uiLogInstanceField
+        {
+            get
+            {
+                if (_uiLogInstanceField == null)
+                {
+                    var uiLogType = Type.GetType("nel.UILog, Assembly-CSharp");
+                    if (uiLogType != null)
+                    {
+                        _uiLogInstanceField = uiLogType.GetField("Instance", BindingFlags.Public | BindingFlags.Static);
+                    }
+                }
+                return _uiLogInstanceField;
+            }
+        }
+
+        public static MethodInfo addAlertMethod
+        {
+            get
+            {
+                if (_addAlertMethod == null && uiLogInstanceField != null)
+                {
+                    _addAlertMethod = Type.GetType("nel.UILog, Assembly-CSharp").GetMethod("AddAlert", BindingFlags.Public | BindingFlags.Instance);
+                }
+                return _addAlertMethod;
+            }
+        }
 
         public static void ShowNotification(string message, NotificationType type = NotificationType.ALERT)
         {
-            object uiLogInstance = Type.GetType("nel.UILog, Assembly-CSharp").GetField("Instance", BindingFlags.Public | BindingFlags.Static).GetValue(null);
-            MethodInfo addAlertMethod = uiLogInstance.GetType().GetMethod("AddAlert", BindingFlags.Public | BindingFlags.Instance);
-            addAlertMethod.Invoke(uiLogInstance, new object[] { message, Enum.Parse(uiLogRowTypeEnum, type.ToString(), true) });
+            try
+            {
+                if (string.IsNullOrEmpty(message)) return;
+                
+                object uiLogInstance = uiLogInstanceField?.GetValue(null);
+                if (uiLogInstance == null || addAlertMethod == null || uiLogRowTypeEnum == null)
+                {
+                    Console.WriteLine($"[AliceInCradleHack][Notification] Failed to get required reflection objects");
+                    return;
+                }
+
+                addAlertMethod.Invoke(uiLogInstance, new object[] { message, Enum.Parse(uiLogRowTypeEnum, type.ToString(), true) });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[AliceInCradleHack][Notification] ShowNotification exception: {ex.Message}");
+            }
         }
 
         public enum NotificationType
