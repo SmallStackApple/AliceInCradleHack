@@ -47,10 +47,10 @@ namespace AliceInCradleHack.Modules
 
         private void DoCriticalHit(object sender, DamageEvents.PreDamageEventArgs e)
         {
-            if(e.AttackInfo.GetType().GetField("AttackFrom").GetValue(e.AttackInfo).GetType() == Player.typeNoel && !(e.val == M2Attackable.GetMaxHp(sender)))
+            if(e.AttackInfo.GetType().GetField("AttackFrom").GetValue(e.AttackInfo).GetType() == Player.typeNoel)
             {
                 int originalDamage = e.val;
-                e.val = (int)(e.val * (double)Settings.GetValueByPath("Multiplier"));
+                e.val = !(e.val == M2Attackable.GetMaxHp(sender)) ? (int)(e.val * (double)Settings.GetValueByPath("Multiplier")) : e.val;
                 if ((bool)Settings.GetValueByPath("CriticalNotification.EnableNotification"))
                 {
                     double multiplier = (double)Settings.GetValueByPath("Multiplier");
