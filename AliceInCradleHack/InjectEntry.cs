@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AliceInCradleHack.Utils;
+using System;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -85,6 +86,7 @@ namespace AliceInCradleHack
 
                 Console.WriteLine("Injection successful!");
                 Console.ResetColor();
+
                 commandManager.RunCommandLoop();
             }
             catch (Exception ex) {

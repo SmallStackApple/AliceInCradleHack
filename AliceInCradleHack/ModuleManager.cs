@@ -1,4 +1,5 @@
 ﻿using AliceInCradleHack.Modules;
+using AliceInCradleHack.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -43,6 +44,7 @@ namespace AliceInCradleHack
                 new ModuleMosaicRemove(),
                 new ModuleDiscordRPC(),
                 new ModuleKillSound(),
+                new ModuleCritical()
                 // 在此处添加其他模块实例 | Add other module instances here
             };
 
@@ -225,10 +227,12 @@ namespace AliceInCradleHack
                 if (module.IsEnabled)
                 {
                     DisableModule(moduleName);
+                    Notification.ShowNotification($"Disabled {module.Name}", Notification.NotificationType.ALERT);
                 }
                 else
                 {
                     EnableModule(moduleName);
+                    Notification.ShowNotification($"Enabled {module.Name}", Notification.NotificationType.ALERT);
                 }
             }
         }
