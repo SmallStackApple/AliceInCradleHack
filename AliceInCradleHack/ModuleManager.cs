@@ -1,4 +1,4 @@
-﻿using AliceInCradleHack.Modules;
+using AliceInCradleHack.Modules;
 using AliceInCradleHack.Utils;
 using System;
 using System.Collections.Concurrent;
@@ -8,6 +8,9 @@ using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using Module = AliceInCradleHack.Modules.Module;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System.Text;
 
 namespace AliceInCradleHack
 {
@@ -184,6 +187,7 @@ namespace AliceInCradleHack
                 {
                     module.Enable();
                     module.IsEnabled = true;
+                    Notification.ShowNotification($"Enabled {module.Name}", Notification.NotificationType.ALERT);
                 }
                 catch (Exception ex)
                 {
@@ -206,6 +210,7 @@ namespace AliceInCradleHack
                 {
                     module.Disable();
                     module.IsEnabled = false;
+                    Notification.ShowNotification($"Disabled {module.Name}", Notification.NotificationType.ALERT);
                 }
                 catch (Exception ex)
                 {
@@ -227,12 +232,10 @@ namespace AliceInCradleHack
                 if (module.IsEnabled)
                 {
                     DisableModule(moduleName);
-                    Notification.ShowNotification($"Disabled {module.Name}", Notification.NotificationType.ALERT);
                 }
                 else
                 {
                     EnableModule(moduleName);
-                    Notification.ShowNotification($"Enabled {module.Name}", Notification.NotificationType.ALERT);
                 }
             }
         }
@@ -350,6 +353,228 @@ namespace AliceInCradleHack
 
             var module = _modules[moduleName];
             return module.Settings.GetNodeByPath(settingPath);
+        }
+
+        /// <summary>
+        /// 导出指定模块的设置到JSON文件 | Export specified module's settings to JSON file
+        /// </summary>
+        /// <param name="moduleName">模块名称 | Module name</param>
+        /// <param name="filePath">文件路径 | File path</param>
+        /// <returns>是否导出成功 | Whether export was successful</returns>
+        public bool ExportModuleSettings(string moduleName, string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(moduleName))
+            {
+                Console.WriteLine("Module name cannot be null or empty");
+                return false;
+            }
+
+            if (!_modules.TryGetValue(moduleName, out var module))
+            {
+                Console.WriteLine($"Module '{moduleName}' not found");
+                return false;
+            }
+
+            try
+            {
+                return module.Settings.ExportToJsonFile(filePath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to export module settings: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 从JSON文件导入设置到指定模块 | Import settings from JSON file to specified module
+        /// </summary>
+        /// <param name="moduleName">模块名称 | Module name</param>
+        /// <param name="filePath">文件路径 | File path</param>
+        /// <returns>是否导入成功 | Whether import was successful</returns>
+        public bool ImportModuleSettings(string moduleName, string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(moduleName))
+            {
+                Console.WriteLine("Module name cannot be null or empty");
+                return false;
+            }
+
+            if (!_modules.TryGetValue(moduleName, out var module))
+            {
+                Console.WriteLine($"Module '{moduleName}' not found");
+                return false;
+            }
+
+            try
+            {
+                return module.Settings.ImportFromJsonFile(filePath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to import module settings: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 导出所有模块的设置到JSON文件 | Export all modules' settings to JSON file
+        /// </summary>
+        /// <param name="filePath">文件路径 | File path</param>
+        /// <returns>是否导出成功 | Whether export was successful</returns>
+        public bool ExportAllSettings(string filePath)
+        {
+            try
+            {
+                var allSettings = new JObject();
+                
+                foreach (var module in _modules.Values)
+                {
+                    var moduleSettings = new JObject();
+                    
+                    // 添加模块启用状态
+                    moduleSettings["__IsEnabled"] = module.IsEnabled;
+
+                    // 获取模块的所有设置叶子节点
+                    var leafNodes = module.Settings.GetAllLeafNodes();
+
+                    // 将设置按路径结构组织
+                    foreach (var node in leafNodes)
+                    {
+                        // 将路径转换为嵌套结构
+                        var pathSegments = node.GetPath().Split('.');
+                        var currentObj = moduleSettings;
+                        
+                        for (int i = 0; i < pathSegments.Length - 1; i++)
+                        {
+                            var segment = pathSegments[i];
+                            if (!currentObj.ContainsKey(segment))
+                            {
+                                currentObj[segment] = new JObject();
+                            }
+                            currentObj = (JObject)currentObj[segment];
+                        }
+                        
+                        // 设置最终值
+                        var finalKey = pathSegments.Last();
+                        currentObj[finalKey] = JToken.FromObject(node.Value.ToString());
+                    }
+                    
+                    allSettings[module.Name] = moduleSettings;
+                }
+                
+                File.WriteAllText(filePath, allSettings.ToString(Formatting.Indented), Encoding.UTF8);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to export all settings: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 从JSON文件导入所有模块的设置 | Import all modules' settings from JSON file
+        /// </summary>
+        /// <param name="filePath">文件路径 | File path</param>
+        /// <returns>是否导入成功 | Whether import was successful</returns>
+        public bool ImportAllSettings(string filePath)
+        {
+            try
+            {
+                if (!File.Exists(filePath))
+                {
+                    Console.WriteLine($"Settings file not found: {filePath}");
+                    return false;
+                }
+                
+                var jsonContent = File.ReadAllText(filePath, Encoding.UTF8);
+                var allSettings = JObject.Parse(jsonContent);
+                
+                bool success = true;
+                
+                foreach (var moduleProperty in allSettings.Properties())
+                {
+                    var moduleName = moduleProperty.Name;
+                    if (!_modules.TryGetValue(moduleName, out var module))
+                    {
+                        Console.WriteLine($"Warning: Module '{moduleName}' not found, skipping...");
+                        success = false;
+                        continue;
+                    }
+                    
+                    var moduleSettingsObj = (JObject)moduleProperty.Value;
+                    
+                    // 获取并设置模块启用状态
+                    if (moduleSettingsObj.TryGetValue("__IsEnabled", out var isEnabledToken))
+                    {
+                        bool shouldBeEnabled = isEnabledToken.ToObject<bool>();
+                        
+                        // 根据当前状态和目标状态决定是否需要切换
+                        if (module.IsEnabled && !shouldBeEnabled)
+                        {
+                            // 模块当前启用，但应该禁用
+                            DisableModule(moduleName);
+                        }
+                        else if (!module.IsEnabled && shouldBeEnabled)
+                        {
+                            // 模块当前禁用，但应该启用
+                            EnableModule(moduleName);
+                        }
+                        // 如果状态一致，则不需要操作
+                    }
+                    
+                    // 移除 __IsEnabled 属性，避免干扰正常的设置导入
+                    moduleSettingsObj.Remove("__IsEnabled");
+                    
+                    var moduleSettingsJson = moduleSettingsObj.ToString();
+                    if (!module.Settings.FromJson(moduleSettingsJson))
+                    {
+                        Console.WriteLine($"Warning: Failed to import settings for module '{moduleName}'");
+                        success = false;
+                    }
+                }
+                
+                return success;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to import all settings: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 获取模块设置的JSON表示 | Get JSON representation of module settings
+        /// </summary>
+        /// <param name="moduleName">模块名称 | Module name</param>
+        /// <returns>JSON字符串（模块不存在返回null） | JSON string (null if module doesn't exist)</returns>
+        public string GetModuleSettingsAsJson(string moduleName)
+        {
+            if (string.IsNullOrWhiteSpace(moduleName))
+                return null;
+
+            if (!_modules.TryGetValue(moduleName, out var module))
+                return null;
+
+            return module.Settings.ToJson();
+        }
+
+        /// <summary>
+        /// 从JSON字符串设置模块配置 | Set module configuration from JSON string
+        /// </summary>
+        /// <param name="moduleName">模块名称 | Module name</param>
+        /// <param name="jsonSettings">JSON格式的设置 | Settings in JSON format</param>
+        /// <returns>是否设置成功 | Whether setting was successful</returns>
+        public bool SetModuleSettingsFromJson(string moduleName, string jsonSettings)
+        {
+            if (string.IsNullOrWhiteSpace(moduleName) || string.IsNullOrWhiteSpace(jsonSettings))
+                return false;
+
+            if (!_modules.TryGetValue(moduleName, out var module))
+                return false;
+
+            return module.Settings.FromJson(jsonSettings);
         }
     }
 }

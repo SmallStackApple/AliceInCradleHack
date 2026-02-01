@@ -2,6 +2,7 @@
 using AliceInCradleHack.Utils;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Diagnostics.Tracing;
 using System.Linq;
 using System.Text;
@@ -50,11 +51,19 @@ namespace AliceInCradleHack.Modules
             if(e.AttackInfo.GetType().GetField("AttackFrom").GetValue(e.AttackInfo).GetType() == Player.typeNoel)
             {
                 int originalDamage = e.val;
-                e.val = !(e.val == M2Attackable.GetMaxHp(sender)) ? (int)(e.val * (double)Settings.GetValueByPath("Multiplier")) : e.val;
+                double multiplier = (double)Settings.GetValueByPath("Multiplier");
+                int newDamage = (int)(originalDamage * multiplier);
+                if (originalDamage > M2Attackable.GetHp(sender))
+                {
+                    newDamage = originalDamage;
+                }
+                else if (newDamage > M2Attackable.GetHp(sender))
+                {
+                    newDamage = M2Attackable.GetHp(sender);
+                }
+                e.val = newDamage;
                 if ((bool)Settings.GetValueByPath("CriticalNotification.EnableNotification"))
                 {
-                    double multiplier = (double)Settings.GetValueByPath("Multiplier");
-                    int newDamage = (int)(originalDamage * multiplier);
                     string notificationText = (string)Settings.GetValueByPath("CriticalNotification.NotificationText");
                     notificationText = notificationText.Replace("%a", originalDamage.ToString())
                                                        .Replace("%m", multiplier.ToString())
