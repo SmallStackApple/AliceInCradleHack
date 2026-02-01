@@ -1,8 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace AliceInCradleHack.Modules
 {
@@ -229,12 +231,21 @@ namespace AliceInCradleHack.Modules
         public Dictionary<string, object> GetAllLeafValues(string prefix = "")
         {
             var result = new Dictionary<string, object>();
-            var currentPath = string.IsNullOrEmpty(prefix) ? Name : $"{prefix}.{Name}";
+            
+            // 如果是根节点，不包含在路径中
+            var currentPath = string.IsNullOrEmpty(prefix) ? "" : 
+                             (string.IsNullOrEmpty(Name) || Name == "Root" ? prefix : $"{prefix}.{Name}");
 
             // 叶子节点
             if (Children.Count == 0)
             {
-                result.Add(currentPath, Value);
+                // 只有当不是根节点且有值时才添加
+                if (!string.IsNullOrEmpty(currentPath) && (Name != "Root" || !string.IsNullOrEmpty(prefix)))
+                {
+                    // 移除路径开头的"Root."前缀
+                    var finalPath = currentPath.StartsWith("Root.") ? currentPath.Substring(5) : currentPath;
+                    result.Add(finalPath, Value);
+                }
                 return result;
             }
 
@@ -244,7 +255,9 @@ namespace AliceInCradleHack.Modules
                 var childValues = child.GetAllLeafValues(currentPath);
                 foreach (var kvp in childValues)
                 {
-                    result.Add(kvp.Key, kvp.Value);
+                    // 移除路径开头的"Root."前缀
+                    var finalKey = kvp.Key.StartsWith("Root.") ? kvp.Key.Substring(5) : kvp.Key;
+                    result.Add(finalKey, kvp.Value);
                 }
             }
 
@@ -257,7 +270,11 @@ namespace AliceInCradleHack.Modules
             // 叶子节点
             if (Children.Count == 0)
             {
-                leafNodes.Add(this);
+                // 排除根节点
+                if (Name != "Root" || Parent != null)
+                {
+                    leafNodes.Add(this);
+                }
                 return leafNodes;
             }
             // 非叶子节点，递归遍历子节点 | Non-leaf node, recursively traverse child nodes
@@ -274,11 +291,179 @@ namespace AliceInCradleHack.Modules
             var currentNode = this;
             while (currentNode != null)
             {
-                segments.Add(currentNode.Name);
+                // 排除根节点
+                if (currentNode.Name != "Root" || currentNode.Parent != null)
+                {
+                    segments.Add(currentNode.Name);
+                }
                 currentNode = currentNode.Parent;
             }
             segments.Reverse();
-            return string.Join(".", segments);
+            var fullPath = string.Join(".", segments);
+            
+            // 移除路径开头的"Root."前缀
+            return fullPath.StartsWith("Root.") ? fullPath.Substring(5) : fullPath;
+        }
+
+        /// <summary>
+        /// 导出设置为JSON字符串 | Export settings to JSON string
+        /// </summary>
+        /// <returns>JSON格式的设置数据 | Settings data in JSON format</returns>
+        public string ToJson()
+        {
+            var jsonData = new JObject();
+            
+            // 递归导出所有叶子节点的值
+            var leafValues = GetAllLeafValues();
+            foreach (var kvp in leafValues)
+            {
+                // 将路径转换为嵌套结构
+                var pathSegments = kvp.Key.Split('.');
+                var currentObj = jsonData;
+                
+                for (int i = 0; i < pathSegments.Length - 1; i++)
+                {
+                    var segment = pathSegments[i];
+                    if (!currentObj.ContainsKey(segment))
+                    {
+                        currentObj[segment] = new JObject();
+                    }
+                    currentObj = (JObject)currentObj[segment];
+                }
+                
+                // 设置最终值
+                var finalKey = pathSegments.Last();
+                currentObj[finalKey] = JToken.FromObject(kvp.Value);
+            }
+            
+            return jsonData.ToString(Formatting.Indented);
+        }
+
+        /// <summary>
+        /// 从JSON字符串导入设置 | Import settings from JSON string
+        /// </summary>
+        /// <param name="json">JSON格式的设置数据 | Settings data in JSON format</param>
+        /// <returns>是否导入成功 | Whether import was successful</returns>
+        public bool FromJson(string json)
+        {
+            try
+            {
+                var jsonData = JObject.Parse(json);
+                return ApplyJsonData(this, jsonData, "");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to parse JSON: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 递归应用JSON数据到设置节点 | Recursively apply JSON data to setting nodes
+        /// </summary>
+        /// <param name="node">当前节点 | Current node</param>
+        /// <param name="jsonData">JSON数据 | JSON data</param>
+        /// <param name="currentPath">当前路径 | Current path</param>
+        /// <returns>是否应用成功 | Whether application was successful</returns>
+        private bool ApplyJsonData(SettingNode node, JObject jsonData, string currentPath)
+        {
+            bool success = true;
+            
+            foreach (var property in jsonData.Properties())
+            {
+                var fullPath = string.IsNullOrEmpty(currentPath) ? property.Name : $"{currentPath}.{property.Name}";
+                var propertyValue = property.Value;
+                
+                if (propertyValue.Type == JTokenType.Object)
+                {
+                    // 递归处理对象类型的属性
+                    if (node.Children.TryGetValue(property.Name, out var childNode))
+                    {
+                        if (!ApplyJsonData(childNode, (JObject)propertyValue, fullPath))
+                        {
+                            success = false;
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Warning: Child node '{fullPath}' not found");
+                        success = false;
+                    }
+                }
+                else
+                {
+                    // 处理叶子节点的值
+                    if (node.Children.TryGetValue(property.Name, out var leafNode) && leafNode.Children.Count == 0)
+                    {
+                        try
+                        {
+                            var value = propertyValue.ToObject(leafNode.ValueType);
+                            if (!leafNode.SetValueByPath("", value))
+                            {
+                                Console.WriteLine($"Warning: Failed to set value for '{fullPath}'");
+                                success = false;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Warning: Failed to convert value for '{fullPath}': {ex.Message}");
+                            success = false;
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Warning: Leaf node '{fullPath}' not found or is not a leaf");
+                        success = false;
+                    }
+                }
+            }
+            
+            return success;
+        }
+
+        /// <summary>
+        /// 导出设置到JSON文件 | Export settings to JSON file
+        /// </summary>
+        /// <param name="filePath">文件路径 | File path</param>
+        /// <returns>是否导出成功 | Whether export was successful</returns>
+        public bool ExportToJsonFile(string filePath)
+        {
+            try
+            {
+                var json = ToJson();
+                System.IO.File.WriteAllText(filePath, json, Encoding.UTF8);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to export to JSON file: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 从JSON文件导入设置 | Import settings from JSON file
+        /// </summary>
+        /// <param name="filePath">文件路径 | File path</param>
+        /// <returns>是否导入成功 | Whether import was successful</returns>
+        public bool ImportFromJsonFile(string filePath)
+        {
+            try
+            {
+                if (!System.IO.File.Exists(filePath))
+                {
+                    Console.WriteLine($"JSON file not found: {filePath}");
+                    return false;
+                }
+                
+                var json = System.IO.File.ReadAllText(filePath, Encoding.UTF8);
+                return FromJson(json);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to import from JSON file: {ex.Message}");
+                return false;
+            }
         }
     }
 

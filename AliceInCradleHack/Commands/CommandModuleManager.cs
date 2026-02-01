@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,7 +18,8 @@ namespace AliceInCradleHack.Commands
             "toggle [module_name] - Toggle a module on or off\n"+
             "info [module_name] - Show information about a module\n"+
             "set [module_name] [setting_key] [setting_value] - Set a module's setting\n"+
-            "listsettings [module_name] - List all settings of a module";
+            "listsettings [module_name] - List all settings of a module\n"+
+            "config [save/load] [file_path] - Save or load module configurations\n";
 
         private ModuleManager ModuleManager => ModuleManager.Instance;
         private readonly Dictionary<string, Action<string[]>> SubCommands;
@@ -32,6 +34,7 @@ namespace AliceInCradleHack.Commands
                 { "info", args => ModuleInfo(args.Length > 0 ? args[0] : null) },
                 { "set", args => SetModuleSetting(args) },
                 { "listsettings", args => ListModuleSettings(args.Length > 0 ? args[0] : null) },
+                { "config", args => Config(args) }
             };
         }
 
@@ -134,6 +137,32 @@ namespace AliceInCradleHack.Commands
             module.Settings.GetAllLeafNodes().ForEach(node => {
                 Console.WriteLine($"{node.GetPath()} : {Convert.ToString(node.Value)} - {node.Description}");
             });
+        }
+
+        private void Config(string[] args)
+        {
+            if (args.Length < 2)
+            {
+                Console.WriteLine("Usage: module config [save/load] [file_path]");
+                return;
+            }
+            string action = args[0];
+            string filePath = args[1];
+
+            if (action.Equals("save", StringComparison.OrdinalIgnoreCase))
+            {
+                ModuleManager.ExportAllSettings(filePath);
+                Console.WriteLine($"Module configurations saved to '{filePath}'.");
+            }
+            else if (action.Equals("load", StringComparison.OrdinalIgnoreCase))
+            {
+                ModuleManager.ImportAllSettings(filePath);
+                Console.WriteLine($"Module configurations loaded from '{filePath}'.");
+            }
+            else
+            {
+                Console.WriteLine("Invalid action. Use 'save' or 'load'.");
+            }
         }
     }
 }
