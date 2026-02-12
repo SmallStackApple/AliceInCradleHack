@@ -21,7 +21,7 @@ namespace AliceInCradleHack.Utils
             {
                 if (_uiLogRowType == null)
                 {
-                    _uiLogRowType = Type.GetType("nel.UILogRow, Assembly-CSharp");
+                    _uiLogRowType = typeof(nel.UILogRow);
                 }
                 return _uiLogRowType;
             }

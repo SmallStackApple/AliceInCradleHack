@@ -57,7 +57,7 @@ namespace AliceInCradleHack.Modules
 
         private void PlayKillSound(object sender, DamageEvents.PostDamageEventArgs eventArgs)
         {
-            if(M2Attackable.GetHp(sender) == 0 && eventArgs.AttackInfo.GetType().GetField("AttackFrom").GetValue(eventArgs.AttackInfo).GetType() == Player.typeNoel)
+            if(M2Attackable.GetHp((m2d.M2Attackable)sender) == 0 && eventArgs.AttackInfo.GetType().GetField("AttackFrom").GetValue(eventArgs.AttackInfo).GetType() == Player.typeNoel)
             {
                 string soundFilePath = (string)Settings.GetValueByPath("SoundFilePath");
                 if (string.IsNullOrWhiteSpace(soundFilePath))

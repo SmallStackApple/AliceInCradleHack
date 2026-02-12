@@ -53,13 +53,13 @@ namespace AliceInCradleHack.Modules
                 int originalDamage = e.val;
                 double multiplier = (double)Settings.GetValueByPath("Multiplier");
                 int newDamage = (int)(originalDamage * multiplier);
-                if (originalDamage > M2Attackable.GetHp(sender))
+                if (originalDamage > M2Attackable.GetHp((m2d.M2Attackable)sender))
                 {
                     newDamage = originalDamage;
                 }
-                else if (newDamage > M2Attackable.GetHp(sender))
+                else if (newDamage > M2Attackable.GetHp((m2d.M2Attackable)sender))
                 {
-                    newDamage = M2Attackable.GetHp(sender);
+                    newDamage = M2Attackable.GetHp((m2d.M2Attackable)sender);
                 }
                 e.val = newDamage;
                 if ((bool)Settings.GetValueByPath("CriticalNotification.EnableNotification"))
