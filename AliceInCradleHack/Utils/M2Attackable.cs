@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Reflection;
+using m2d;
+
 namespace AliceInCradleHack.Utils
 {
     public static class M2Attackable
     {
-        public readonly static Type typeM2Attackable = Type.GetType("m2d.M2Attackable, unsafeAssem");
+        public readonly static Type typeM2Attackable = typeof(m2d.M2Attackable);
 
         public readonly static FieldInfo fieldInfoHp = typeM2Attackable.GetField("hp", BindingFlags.NonPublic | BindingFlags.Instance);
 
@@ -14,12 +16,12 @@ namespace AliceInCradleHack.Utils
 
         public readonly static FieldInfo fieldInfoMaxMp = typeM2Attackable.GetField("maxmp", BindingFlags.NonPublic | BindingFlags.Instance);
 
-        public static int GetHp(object instance) => (int)fieldInfoHp.GetValue(instance);
+        public static int GetHp(m2d.M2Attackable instance) => instance == null ? -1 : (fieldInfoHp.GetValue(instance) as int? ?? -1);
 
-        public static int GetMaxHp(object instance) => (int)fieldInfoMaxHp.GetValue(instance);
+        public static int GetMaxHp(m2d.M2Attackable instance) => instance == null ? -1 : (fieldInfoMaxHp.GetValue(instance) as int? ?? -1);
 
-        public static int GetMp(object instance) => (int)fieldInfoMp.GetValue(instance);
+        public static int GetMp(m2d.M2Attackable instance) => instance == null ? -1 : (fieldInfoMp.GetValue(instance) as int? ?? -1);
 
-        public static int GetMaxMp(object instance) => (int)fieldInfoMaxMp.GetValue(instance);
+        public static int GetMaxMp(m2d.M2Attackable instance) => instance == null ? -1 : (fieldInfoMaxMp.GetValue(instance) as int? ?? -1);
     }
 }

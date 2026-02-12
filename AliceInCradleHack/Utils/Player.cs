@@ -1,18 +1,44 @@
-﻿using System;
-using System.Reflection;
+﻿using nel;
+using System;
 
 namespace AliceInCradleHack.Utils
 {
     public static class Player
     {
-        public readonly static Type typeNoel = Type.GetType("nel.PRNoel, Assembly-CSharp");
+        public readonly static Type typeNoel = typeof(PRNoel);
 
-        public static int GetHp(object instance) => M2Attackable.GetHp(instance);
+        public static PRNoel Instance => SceneGame.PlayerInstance;
 
-        public static int GetMaxHp(object instance) => M2Attackable.GetMaxHp(instance);
+        public static int hp
+        {
+            get
+            {
+                return M2Attackable.GetHp(SceneGame.PlayerInstance);
+            }
+        }
 
-        public static int GetMp(object instance) => M2Attackable.GetMp(instance);
+        public static int maxhp
+        {
+            get
+            {
+                return M2Attackable.GetMaxHp(SceneGame.PlayerInstance);
+            }
+        }
 
-        public static int GetMaxMp(object instance) => M2Attackable.GetMaxMp(instance);
+        public static int mp
+        {
+            get
+            {
+                return M2Attackable.GetMp(SceneGame.PlayerInstance);
+            }
+        }
+
+        public static int maxmp
+        {
+            get
+            {
+                return M2Attackable.GetMaxMp(SceneGame.PlayerInstance);
+            }
+        }
     }
 }
