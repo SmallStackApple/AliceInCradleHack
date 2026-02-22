@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AliceInCradleHack.Commands
 {
@@ -14,11 +11,11 @@ namespace AliceInCradleHack.Commands
         public override string Usage =>
             "module [subcommands]\n" +
             "list - List all modules\n" +
-            "help - Show this help message\n"+
-            "toggle [module_name] - Toggle a module on or off\n"+
-            "info [module_name] - Show information about a module\n"+
-            "set [module_name] [setting_key] [setting_value] - Set a module's setting\n"+
-            "listsettings [module_name] - List all settings of a module\n"+
+            "help - Show this help message\n" +
+            "toggle [module_name] - Toggle a module on or off\n" +
+            "info [module_name] - Show information about a module\n" +
+            "set [module_name] [setting_key] [setting_value] - Set a module's setting\n" +
+            "listsettings [module_name] - List all settings of a module\n" +
             "config [save/load] [file_path] - Save or load module configurations\n";
 
         private ModuleManager ModuleManager => ModuleManager.Instance;
@@ -117,7 +114,7 @@ namespace AliceInCradleHack.Commands
                 Console.WriteLine($"Module '{moduleName}' not found.");
                 return;
             }
-            if(module.Settings.GetNodeByPath(settingKey) == null)
+            if (module.Settings.GetNodeByPath(settingKey) == null)
             {
                 Console.WriteLine($"Setting '{settingKey}' not found in module '{moduleName}'.");
                 return;
@@ -134,7 +131,8 @@ namespace AliceInCradleHack.Commands
                 Console.WriteLine($"Module '{moduleName}' not found.");
                 return;
             }
-            module.Settings.GetAllLeafNodes().ForEach(node => {
+            module.Settings.GetAllLeafNodes().ForEach(node =>
+            {
                 Console.WriteLine($"{node.GetPath()} : {Convert.ToString(node.Value)} - {node.Description}");
             });
         }

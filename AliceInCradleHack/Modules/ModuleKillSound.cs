@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 using NAudio.Wave;
 using AliceInCradleHack.Events;
 using AliceInCradleHack.Utils;
+using static AliceInCradleHack.Events.DamageEvents;
 
 namespace AliceInCradleHack.Modules
 {
@@ -30,7 +27,7 @@ namespace AliceInCradleHack.Modules
         private AudioFileReader audioFileReader;
         public override void Disable()
         {
-            DamageEvents.EventPostEnemyGetDamageHandler -= PlayKillSound;
+            HpDamage.EventPostEnemyGetDamageHandler -= PlayKillSound;
             IsEnabled = false;
             try
             {
@@ -47,7 +44,7 @@ namespace AliceInCradleHack.Modules
         }
         public override void Enable()
         {
-            DamageEvents.EventPostEnemyGetDamageHandler += PlayKillSound;
+            HpDamage.EventPostEnemyGetDamageHandler += PlayKillSound;
             IsEnabled = true;
         }
         public override void Initialize()
@@ -55,9 +52,9 @@ namespace AliceInCradleHack.Modules
 
         }
 
-        private void PlayKillSound(object sender, DamageEvents.PostDamageEventArgs eventArgs)
+        private void PlayKillSound(object sender, HpDamage.PostDamageEventArgs eventArgs)
         {
-            if(M2Attackable.GetHp((m2d.M2Attackable)sender) == 0 && eventArgs.AttackInfo.GetType().GetField("AttackFrom").GetValue(eventArgs.AttackInfo).GetType() == Player.typeNoel)
+            if (M2Attackable.GetHp((m2d.M2Attackable)sender) == 0 && eventArgs.attackInfo.AttackFrom.GetType() == Player.typeNoel)
             {
                 string soundFilePath = (string)Settings.GetValueByPath("SoundFilePath");
                 if (string.IsNullOrWhiteSpace(soundFilePath))

@@ -32,9 +32,9 @@ namespace AliceInCradleHack
             Console.WriteLine("Registering initial commands...");
             List<Command> initialCommands = new List<Command>
             {
-                new Commands.CommandCommandManager(),
-                new Commands.CommandModuleManager(),
-                new Commands.CommandNotify(),
+                new CommandCommandManager(),
+                new CommandModuleManager(),
+                new CommandNotify(),
                 // Add other command instances here
             };
             foreach (var command in initialCommands)

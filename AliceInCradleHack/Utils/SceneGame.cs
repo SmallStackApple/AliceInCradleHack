@@ -15,20 +15,6 @@ namespace AliceInCradleHack.Utils
 
         public readonly static FieldInfo fieldInfoPlayer = typeSceneGame.GetField("PrNoel", BindingFlags.NonPublic | BindingFlags.Instance);
 
-        public static PRNoel PlayerInstance { get; private set; } = null;
-
-        [HarmonyPatch(typeof(nel.SceneGame))]
-        public static class SceneGamePatch
-        {
-            [HarmonyPrefix]
-            [HarmonyPatch("runIRD")]
-            public static void runIRDPrefix(object __instance)
-            {
-                if(PlayerInstance == null && PlayerInstance != (PRNoel)__instance && __instance != null)
-                {
-                    PlayerInstance = (PRNoel)fieldInfoPlayer.GetValue(__instance);
-                }
-            }
-        }
+        public static PRNoel PlayerInstance { get; set; } = null;
     }
 }
