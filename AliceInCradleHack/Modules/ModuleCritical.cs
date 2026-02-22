@@ -1,12 +1,5 @@
-﻿using AliceInCradleHack.Events;
-using AliceInCradleHack.Utils;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
-using System.Diagnostics.Tracing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using AliceInCradleHack.Utils;
+using static AliceInCradleHack.Events.DamageEvents;
 
 namespace AliceInCradleHack.Modules
 {
@@ -34,32 +27,29 @@ namespace AliceInCradleHack.Modules
 
         public override void Disable()
         {
-            DamageEvents.EventPreEnemyGetDamageHandler -= DoCriticalHit;
+            HpDamage.EventPreEnemyGetDamageHandler -= DoCriticalHit;
         }
 
         public override void Enable()
         {
-            DamageEvents.EventPreEnemyGetDamageHandler += DoCriticalHit;
+            HpDamage.EventPreEnemyGetDamageHandler += DoCriticalHit;
         }
 
         public override void Initialize()
         {
         }
 
-        private void DoCriticalHit(object sender, DamageEvents.PreDamageEventArgs e)
+        private void DoCriticalHit(object sender, HpDamage.PreDamageEventArgs e)
         {
-            if(e.AttackInfo.GetType().GetField("AttackFrom").GetValue(e.AttackInfo).GetType() == Player.typeNoel)
+            if(e.attackInfo.AttackFrom.GetType() == Player.typeNoel)
             {
                 int originalDamage = e.val;
                 double multiplier = (double)Settings.GetValueByPath("Multiplier");
                 int newDamage = (int)(originalDamage * multiplier);
-                if (originalDamage > M2Attackable.GetHp((m2d.M2Attackable)sender))
+                int targetHp = M2Attackable.GetHp((m2d.M2Attackable)sender);
+                if (originalDamage > targetHp)
                 {
                     newDamage = originalDamage;
-                }
-                else if (newDamage > M2Attackable.GetHp((m2d.M2Attackable)sender))
-                {
-                    newDamage = M2Attackable.GetHp((m2d.M2Attackable)sender);
                 }
                 e.val = newDamage;
                 if ((bool)Settings.GetValueByPath("CriticalNotification.EnableNotification"))

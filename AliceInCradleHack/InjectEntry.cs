@@ -27,7 +27,7 @@ namespace AliceInCradleHack
         {
             CommandManager commandManager = CommandManager.Instance;
             ModuleManager moduleManager = ModuleManager.Instance;
-            EventManager eventManager = EventManager.Instance;
+            PatchManager patchManager = PatchManager.Instance;
             try
             {
                 AllocConsole();
@@ -70,8 +70,8 @@ namespace AliceInCradleHack
                 };
                 Console.WriteLine("done");
 
-                Console.WriteLine("-EventManager...");
-                eventManager.Initialize();
+                Console.WriteLine("Applying patches...");
+                patchManager.Initialize();
                 Console.WriteLine("done");
 
                 Console.WriteLine("-CommandManager...");
