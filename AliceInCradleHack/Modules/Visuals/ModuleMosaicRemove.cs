@@ -1,8 +1,4 @@
-﻿using AliceInCradleHack.Commands;
-using HarmonyLib;
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using HarmonyLib;
 
 namespace AliceInCradleHack.Modules
 {
