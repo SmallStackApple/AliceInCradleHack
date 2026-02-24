@@ -8,14 +8,14 @@ namespace AliceInCradleHack.Modules
         public override string Description => "Removes mosaic from the game.";
         public override string Author => "SmallStackApple";
         public override string Version => "1.0.0";
-        public override bool IsEnabled { get;set; } = false;
+        public override bool IsEnabled { get; set; } = false;
         public override SettingNode Settings { get; } = new SettingNode();
         public override string Category { get; } = "Visuals";
 
         private const string NamespaceName = "aliceincradlehack.modules.mosaicremove";
 
         private readonly Harmony harmony = new Harmony(NamespaceName);
-        public override void Initialize(){}
+        public override void Initialize() { }
         public override void Enable()
         {
             var original = AccessTools.Method("nel.MosaicShower:FnDrawMosaic");

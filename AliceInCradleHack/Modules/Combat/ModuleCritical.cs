@@ -18,7 +18,7 @@ namespace AliceInCradleHack.Modules
         public override string Category => "Combat";
 
         public override SettingNode Settings { get; } = new SettingBuilder()
-            .Add("Multiplier","Damage multiplier", 2.0d)
+            .Add("Multiplier", "Damage multiplier", 2.0d)
             .Group("CriticalNotification", "Critical notification")
                 .Add("EnableNotification", "Enable critical hit notification", true)
                 .Add("NotificationText", "Text to display on critical hit.(%a:The damage;%m:The multiplier;%b:The damage after multiplier)", "SilenceFix >> Critical Notification. %a=>%b")
@@ -41,7 +41,7 @@ namespace AliceInCradleHack.Modules
 
         private void DoCriticalHit(object sender, HpDamage.PreDamageEventArgs e)
         {
-            if(e.attackInfo.AttackFrom.GetType() == Player.typeNoel)
+            if (e.attackInfo.AttackFrom.GetType() == Player.typeNoel)
             {
                 int originalDamage = e.val;
                 double multiplier = (double)Settings.GetValueByPath("Multiplier");

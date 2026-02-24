@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reflection;
-using nel;
 
 namespace AliceInCradleHack.Utils
 {
@@ -10,6 +9,12 @@ namespace AliceInCradleHack.Utils
 
         public readonly static FieldInfo fieldInfoPlayer = typeSceneGame.GetField("PrNoel", BindingFlags.NonPublic | BindingFlags.Instance);
 
-        public static PRNoel PlayerInstance { get; set; } = null;
+        public readonly static FieldInfo fieldInfoM2D = typeSceneGame.GetField("M2D", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        public static nel.SceneGame Instance { get; set; } = null;
+
+        public static nel.PRNoel PrNoelInstance { get; set; } = null;
+
+        public static nel.NelM2DBase M2DInstance { get; set; } = null;
     }
 }

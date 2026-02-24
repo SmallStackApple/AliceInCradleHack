@@ -10,10 +10,10 @@ namespace AliceInCradleHack.Modules
         public override string Version => "1.0.0";
         public override bool IsEnabled { get; set; } = false;
 
-        public override SettingNode Settings { get; } = 
+        public override SettingNode Settings { get; } =
             new SettingBuilder()
-            .Add("Details", "The details line of the Discord Rich Presence.","Playing Alice in Cradle")
-            .Add("State", "The state line of the Discord Rich Presence.","In Bug Wall")
+            .Add("Details", "The details line of the Discord Rich Presence.", "Playing Alice in Cradle")
+            .Add("State", "The state line of the Discord Rich Presence.", "In Bug Wall")
             .Build();
 
         public override string Category { get; } = "Misc";

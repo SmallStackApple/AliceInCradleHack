@@ -68,7 +68,7 @@ namespace AliceInCradleHack.Utils
             try
             {
                 if (string.IsNullOrEmpty(message)) return;
-                
+
                 object uiLogInstance = uiLogInstanceField?.GetValue(null);
                 if (uiLogInstance == null || addAlertMethod == null || uiLogRowTypeEnum == null)
                 {

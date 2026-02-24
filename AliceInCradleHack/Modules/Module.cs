@@ -1,9 +1,9 @@
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace AliceInCradleHack.Modules
 {
@@ -230,9 +230,9 @@ namespace AliceInCradleHack.Modules
         public Dictionary<string, object> GetAllLeafValues(string prefix = "")
         {
             var result = new Dictionary<string, object>();
-            
+
             // 如果是根节点，不包含在路径中
-            var currentPath = string.IsNullOrEmpty(prefix) ? "" : 
+            var currentPath = string.IsNullOrEmpty(prefix) ? "" :
                              (string.IsNullOrEmpty(Name) || Name == "Root" ? prefix : $"{prefix}.{Name}");
 
             // 叶子节点
@@ -299,7 +299,7 @@ namespace AliceInCradleHack.Modules
             }
             segments.Reverse();
             var fullPath = string.Join(".", segments);
-            
+
             // 移除路径开头的"Root."前缀
             return fullPath.StartsWith("Root.") ? fullPath.Substring(5) : fullPath;
         }
@@ -311,7 +311,7 @@ namespace AliceInCradleHack.Modules
         public string ToJson()
         {
             var jsonData = new JObject();
-            
+
             // 递归导出所有叶子节点的值
             var leafValues = GetAllLeafValues();
             foreach (var kvp in leafValues)
@@ -319,7 +319,7 @@ namespace AliceInCradleHack.Modules
                 // 将路径转换为嵌套结构
                 var pathSegments = kvp.Key.Split('.');
                 var currentObj = jsonData;
-                
+
                 for (int i = 0; i < pathSegments.Length - 1; i++)
                 {
                     var segment = pathSegments[i];
@@ -329,12 +329,12 @@ namespace AliceInCradleHack.Modules
                     }
                     currentObj = (JObject)currentObj[segment];
                 }
-                
+
                 // 设置最终值
                 var finalKey = pathSegments.Last();
                 currentObj[finalKey] = JToken.FromObject(kvp.Value);
             }
-            
+
             return jsonData.ToString(Formatting.Indented);
         }
 
@@ -367,12 +367,12 @@ namespace AliceInCradleHack.Modules
         private bool ApplyJsonData(SettingNode node, JObject jsonData, string currentPath)
         {
             bool success = true;
-            
+
             foreach (var property in jsonData.Properties())
             {
                 var fullPath = string.IsNullOrEmpty(currentPath) ? property.Name : $"{currentPath}.{property.Name}";
                 var propertyValue = property.Value;
-                
+
                 if (propertyValue.Type == JTokenType.Object)
                 {
                     // 递归处理对象类型的属性
@@ -416,7 +416,7 @@ namespace AliceInCradleHack.Modules
                     }
                 }
             }
-            
+
             return success;
         }
 
@@ -454,7 +454,7 @@ namespace AliceInCradleHack.Modules
                     Console.WriteLine($"JSON file not found: {filePath}");
                     return false;
                 }
-                
+
                 var json = System.IO.File.ReadAllText(filePath, Encoding.UTF8);
                 return FromJson(json);
             }
