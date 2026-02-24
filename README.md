@@ -28,7 +28,7 @@ An injection hack for Alice In Cradle
 - 手动注入
     1. 运行游戏
     2. 将所有文件夹复制到[C:\AliceInCradleHack\\](C:\AliceInCradleHack\)文件夹下
-    3. 使用任意方式注入AliceInCradleHack.dll并调用AliceInCradleHack.InjectEntry:Inject()方法进行初始化（可以使用我构建的[SharpMonoInjector](https://github.com/SmallStackApple/SharpMonoInjector/release)）
+    3. 使用任意方式注入AliceInCradleHack.dll并调用AliceInCradleHack.InjectEntry:Inject()方法进行初始化（可以使用我构建的[SharpMonoInjector](https://github.com/SmallStackApple/SharpMonoInjector/releases)）
 - 使用最新构建版本
    - 访问[nightly](https://nightly.link/SmallStackApple/AliceInCradleHack/workflows/build/main/release-build.zip)获取最新构建版本
 
