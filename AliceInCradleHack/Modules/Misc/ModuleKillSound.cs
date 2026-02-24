@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using NAudio.Wave;
-using AliceInCradleHack.Events;
 using AliceInCradleHack.Utils;
 using static AliceInCradleHack.Events.DamageEvents;
 

@@ -20,7 +20,7 @@ namespace AliceInCradleHack.Modules.Client
             .Add("ShowDynamicIsland","Show dynamic island on the top of the screen.", true)
             .Build();
 
-        private GuiForm guiForm = new GuiForm();
+        private readonly GuiForm guiForm = new GuiForm();
 
         public override void Initialize()
         {
