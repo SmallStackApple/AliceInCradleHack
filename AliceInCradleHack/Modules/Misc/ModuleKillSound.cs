@@ -1,7 +1,7 @@
-﻿using System;
-using System.IO;
+﻿using AliceInCradleHack.Utils;
 using NAudio.Wave;
-using AliceInCradleHack.Utils;
+using System;
+using System.IO;
 using static AliceInCradleHack.Events.DamageEvents;
 
 namespace AliceInCradleHack.Modules

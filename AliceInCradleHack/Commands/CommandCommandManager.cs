@@ -8,7 +8,7 @@ namespace AliceInCradleHack.Commands
     {
         public override string Name => "command";
         public override string Description => "Command manager command.";
-        public override string Usage => 
+        public override string Usage =>
             "command [subcommands]\n" +
             "list - List all commands\n" +
             "prompt - Set console prompt\n" +

@@ -17,7 +17,7 @@ namespace AliceInCradleHack.Modules.Client
         public override string Category => "Client";
 
         public override SettingNode Settings { get; } = new SettingBuilder()
-            .Add("ShowDynamicIsland","Show dynamic island on the top of the screen.", true)
+            .Add("ShowDynamicIsland", "Show dynamic island on the top of the screen.", true)
             .Build();
 
         private readonly GuiForm guiForm = new GuiForm();
@@ -40,7 +40,7 @@ namespace AliceInCradleHack.Modules.Client
 
         private class GuiForm : Form
         {
-            
+
         }
     }
 }

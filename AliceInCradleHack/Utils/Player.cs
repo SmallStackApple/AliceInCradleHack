@@ -7,13 +7,13 @@ namespace AliceInCradleHack.Utils
     {
         public readonly static Type typeNoel = typeof(PRNoel);
 
-        public static PRNoel Instance => SceneGame.PlayerInstance;
+        public static PRNoel Instance => SceneGame.PrNoelInstance;
 
         public static int hp
         {
             get
             {
-                return M2Attackable.GetHp(SceneGame.PlayerInstance);
+                return M2Attackable.GetHp(SceneGame.PrNoelInstance);
             }
         }
 
@@ -21,7 +21,7 @@ namespace AliceInCradleHack.Utils
         {
             get
             {
-                return M2Attackable.GetMaxHp(SceneGame.PlayerInstance);
+                return M2Attackable.GetMaxHp(SceneGame.PrNoelInstance);
             }
         }
 
@@ -29,7 +29,7 @@ namespace AliceInCradleHack.Utils
         {
             get
             {
-                return M2Attackable.GetMp(SceneGame.PlayerInstance);
+                return M2Attackable.GetMp(SceneGame.PrNoelInstance);
             }
         }
 
@@ -37,7 +37,7 @@ namespace AliceInCradleHack.Utils
         {
             get
             {
-                return M2Attackable.GetMaxMp(SceneGame.PlayerInstance);
+                return M2Attackable.GetMaxMp(SceneGame.PrNoelInstance);
             }
         }
     }
