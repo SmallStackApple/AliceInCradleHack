@@ -27,7 +27,7 @@ An injection hack for Alice In Cradle
     3. 运行`inject.bat`或者`inject.ps1`
 - 手动注入
     1. 运行游戏
-    2. 将所有文件夹复制到[C:\AliceInCradleHack\\](C:\AliceInCradleHack\)文件夹下
+    2. 将所有文件夹复制到`C:\AliceInCradleHack\`文件夹下
     3. 使用任意方式注入AliceInCradleHack.dll并调用AliceInCradleHack.InjectEntry:Inject()方法进行初始化（可以使用我构建的[SharpMonoInjector](https://github.com/SmallStackApple/SharpMonoInjector/releases)）
 - 使用最新构建版本
    - 访问[nightly](https://nightly.link/SmallStackApple/AliceInCradleHack/workflows/build/main/release-build.zip)获取最新构建版本
@@ -66,7 +66,7 @@ This project is a pure .NET Framework 4.8.1 injectable hack tool for [AliceInCra
     3. Run `inject.bat` or `inject.ps1`
 - Manual Injection
     1. Launch the game
-    2. Copy all folders to the directory [C:\AliceInCradleHack\]
+    2. Copy all folders to the directory `C:\AliceInCradleHack\`
     3. Inject AliceInCradleHack.dll by any means and call the `AliceInCradleHack.InjectEntry:Inject()` method for initialization (you can use the [SharpMonoInjector](https://github.com/SmallStackApple/SharpMonoInjector/release) built by me)
 - Use the Latest Built Version
    - Visit [nightly](https://nightly.link/SmallStackApple/AliceInCradleHack/workflows/build/main/release-build.zip) to get the latest built version
