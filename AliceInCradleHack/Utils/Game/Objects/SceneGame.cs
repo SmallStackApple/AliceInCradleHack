@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace AliceInCradleHack.Utils
+namespace AliceInCradleHack.Utils.Game.Objects
 {
     public static class SceneGame
     {

@@ -1,6 +1,6 @@
 ﻿using HarmonyLib;
 using nel;
-using static AliceInCradleHack.Utils.SceneGame;
+using static AliceInCradleHack.Utils.Game.Objects.SceneGame;
 
 namespace AliceInCradleHack.Patches
 {

@@ -1,4 +1,4 @@
-﻿using AliceInCradleHack.Utils;
+﻿using AliceInCradleHack.Utils.Game.Objects;
 using NAudio.Wave;
 using System;
 using System.IO;
