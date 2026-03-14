@@ -26,11 +26,11 @@ namespace AliceInCradleHack.Modules
                 .Back()
             .Build();
 
-        private readonly PRNoel player = Utils.SceneGame.PrNoelInstance;
+        private PRNoel player => Utils.Game.Objects.SceneGame.PrNoelInstance;
 
-        private readonly UseItemSelector useItemSelector = Utils.UseItemSelector.Instance;
+        private UseItemSelector useItemSelector => Utils.Game.Objects.UseItemSelector.Instance;
 
-        private readonly UseItemSelector.ItCell[] aCell = Utils.UseItemSelector.ACell;
+        private UseItemSelector.ItCell[] ACell => Utils.Game.Objects.UseItemSelector.ACell;
 
         public override void Disable()
         {
@@ -46,12 +46,8 @@ namespace AliceInCradleHack.Modules
 
         private void eatGApple()
         {
-            foreach(var cell in aCell)
+            foreach(var cell in ACell)
             {
-                if (cell.Itm.category == NelItem.CATEG.CURE_HP)
-                {
-
-                }
             }
         }
     }

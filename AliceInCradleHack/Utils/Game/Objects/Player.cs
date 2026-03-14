@@ -1,7 +1,7 @@
 ﻿using nel;
 using System;
 
-namespace AliceInCradleHack.Utils
+namespace AliceInCradleHack.Utils.Game.Objects
 {
     public static class Player
     {
