@@ -1,4 +1,5 @@
-﻿using AliceInCradleHack.Utils.Game.Objects;
+﻿using AliceInCradleHack.Utils.Client;
+using AliceInCradleHack.Utils.Game.Objects;
 using static AliceInCradleHack.Events.DamageEvents;
 
 namespace AliceInCradleHack.Modules

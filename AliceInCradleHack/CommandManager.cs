@@ -9,12 +9,12 @@ namespace AliceInCradleHack
 
     public class CommandManager
     {
-        private readonly Dictionary<string, Command> commands = new Dictionary<string, Command>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, Command> commands = new(StringComparer.OrdinalIgnoreCase);
         private bool Inited = false;
         private readonly Thread commandThread;
         public string Prompt { get; set; } = "> ";
 
-        private static readonly Lazy<CommandManager> __lazyInstance = new Lazy<CommandManager>(() => new CommandManager());
+        private static readonly Lazy<CommandManager> __lazyInstance = new(() => new CommandManager());
         public static CommandManager Instance { get; } = __lazyInstance.Value;
 
         private CommandManager() 
@@ -30,7 +30,7 @@ namespace AliceInCradleHack
         {
             if (Inited) return;
             Console.WriteLine("Registering initial commands...");
-            List<Command> initialCommands = new List<Command>
+            List<Command> initialCommands = new()
             {
                 new CommandCommandManager(),
                 new CommandModuleManager(),

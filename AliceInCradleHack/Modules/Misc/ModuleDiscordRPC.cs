@@ -19,7 +19,7 @@ namespace AliceInCradleHack.Modules
         public override string Category { get; } = "Misc";
 
         private const string DiscordApplicationId = "1462025663203774514";
-        private static readonly DiscordRpcClient RPCClient = new DiscordRpcClient(DiscordApplicationId);
+        private static readonly DiscordRpcClient RPCClient = new(DiscordApplicationId);
 
         public override void Initialize()
         {
