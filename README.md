@@ -35,7 +35,7 @@ An injection hack for Alice In Cradle
 ## 作者倡议
 本项目及基于其开发的 **衍生作品** 均遵循 GPLv3 开源协议，核心是自由共享、协作共赢。为守护开源精神的纯粹性，作者在此发出倡议，恳请所有使用者与开发者共同遵守：
 
-1. 不建议付费分发：本项目及衍生作品永久开源，**建议不要将其作为付费商品售卖、付费解锁内容，或通过广告、会员等形式变相商业化**，让技术无门槛惠及更多人 **（如果我哪天闭源收费我就死父母）**；
+1. 不建议付费分发：本项目及衍生作品永久开源，**建议不要将其作为付费商品售卖、付费解锁内容，或通过广告、会员等形式变相商业化**，让技术无门槛惠及更多人；
 2. 不索取强制互动：使用、分享或二次开发本项目及衍生作品时，**不必将“点赞、关注、收藏、转发”作为必要条件**，尊重每一位使用者的自主选择；
 3. 鼓励自由共享：欢迎在遵循 GPLv3 协议的前提下，**免费分享项目链接、衍生作品成果（需保留原版权声明及开源协议），共同推动社区良性发展**。
 
@@ -74,7 +74,7 @@ This project is a pure .NET Framework 4.8.1 injectable hack tool for [AliceInCra
 ## Author's Initiative
 This project and all **derivative works** developed based on it are licensed under the GPLv3 open source license, with the core values of free sharing and win-win collaboration. To safeguard the purity of the open source spirit, the author hereby puts forward the following initiative, and earnestly requests all users and developers to abide by it together:
 
-1. Paid Distribution is Not Recommended: This project and its derivative works are permanently open source. It is **recommended not to sell them as paid products, unlock content for a fee, or conduct disguised commercialization through advertisements, memberships, etc.**, so that technology can benefit more people without thresholds **(If I ever close the source and charge for it, I will be cursed with the death of my parents))**;
+1. Paid Distribution is Not Recommended: This project and its derivative works are permanently open source. It is **recommended not to sell them as paid products, unlock content for a fee, or conduct disguised commercialization through advertisements, memberships, etc.**, so that technology can benefit more people without thresholds;
 2. No Mandatory Interaction Required: When using, sharing or secondary developing this project and its derivative works, **it is not necessary to take "liking, following, collecting, forwarding" as prerequisites**, and respect the independent choice of every user;
 3. Encourage Free Sharing: You are welcome to **freely share project links and derivative work results (while retaining the original copyright notice and open source license)** in accordance with the GPLv3 license, and jointly promote the healthy development of the community.
 
