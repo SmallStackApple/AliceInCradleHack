@@ -1,5 +1,5 @@
 using AliceInCradleHack.Modules;
-using AliceInCradleHack.Utils;
+using AliceInCradleHack.Utils.Client;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

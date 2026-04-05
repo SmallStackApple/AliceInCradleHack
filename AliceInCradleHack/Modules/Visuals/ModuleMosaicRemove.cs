@@ -12,9 +12,7 @@ namespace AliceInCradleHack.Modules
         public override SettingNode Settings { get; } = new SettingNode();
         public override string Category { get; } = "Visuals";
 
-        private const string NamespaceName = "aliceincradlehack.modules.mosaicremove";
-
-        private readonly Harmony harmony = new Harmony(NamespaceName);
+        private readonly Harmony harmony = new("aliceincradlehack.modules.mosaicremove");
         public override void Initialize() { }
         public override void Enable()
         {
@@ -27,7 +25,7 @@ namespace AliceInCradleHack.Modules
         public override void Disable()
         {
             // Logic to disable mosaic removal
-            harmony.UnpatchAll(NamespaceName);
+            harmony.UnpatchAll(harmony.Id);
             IsEnabled = false;
         }
 

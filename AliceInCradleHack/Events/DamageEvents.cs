@@ -1,4 +1,4 @@
-using AliceInCradleHack.Utils;
+using AliceInCradleHack.Utils.Game.Objects;
 using m2d;
 using nel;
 using System;

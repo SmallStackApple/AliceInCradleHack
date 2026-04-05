@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
 
-namespace AliceInCradleHack.Utils.Game.Objects
+namespace AliceInCradleHack.Utils.Client
 {
     public static class Notification
     {
