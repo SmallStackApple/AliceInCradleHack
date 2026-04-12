@@ -15,32 +15,14 @@ namespace AliceInCradleHack.Commands
             "alert_type: [NORMAL, GETITEM, CONSUMEITEM, MONEY, ALERT, ALERT_EGG, ALERT_EP, ALERT_EP2, ALERT_GRAY, ALERT_HUNGER, ALERT_BENCH, ALERT_PUPPET, ALERT_FATAL, ALERT_BARU]";
         public override void Execute(string[] args)
         {
-            //invoke nel.UILog "public UILogRow AddAlert(string t, UILogRow.TYPE alert_type = UILogRow.TYPE.ALERT)"
-            /*
-                enum nel.UILogRow.TYPE
-                NORMAL,
-			    GETITEM,
-			    CONSUMEITEM,
-			    MONEY,
-			    ALERT,
-			    ALERT_EGG,
-			    ALERT_EP,
-			    ALERT_EP2,
-			    ALERT_GRAY,
-			    ALERT_HUNGER,
-			    ALERT_BENCH,
-			    ALERT_PUPPET,
-			    ALERT_FATAL,
-			    ALERT_BARU
-            */
             if (args.Length == 0)
             {
                 Console.WriteLine("Usage:" + Usage);
                 return;
             }
-            Notification.ShowNotification(
+            Notification.ShowNotificationByUILog(
                 string.Join(" ", args.Skip(1)),
-                Enum.TryParse<Notification.NotificationType>(args[0], true, out var type) ? type : Notification.NotificationType.ALERT
+                Enum.TryParse(args[0], true, out nel.UILogRow.TYPE alertType) ? alertType : nel.UILogRow.TYPE.ALERT
             );
         }
     }

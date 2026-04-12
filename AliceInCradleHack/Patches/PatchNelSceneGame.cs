@@ -6,7 +6,7 @@ namespace AliceInCradleHack.Patches
 {
     public class PatchNelSceneGame : Patch
     {
-        Harmony harmony = new Harmony("aliceincradlehack.patches.patchnelscenegame");
+        private readonly Harmony harmony = new("aliceincradlehack.patches.patchnelscenegame");
         public override void Apply()
         {
             harmony.Patch(
@@ -25,18 +25,18 @@ namespace AliceInCradleHack.Patches
             if (__instance != null)
             {
                 Instance = __instance as SceneGame;
-            }
 
-            var playerValue = fieldInfoPlayer.GetValue(__instance) as PRNoel;
-            if (PrNoelInstance != playerValue && playerValue != null)
-            {
-                PrNoelInstance = playerValue;
-            }
+                var playerValue = fieldInfoPlayer.GetValue(__instance) as PRNoel;
+                if (PrNoelInstance != playerValue && playerValue != null)
+                {
+                    PrNoelInstance = playerValue;
+                }
 
-            var m2dinstance = fieldInfoM2D.GetValue(__instance) as NelM2DBase;
-            if (M2DInstance != m2dinstance && m2dinstance != null)
-            {
-                M2DInstance = m2dinstance;
+                var m2dinstance = fieldInfoM2D.GetValue(__instance) as NelM2DBase;
+                if (M2DInstance != m2dinstance && m2dinstance != null)
+                {
+                    M2DInstance = m2dinstance;
+                }
             }
         }
     }

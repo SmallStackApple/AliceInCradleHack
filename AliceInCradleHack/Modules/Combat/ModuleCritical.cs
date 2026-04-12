@@ -59,7 +59,7 @@ namespace AliceInCradleHack.Modules
                     notificationText = notificationText.Replace("%a", originalDamage.ToString())
                                                        .Replace("%m", multiplier.ToString())
                                                        .Replace("%b", newDamage.ToString());
-                    Notification.ShowNotification(notificationText, Notification.NotificationType.ALERT);
+                    Notification.ShowNotificationByUILog(notificationText, nel.UILogRow.TYPE.ALERT);
                 }
             }
         }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AliceInCradleHack.Utils.Client;
+using System;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -14,7 +15,7 @@ namespace AliceInCradleHack
         [DllImport("kernel32.dll")]
         public static extern bool FreeConsole();
 
-        private static readonly Thread InjectThread = new Thread(new ThreadStart(InjectTask));
+        private static readonly Thread InjectThread = new(new ThreadStart(InjectTask));
 
         static void Inject()
         {
@@ -29,6 +30,10 @@ namespace AliceInCradleHack
             PatchManager patchManager = PatchManager.Instance;
             try
             {
+                Console.WriteLine("Finding main folder...");
+                string mainFolder = MainFolder.GetMainFolder();
+                Console.WriteLine("found:" + mainFolder);
+
                 AllocConsole();
                 //redirect input and output
                 Console.SetOut(new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
@@ -40,7 +45,6 @@ namespace AliceInCradleHack
                     e.Cancel = true;
                 };
                 
-                Console.ForegroundColor = ConsoleColor.Green;
                 //splash :P
                 Console.WriteLine(
                     "           _ _          _____        _____               _ _      _    _            _    \r\n"+
@@ -57,9 +61,9 @@ namespace AliceInCradleHack
 
                 Console.WriteLine("-Dependency...");
                 AppDomain.CurrentDomain.AssemblyResolve += (sender, args) => {
-                    // Load dependencies from C:\AliceInCradleHack\lib
+                    // Load dependencies from mainFolder\lib
                     string assemblyName = new AssemblyName(args.Name).Name + ".dll";
-                    string assemblyPath = Path.Combine("C:\\AliceInCradleHack\\lib", assemblyName);
+                    string assemblyPath = Path.Combine(mainFolder+"\\lib", assemblyName);
 
                     if (File.Exists(assemblyPath))
                     {
@@ -83,6 +87,7 @@ namespace AliceInCradleHack
 
                 Console.WriteLine("Initialization complete.");
 
+                Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("Injection successful!");
                 Console.ResetColor();
 

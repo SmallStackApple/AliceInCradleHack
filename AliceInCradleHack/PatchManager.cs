@@ -6,18 +6,16 @@ namespace AliceInCradleHack
 {
     public class PatchManager
     {
-        public List<Patch> Patches { get; } = new List<Patch>();
+        public List<Patch> Patches { get; } = new();
 
-
-        private static readonly Lazy<PatchManager> __lazyInstance = new Lazy<PatchManager>(() => new PatchManager());
+        private static readonly Lazy<PatchManager> __lazyInstance = new(() => new PatchManager());
         public static PatchManager Instance { get; } = __lazyInstance.Value;
 
         public void Initialize()
         {
-            List<Patch> buildInPatches = new List<Patch>
+            List<Patch> buildInPatches = new()
             {
                 new PatchM2dM2Attackable(),
-                new PatchNelSceneGame(),
             };
             foreach (var patch in buildInPatches)
             {
