@@ -6,7 +6,7 @@ namespace AliceInCradleHack.Patches
 {
     public class PatchM2dM2Attackable : Patch
     {
-        Harmony harmony = new Harmony("aliceincradlehack.patches.patchm2dm2attackable");
+        private readonly Harmony harmony = new("aliceincradlehack.patches.patchm2dm2attackable");
 
         public override void Apply()
         {

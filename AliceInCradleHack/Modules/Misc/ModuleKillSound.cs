@@ -46,10 +46,7 @@ namespace AliceInCradleHack.Modules
             HpDamage.EventPostEnemyGetDamageHandler += PlayKillSound;
             IsEnabled = true;
         }
-        public override void Initialize()
-        {
-
-        }
+        public override void Initialize() { }
 
         private void PlayKillSound(object sender, HpDamage.PostDamageEventArgs eventArgs)
         {

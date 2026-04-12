@@ -186,7 +186,7 @@ namespace AliceInCradleHack
                 {
                     module.Enable();
                     module.IsEnabled = true;
-                    Notification.ShowNotification($"Enabled {module.Name}", Notification.NotificationType.ALERT);
+                    Notification.ShowNotificationByUILog($"Enabled {module.Name}", nel.UILogRow.TYPE.ALERT);
                 }
                 catch (Exception ex)
                 {
@@ -209,7 +209,7 @@ namespace AliceInCradleHack
                 {
                     module.Disable();
                     module.IsEnabled = false;
-                    Notification.ShowNotification($"Disabled {module.Name}", Notification.NotificationType.ALERT);
+                    Notification.ShowNotificationByUILog($"Disabled {module.Name}", nel.UILogRow.TYPE.ALERT);
                 }
                 catch (Exception ex)
                 {
