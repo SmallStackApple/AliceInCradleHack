@@ -85,6 +85,11 @@ namespace AliceInCradleHack
                 moduleManager.Initialize();
                 Console.WriteLine("done");
 
+                Console.WriteLine("-Extensions...");
+                string extensionsDir = Path.Combine(mainFolder, "Extensions");
+                ExtensionManager.Instance.LoadFromDirectory(extensionsDir);
+                Console.WriteLine("done");
+
                 Console.WriteLine("Initialization complete.");
 
                 Console.ForegroundColor = ConsoleColor.Green;

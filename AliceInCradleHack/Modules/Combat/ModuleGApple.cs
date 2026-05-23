@@ -16,19 +16,19 @@ namespace AliceInCradleHack.Modules
 
         public override string Category => "Combat";
 
-        public override SettingNode Settings =>
+        public override SettingNode Settings { get; } =
             new SettingBuilder()
             .Add("MinHP", "Minimum HP percentage to activate GApple.", 50)
             .Add("Delay", "Delay between GApple uses in seconds.", 2d)
             .Group("Notification", "Notification settings")
-                .Add("Notify", "Enable notification when GApple is used.", true)
+                .Add("Enable", "Enable notification when GApple is used.", true)
                 .Add("NotificationText", "Text to display when GApple is used.(%hp:Current HP percentage)", "GApple eaten!")
                 .Back()
             .Build();
 
-        private PRNoel player => Utils.Game.Objects.SceneGame.PrNoelInstance;
+        private PRNoel Player => Utils.Game.Objects.SceneGame.PrNoelInstance;
 
-        private UseItemSelector useItemSelector => Utils.Game.Objects.UseItemSelector.Instance;
+        private UseItemSelector UseItemSelector => Utils.Game.Objects.UseItemSelector.Instance;
 
         private UseItemSelector.ItCell[] ACell => Utils.Game.Objects.UseItemSelector.ACell;
 
@@ -44,11 +44,17 @@ namespace AliceInCradleHack.Modules
         {
         }
 
-        private void eatGApple()
+        private void Eat(UseItemSelector.ItCell cell)
         {
-            foreach(var cell in ACell)
-            {
-            }
+            PR pr = UseItemSelector.IMNG.Mp.getKeyPr() as PR;
+
+            if(Player == null || UseItemSelector == null || ACell == null || !cell.Itm.useable || pr == null) return;
+
+            int grade = cell.getGrade();
+            ItemStorage inventory = UseItemSelector.IMNG.getInventory();
+            
+            if(cell.Info.getCount(grade) <= 0 || !pr.is_alive) return;
+            int num = cell.Itm.Use(pr, UseItemSelector.IMNG.getInventory(), grade, pr);
         }
     }
 }

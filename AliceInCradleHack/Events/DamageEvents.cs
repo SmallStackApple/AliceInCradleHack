@@ -33,55 +33,61 @@ namespace AliceInCradleHack.Events
             {
                 var eventArgs = new PreDamageEventArgs(__instance, __args);
 
-                try
+                if (__instance != null)
                 {
-                    EventPreGetDamage?.Invoke(__instance, eventArgs);
-                    if (__instance.GetType() == typeNoel)
+                    try
                     {
-                        EventPrePlayerGetDamageHandler?.Invoke(__instance, eventArgs);
-                    }
-                    else if (__instance.GetType().IsSubclassOf(typeEnemy))
-                    {
-                        EventPreEnemyGetDamageHandler?.Invoke(__instance, eventArgs);
-                    }
-                    if (__instance.GetType() != typeNoel)
-                    {
-                        EventPreNotPlayerGetDamageHandler?.Invoke(__instance, eventArgs);
-                    }
+                        EventPreGetDamage?.Invoke(__instance, eventArgs);
+                        if (__instance.GetType() == typeNoel)
+                        {
+                            EventPrePlayerGetDamageHandler?.Invoke(__instance, eventArgs);
+                        }
+                        else if (__instance.GetType().IsSubclassOf(typeEnemy))
+                        {
+                            EventPreEnemyGetDamageHandler?.Invoke(__instance, eventArgs);
+                        }
+                        if (__instance.GetType() != typeNoel)
+                        {
+                            EventPreNotPlayerGetDamageHandler?.Invoke(__instance, eventArgs);
+                        }
 
-                    __args[0] = eventArgs.val;
-                    __args[1] = eventArgs.force;
-                    __args[2] = eventArgs.attackInfo;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[AliceInCradleHack][DamageEvents] PreFix exception: {ex}");
+                        __args[0] = eventArgs.val;
+                        __args[1] = eventArgs.force;
+                        __args[2] = eventArgs.attackInfo;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[AliceInCradleHack][DamageEvents] PreFix exception: {ex}");
+                    }
                 }
             }
 
             public static void PostDamage(object __instance, ref int __result, object[] __args)
             {
                 var eventArgs = new PostDamageEventArgs(__instance, __result, __args);
-                try
+                if(__instance != null)
                 {
-                    EventPostGetDamage?.Invoke(__instance, eventArgs);
-                    if (__instance.GetType() == typeNoel)
+                    try
                     {
-                        EventPostPlayerGetDamageHandler?.Invoke(__instance, eventArgs);
+                        EventPostGetDamage?.Invoke(__instance, eventArgs);
+                        if (__instance.GetType() == typeNoel)
+                        {
+                            EventPostPlayerGetDamageHandler?.Invoke(__instance, eventArgs);
+                        }
+                        else if (__instance.GetType().IsSubclassOf(typeEnemy))
+                        {
+                            EventPostEnemyGetDamageHandler?.Invoke(__instance, eventArgs);
+                        }
+                        if (__instance.GetType() != typeNoel)
+                        {
+                            EventPostNotPlayerGetDamageHandler?.Invoke(__instance, eventArgs);
+                        }
+                        __result = eventArgs.result;
                     }
-                    else if (__instance.GetType().IsSubclassOf(typeEnemy))
+                    catch (Exception ex)
                     {
-                        EventPostEnemyGetDamageHandler?.Invoke(__instance, eventArgs);
+                        Console.WriteLine($"[AliceInCradleHack][DamageEvents] PostFix exception: {ex}");
                     }
-                    if (__instance.GetType() != typeNoel)
-                    {
-                        EventPostNotPlayerGetDamageHandler?.Invoke(__instance, eventArgs);
-                    }
-                    __result = eventArgs.result;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[AliceInCradleHack][DamageEvents] PostFix exception: {ex}");
                 }
             }
 
