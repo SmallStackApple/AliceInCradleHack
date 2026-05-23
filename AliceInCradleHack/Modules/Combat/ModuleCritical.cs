@@ -28,12 +28,12 @@ namespace AliceInCradleHack.Modules
 
         public override void Disable()
         {
-            HpDamage.EventPreEnemyGetDamageHandler -= DoCriticalHit;
+            HpDamage.EventPreNotPlayerGetDamageHandler -= DoCriticalHit;
         }
 
         public override void Enable()
         {
-            HpDamage.EventPreEnemyGetDamageHandler += DoCriticalHit;
+            HpDamage.EventPreNotPlayerGetDamageHandler += DoCriticalHit;
         }
 
         public override void Initialize()
@@ -48,10 +48,6 @@ namespace AliceInCradleHack.Modules
                 double multiplier = (double)Settings.GetValueByPath("Multiplier");
                 int newDamage = (int)(originalDamage * multiplier);
                 int targetHp = M2Attackable.GetHp((m2d.M2Attackable)sender);
-                if (originalDamage > targetHp)
-                {
-                    newDamage = originalDamage;
-                }
                 e.val = newDamage;
                 if ((bool)Settings.GetValueByPath("CriticalNotification.EnableNotification"))
                 {

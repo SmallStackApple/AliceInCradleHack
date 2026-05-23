@@ -9,7 +9,7 @@ namespace AliceInCradleHack.Modules
         public override string Author => "SmallStackApple";
         public override string Version => "1.0.0";
         public override bool IsEnabled { get; set; } = false;
-        public override SettingNode Settings { get; } = new SettingNode();
+        public override SettingNode Settings { get; } = new SettingGroup("MosaicRemove");
         public override string Category { get; } = "Visuals";
 
         private readonly Harmony harmony = new("aliceincradlehack.modules.mosaicremove");

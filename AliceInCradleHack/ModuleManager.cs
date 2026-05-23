@@ -5,11 +5,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using Module = AliceInCradleHack.Modules.Module;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text;
+using AliceInCradleHack.Modules.Combat;
 
 namespace AliceInCradleHack
 {
@@ -20,15 +20,12 @@ namespace AliceInCradleHack
     public class ModuleManager
     {
         // 线程安全的模块字典 | Thread-safe module dictionary
-        private readonly ConcurrentDictionary<string, Module> _modules = new ConcurrentDictionary<string, Module>();
-
-        // 按键绑定的模块字典 | Key-bind modules dictionary
-        private readonly ConcurrentDictionary<string, Module> _keyBindModules = new ConcurrentDictionary<string, Module>();
+        private readonly ConcurrentDictionary<string, Module> _modules = new();
 
         /// <summary>
         /// 懒加载单例（线程安全） | Lazy singleton (thread-safe)
         /// </summary>
-        private static readonly Lazy<ModuleManager> _lazyInstance = new Lazy<ModuleManager>(() => new ModuleManager());
+        private static readonly Lazy<ModuleManager> _lazyInstance = new(() => new ModuleManager());
 
         /// <summary>
         /// 模块管理器单例实例 | Module Manager singleton instance
@@ -46,7 +43,8 @@ namespace AliceInCradleHack
                 new ModuleMosaicRemove(),
                 new ModuleDiscordRPC(),
                 new ModuleKillSound(),
-                new ModuleCritical()
+                new ModuleCritical(),
+                new ModuleVelocity(),
                 // 在此处添加其他模块实例 | Add other module instances here
             };
 
@@ -56,81 +54,6 @@ namespace AliceInCradleHack
             }
 
             
-        }
-
-        /// <summary>
-        /// 从程序集文件加载并注册模块 | Load and register modules from assembly file
-        /// </summary>
-        /// <param name="assemblyPath">程序集文件路径 | Assembly file path</param>
-        public void RegisterModuleFromAssemblyFile(string assemblyPath)
-        {
-            // 参数校验 | Parameter validation
-            if (string.IsNullOrWhiteSpace(assemblyPath))
-            {
-                throw new ArgumentNullException(nameof(assemblyPath), "Assembly file path cannot be null or empty");
-            }
-
-            if (!File.Exists(assemblyPath))
-            {
-                throw new FileNotFoundException("Assembly file not found", assemblyPath);
-            }
-
-            if (!assemblyPath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
-            {
-                throw new ArgumentException("Invalid assembly file type. Only .dll are supported.", nameof(assemblyPath));
-            }
-
-            try
-            {
-
-                // 加载目录下的lib中的依赖项 | Load dependencies from lib folder in the same directory
-                if (Directory.Exists(Path.Combine(Path.GetDirectoryName(assemblyPath), "lib")))
-                {
-                    AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
-                    {
-                        var assemblyName = new AssemblyName(args.Name).Name + ".dll";
-                        var libPath = Path.Combine(Path.GetDirectoryName(assemblyPath), "lib", assemblyName);
-                        if (File.Exists(libPath))
-                        {
-                            return Assembly.LoadFrom(libPath);
-                        }
-                        return null;
-                    };
-                }
-
-                // 加载程序集 | Load assembly
-                var assembly = Assembly.LoadFrom(assemblyPath);
-
-                // 获取所有非抽象的Module子类 | Get all non-abstract subclasses of Module
-                var moduleTypes = assembly.GetTypes()
-                    .Where(t => !t.IsAbstract && t.IsSubclassOf(typeof(Module)));
-
-                foreach (var type in moduleTypes)
-                {
-                    try
-                    {
-                        // 创建模块实例并注册 | Create module instance and register
-                        var moduleInstance = (Module)Activator.CreateInstance(type);
-                        RegisterModule(moduleInstance);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Failed to create module instance {type.FullName}: {ex.Message}");
-                    }
-                }
-            }
-            catch (FileNotFoundException ex)
-            {
-                Console.WriteLine($"Assembly file not found {assemblyPath}: {ex.Message}");
-            }
-            catch (BadImageFormatException ex)
-            {
-                Console.WriteLine($"Invalid assembly format {assemblyPath}: {ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to load modules from assembly {assemblyPath}: {ex.Message}");
-            }
         }
 
         /// <summary>
@@ -434,30 +357,8 @@ namespace AliceInCradleHack
                     // 添加模块启用状态
                     moduleSettings["__IsEnabled"] = module.IsEnabled;
 
-                    // 获取模块的所有设置叶子节点
-                    var leafNodes = module.Settings.GetAllLeafNodes();
-
-                    // 将设置按路径结构组织
-                    foreach (var node in leafNodes)
-                    {
-                        // 将路径转换为嵌套结构
-                        var pathSegments = node.GetPath().Split('.');
-                        var currentObj = moduleSettings;
-                        
-                        for (int i = 0; i < pathSegments.Length - 1; i++)
-                        {
-                            var segment = pathSegments[i];
-                            if (!currentObj.ContainsKey(segment))
-                            {
-                                currentObj[segment] = new JObject();
-                            }
-                            currentObj = (JObject)currentObj[segment];
-                        }
-                        
-                        // 设置最终值
-                        var finalKey = pathSegments.Last();
-                        currentObj[finalKey] = JToken.FromObject(node.Value.ToString());
-                    }
+                    // 直接用 SettingGroup 的递归序列化，省去叶子遍历 + 路径拆分 + 重建的脱裤放屁
+                    moduleSettings.Merge(module.Settings.ToJToken());
                     
                     allSettings[module.Name] = moduleSettings;
                 }

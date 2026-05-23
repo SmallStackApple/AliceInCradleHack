@@ -133,7 +133,7 @@ namespace AliceInCradleHack.Commands
             }
             module.Settings.GetAllLeafNodes().ForEach(node =>
             {
-                Console.WriteLine($"{node.GetPath()} : {Convert.ToString(node.Value)} - {node.Description}");
+                Console.WriteLine($"{node.GetPath()} : {Convert.ToString(node.GetValue())} - {node.Description}");
             });
         }
 
