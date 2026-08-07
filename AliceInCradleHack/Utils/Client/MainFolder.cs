@@ -1,13 +1,14 @@
-﻿using System.IO;
-using System.Text;
+using System.IO;
 
-namespace AliceInCradleHack.Utils.Client
+namespace AliceInCradleHack.utils.client
 {
     public static class MainFolder
     {
+        /// <summary>
+        /// Reads the main folder path from the first line of C:\AliceInCradleHack\path.txt.
+        /// </summary>
         public static string GetMainFolder()
         {
-            //get the path of the main folder, which is in C:\AliceInCradleHack\path.txt, first line.
             string folderPath = File.ReadAllLines("C:\\AliceInCradleHack\\path.txt")[0];
             if (!Directory.Exists(folderPath))
             {

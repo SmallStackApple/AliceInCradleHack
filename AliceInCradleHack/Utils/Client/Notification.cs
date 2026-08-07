@@ -1,7 +1,7 @@
-using AliceInCradleHack.Utils.Game.Objects;
+using AliceInCradleHack.utils.game;
 using System;
 
-namespace AliceInCradleHack.Utils.Client
+namespace AliceInCradleHack.utils.client
 {
     public static class Notification
     {
