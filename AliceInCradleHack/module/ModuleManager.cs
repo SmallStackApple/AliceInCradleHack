@@ -1,12 +1,17 @@
+using AliceInCradleHack.config;
+using AliceInCradleHack.module.modules.client;
 using AliceInCradleHack.module.modules.combat;
 using AliceInCradleHack.module.modules.misc;
-using AliceInCradleHack.module.modules.visuals;
-using AliceInCradleHack.module.settings;
+using AliceInCradleHack.module.modules.visual;
 using AliceInCradleHack.utils.client;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace AliceInCradleHack.module
 {
@@ -24,7 +29,7 @@ namespace AliceInCradleHack.module
         private ModuleManager() { }
 
         /// <summary>
-        /// Registers and initializes all built-in modules.
+        /// Registers and initializes all built-in modules, then loads their configs.
         /// </summary>
         public void Initialize()
         {
@@ -35,6 +40,7 @@ namespace AliceInCradleHack.module
                 new ModuleKillSound(),
                 new ModuleCritical(),
                 new ModuleVelocity(),
+                new ModuleWebUi(),
                 // Add other module instances here
             };
 
@@ -42,6 +48,9 @@ namespace AliceInCradleHack.module
             {
                 RegisterModule(module);
             }
+
+            ConfigSystem.LoadAll();
+            ApplyEnabledStates();
         }
 
         /// <summary>
@@ -50,7 +59,8 @@ namespace AliceInCradleHack.module
         public IEnumerable<Module> GetAllModules() => _modules.Values;
 
         /// <summary>
-        /// Registers a module and initializes it. Modules that fail to initialize are removed.
+        /// Registers a module: creates its root config, auto-registers its setting fields
+        /// and initializes it. Modules that fail to initialize are removed.
         /// </summary>
         public void RegisterModule(Module module)
         {
@@ -63,6 +73,10 @@ namespace AliceInCradleHack.module
             {
                 try
                 {
+                    module.Settings = ConfigSystem.Root(new Config(module.Name, module.Description));
+                    module.AutoRegisterSettings();
+                    module.EnabledValue = module.Settings.Boolean(
+                        "__IsEnabled", module.IsEnabled, "Module enabled state", doNotInclude: true);
                     module.Initialize();
                 }
                 catch (Exception ex)
@@ -74,6 +88,21 @@ namespace AliceInCradleHack.module
             else
             {
                 Console.WriteLine($"Module already exists, skip registration {module.Name}");
+            }
+        }
+
+        /// <summary>
+        /// Applies the persisted enabled states after configs have been loaded.
+        /// </summary>
+        private void ApplyEnabledStates()
+        {
+            foreach (var module in _modules.Values)
+            {
+                bool shouldBeEnabled = module.EnabledValue?.Get() ?? module.IsEnabled;
+                if (shouldBeEnabled && !module.IsEnabled)
+                    EnableModule(module.Name);
+                else if (!shouldBeEnabled && module.IsEnabled)
+                    DisableModule(module.Name);
             }
         }
 
@@ -90,7 +119,9 @@ namespace AliceInCradleHack.module
                 {
                     module.Enable();
                     module.IsEnabled = true;
+                    module.EnabledValue?.Set(true);
                     Notification.ShowNotificationByUILog($"Enabled {module.Name}", nel.UILogRow.TYPE.ALERT);
+                    StoreModuleConfig(module);
                 }
                 catch (Exception ex)
                 {
@@ -112,7 +143,9 @@ namespace AliceInCradleHack.module
                 {
                     module.Disable();
                     module.IsEnabled = false;
+                    module.EnabledValue?.Set(false);
                     Notification.ShowNotificationByUILog($"Disabled {module.Name}", nel.UILogRow.TYPE.ALERT);
+                    StoreModuleConfig(module);
                 }
                 catch (Exception ex)
                 {
@@ -176,7 +209,8 @@ namespace AliceInCradleHack.module
         public string[] GetSettingPaths(string moduleName)
         {
             var module = GetModuleByName(moduleName);
-            return module?.Settings.GetAllLeafValues().Keys.ToArray() ?? Array.Empty<string>();
+            if (module?.Settings == null) return Array.Empty<string>();
+            return module.Settings.GetAllLeafNodes().Select(n => n.GetPath()).ToArray();
         }
 
         /// <summary>
@@ -184,24 +218,36 @@ namespace AliceInCradleHack.module
         /// </summary>
         public object GetSettingValue(string moduleName, string settingPath)
         {
-            return GetModuleByName(moduleName)?.Settings.GetValueByPath(settingPath);
+            return GetModuleByName(moduleName)?.Settings?.GetValueByPath(settingPath);
         }
 
         /// <summary>
-        /// Sets a module setting value by path.
+        /// Sets a module setting value by path and persists the module's config.
         /// </summary>
         public bool SetSettingValue(string moduleName, string settingPath, object value)
         {
             var module = GetModuleByName(moduleName);
-            return module != null && module.Settings.SetValueByPath(settingPath, value);
+            if (module?.Settings == null) return false;
+            bool success = module.Settings.SetValueByPath(settingPath, value);
+            if (success) StoreModuleConfig(module);
+            return success;
         }
 
         /// <summary>
         /// Gets detailed information about a setting node, or null if it does not exist.
         /// </summary>
-        public SettingNode GetSettingNode(string moduleName, string settingPath)
+        public Value GetSettingNode(string moduleName, string settingPath)
         {
-            return GetModuleByName(moduleName)?.Settings.GetNodeByPath(settingPath);
+            return GetModuleByName(moduleName)?.Settings?.GetNodeByPath(settingPath);
+        }
+
+        /// <summary>
+        /// Persists the module's config to disk.
+        /// </summary>
+        public void StoreModuleConfig(Module module)
+        {
+            if (module?.Settings != null)
+                ConfigSystem.Store(module.Settings);
         }
 
         /// <summary>
@@ -210,12 +256,21 @@ namespace AliceInCradleHack.module
         public bool ExportModuleSettings(string moduleName, string filePath)
         {
             var module = GetModuleByName(moduleName);
-            if (module == null)
+            if (module?.Settings == null)
             {
                 Console.WriteLine($"Module '{moduleName}' not found");
                 return false;
             }
-            return module.Settings.ExportToJsonFile(filePath);
+            try
+            {
+                File.WriteAllText(filePath, module.Settings.ToJToken().ToString(Formatting.Indented), Encoding.UTF8);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to export settings of '{moduleName}': {ex.Message}");
+                return false;
+            }
         }
 
         /// <summary>
@@ -224,28 +279,93 @@ namespace AliceInCradleHack.module
         public bool ImportModuleSettings(string moduleName, string filePath)
         {
             var module = GetModuleByName(moduleName);
-            if (module == null)
+            if (module?.Settings == null)
             {
                 Console.WriteLine($"Module '{moduleName}' not found");
                 return false;
             }
-            return module.Settings.ImportFromJsonFile(filePath);
+            try
+            {
+                if (!File.Exists(filePath)) return false;
+                module.Settings.FromJToken(JObject.Parse(File.ReadAllText(filePath, Encoding.UTF8)));
+                StoreModuleConfig(module);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to import settings of '{moduleName}': {ex.Message}");
+                return false;
+            }
         }
 
         /// <summary>
-        /// Exports all modules' settings and enabled states to a JSON file.
+        /// Exports all modules' settings and enabled states to a single JSON file.
         /// </summary>
         public bool ExportAllSettings(string filePath)
         {
-            return ModuleSettingsStore.ExportAll(_modules, filePath);
+            try
+            {
+                var all = new JObject();
+                foreach (var module in _modules.Values)
+                {
+                    if (module.Settings != null)
+                        all[module.Name] = module.Settings.ToJToken();
+                }
+                File.WriteAllText(filePath, all.ToString(Formatting.Indented), Encoding.UTF8);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to export all settings: {ex.Message}");
+                return false;
+            }
         }
 
         /// <summary>
-        /// Imports all modules' settings and enabled states from a JSON file.
+        /// Imports settings and enabled states from a single JSON file, toggling modules as needed.
+        /// Unknown modules are skipped with a warning.
         /// </summary>
         public bool ImportAllSettings(string filePath)
         {
-            return ModuleSettingsStore.ImportAll(_modules, filePath);
+            try
+            {
+                if (!File.Exists(filePath))
+                {
+                    Console.WriteLine($"Settings file not found: {filePath}");
+                    return false;
+                }
+
+                var all = JObject.Parse(File.ReadAllText(filePath, Encoding.UTF8));
+                bool success = true;
+
+                foreach (var property in all.Properties())
+                {
+                    var module = GetModuleByName(property.Name);
+                    if (module?.Settings == null)
+                    {
+                        Console.WriteLine($"Warning: Module '{property.Name}' not found, skipping...");
+                        success = false;
+                        continue;
+                    }
+                    if (property.Value is not JObject moduleObj) continue;
+
+                    module.Settings.FromJToken(moduleObj);
+
+                    bool shouldBeEnabled = module.EnabledValue?.Get() ?? module.IsEnabled;
+                    if (shouldBeEnabled && !module.IsEnabled)
+                        EnableModule(module.Name);
+                    else if (!shouldBeEnabled && module.IsEnabled)
+                        DisableModule(module.Name);
+
+                    StoreModuleConfig(module);
+                }
+                return success;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to import all settings: {ex.Message}");
+                return false;
+            }
         }
 
         /// <summary>
@@ -253,7 +373,7 @@ namespace AliceInCradleHack.module
         /// </summary>
         public string GetModuleSettingsAsJson(string moduleName)
         {
-            return GetModuleByName(moduleName)?.Settings.ToJson();
+            return GetModuleByName(moduleName)?.Settings?.ToJToken().ToString(Formatting.Indented);
         }
 
         /// <summary>
@@ -263,7 +383,18 @@ namespace AliceInCradleHack.module
         {
             if (string.IsNullOrWhiteSpace(jsonSettings)) return false;
             var module = GetModuleByName(moduleName);
-            return module != null && module.Settings.FromJson(jsonSettings);
+            if (module?.Settings == null) return false;
+            try
+            {
+                module.Settings.FromJToken(JObject.Parse(jsonSettings));
+                StoreModuleConfig(module);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to apply settings of '{moduleName}': {ex.Message}");
+                return false;
+            }
         }
     }
 }

@@ -11,7 +11,7 @@ namespace AliceInCradleHack.patch.patches
     {
         public override void Apply()
         {
-            Harmony.Patch(
+            harmony.Patch(
                 original: AccessTools.Method(typeof(SceneGame), "runIRD"),
                 prefix: new HarmonyMethod(typeof(PatchNelSceneGame), nameof(RunIrdPrefix))
             );
@@ -19,7 +19,7 @@ namespace AliceInCradleHack.patch.patches
 
         public override void Remove()
         {
-            Harmony.UnpatchAll(Harmony.Id);
+            harmony.UnpatchAll(harmony.Id);
         }
 
         private static void RunIrdPrefix(object __instance)

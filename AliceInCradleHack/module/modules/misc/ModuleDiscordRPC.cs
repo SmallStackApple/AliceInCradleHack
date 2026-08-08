@@ -1,4 +1,4 @@
-using AliceInCradleHack.module.settings;
+using AliceInCradleHack.config;
 using DiscordRPC;
 
 namespace AliceInCradleHack.module.modules.misc
@@ -11,11 +11,9 @@ namespace AliceInCradleHack.module.modules.misc
         public override string Version => "1.0.0";
         public override string Category => "Misc";
 
-        public override SettingNode Settings { get; } =
-            new SettingBuilder()
-            .Add("Details", "The details line of the Discord Rich Presence.", "Playing Alice in Cradle")
-            .Add("State", "The state line of the Discord Rich Presence.", "In Bug Wall")
-            .Build();
+        public readonly Value<string> Details = new("Playing Alice in Cradle", "The details line of the Discord Rich Presence.");
+
+        public readonly Value<string> State = new("In Bug Wall", "The state line of the Discord Rich Presence.");
 
         private const string DiscordApplicationId = "1462025663203774514";
         private static readonly DiscordRpcClient _rpcClient = new(DiscordApplicationId);
@@ -29,8 +27,8 @@ namespace AliceInCradleHack.module.modules.misc
         {
             _rpcClient.SetPresence(new RichPresence()
             {
-                Details = (string)Settings.GetValueByPath("Details"),
-                State = (string)Settings.GetValueByPath("State")
+                Details = Details,
+                State = State
             });
         }
 

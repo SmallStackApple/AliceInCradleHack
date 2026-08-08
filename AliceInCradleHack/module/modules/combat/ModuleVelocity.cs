@@ -1,4 +1,3 @@
-using AliceInCradleHack.module.settings;
 using HarmonyLib;
 using m2d;
 
@@ -11,19 +10,16 @@ namespace AliceInCradleHack.module.modules.combat
         public override string Author => "SmallStackApple";
         public override string Version => "1.0.0";
 
-        public override SettingNode Settings { get; } = new SettingBuilder()
-            .Build();
-
-        private readonly Harmony _harmony = new("aliceincradlehack.modules.combat.velocity");
+        private readonly Harmony harmony = new("aliceincradlehack.modules.combat.velocity");
 
         public override void Enable()
         {
-            _harmony.PatchAll(typeof(ModuleVelocity).Assembly);
+            harmony.PatchAll(typeof(ModuleVelocity).Assembly);
         }
 
         public override void Disable()
         {
-            _harmony.UnpatchAll(_harmony.Id);
+            harmony.UnpatchAll(harmony.Id);
         }
 
         public override void Initialize()

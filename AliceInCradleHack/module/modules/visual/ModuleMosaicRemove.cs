@@ -1,7 +1,6 @@
-using AliceInCradleHack.module.settings;
 using HarmonyLib;
 
-namespace AliceInCradleHack.module.modules.visuals
+namespace AliceInCradleHack.module.modules.visual
 {
     public class ModuleMosaicRemove : Module
     {
@@ -9,11 +8,9 @@ namespace AliceInCradleHack.module.modules.visuals
         public override string Description => "Removes mosaic from the game.";
         public override string Author => "SmallStackApple";
         public override string Version => "1.0.0";
-        public override string Category => "Visuals";
+        public override string Category => "Visual";
 
-        public override SettingNode Settings { get; } = new SettingGroup("MosaicRemove");
-
-        private readonly Harmony _harmony = new("aliceincradlehack.modules.mosaicremove");
+        private readonly Harmony _harmony = new("aliceincradlehack.modules.visual.mosaicremove");
 
         public override void Initialize()
         {

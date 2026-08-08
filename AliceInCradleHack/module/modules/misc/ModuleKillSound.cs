@@ -1,4 +1,4 @@
-using AliceInCradleHack.module.settings;
+using AliceInCradleHack.config;
 using AliceInCradleHack.utils.game;
 using NAudio.Wave;
 using System;
@@ -15,11 +15,9 @@ namespace AliceInCradleHack.module.modules.misc
         public override string Version => "1.0.0";
         public override string Category => "Misc";
 
-        // Persistent settings instance so runtime changes (via commands) apply to this module.
-        public override SettingNode Settings { get; } = new SettingBuilder()
-            .Add("Volume", "Volume of the kill sound (0-100).", 100)
-            .Add("SoundFilePath", "Path to the sound file to play on kill.", "kill_sound.wav")
-            .Build();
+        public readonly RangedValue<int> Volume = new(100, 0, 100, "%", "Volume of the kill sound (0-100).");
+
+        public readonly Value<string> SoundFilePath = new("kill_sound.wav", "Path to the sound file to play on kill.");
 
         private WaveOutEvent _outputDevice;
         private AudioFileReader _audioFileReader;
@@ -60,10 +58,10 @@ namespace AliceInCradleHack.module.modules.misc
             if (M2Attackable.GetHp((m2d.M2Attackable)sender) != 0 || eventArgs.AttackInfo.AttackFrom.GetType() != Player.TypeNoel)
                 return;
 
-            string soundFilePath = (string)Settings.GetValueByPath("SoundFilePath");
+            string soundFilePath = SoundFilePath;
             if (string.IsNullOrWhiteSpace(soundFilePath))
             {
-                Console.WriteLine("Kill sound file path is empty.");
+                Console.WriteLine("Kill sound file not found: path is empty.");
                 return;
             }
 
@@ -78,15 +76,7 @@ namespace AliceInCradleHack.module.modules.misc
                 DisposeAudio();
 
                 _audioFileReader = new AudioFileReader(soundFilePath);
-
-                // Volume setting is stored as 0-100, convert to 0.0-1.0.
-                var volObj = Settings.GetValueByPath("Volume");
-                float vol = 1.0f;
-                if (volObj is int vi)
-                    vol = Math.Max(0, Math.Min(100, vi)) / 100f;
-                else if (volObj is float vf)
-                    vol = Math.Max(0f, Math.Min(1f, vf));
-                _audioFileReader.Volume = vol;
+                _audioFileReader.Volume = Volume.Get() / 100f;
 
                 _outputDevice = new WaveOutEvent();
                 _outputDevice.Init(_audioFileReader);

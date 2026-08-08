@@ -1,4 +1,4 @@
-using AliceInCradleHack.module.settings;
+using AliceInCradleHack.config;
 using System.Windows.Forms;
 
 namespace AliceInCradleHack.module.modules.client
@@ -12,9 +12,7 @@ namespace AliceInCradleHack.module.modules.client
         public override bool IsEnabled { get; set; } = true;
         public override string Category => "Client";
 
-        public override SettingNode Settings { get; } = new SettingBuilder()
-            .Add("ShowDynamicIsland", "Show dynamic island on the top of the screen.", true)
-            .Build();
+        public readonly Value<bool> ShowDynamicIsland = new(true, "Show dynamic island on the top of the screen.");
 
         private readonly GuiForm _guiForm = new GuiForm();
 
