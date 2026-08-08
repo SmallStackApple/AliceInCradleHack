@@ -1,4 +1,4 @@
-using AliceInCradleHack.module.settings;
+using AliceInCradleHack.config;
 using nel;
 
 namespace AliceInCradleHack.module.modules.combat
@@ -11,15 +11,15 @@ namespace AliceInCradleHack.module.modules.combat
         public override string Version => "1.0.0";
         public override string Category => "Combat";
 
-        public override SettingNode Settings { get; } =
-            new SettingBuilder()
-            .Add("MinHP", "Minimum HP percentage to activate GApple.", 50)
-            .Add("Delay", "Delay between GApple uses in seconds.", 2d)
-            .Group("Notification", "Notification settings")
-                .Add("Enable", "Enable notification when GApple is used.", true)
-                .Add("NotificationText", "Text to display when GApple is used.(%hp:Current HP percentage)", "GApple eaten!")
-                .Back()
-            .Build();
+        public readonly RangedValue<int> MinHp = new("MinHP", 50, 0, 100, "%", "Minimum HP percentage to activate GApple.");
+
+        public readonly RangedValue<double> Delay = new(2d, "Delay between GApple uses in seconds.") { Min = 0d };
+
+        [SettingGroup("Notification", "Notification settings")]
+        public readonly Value<bool> EnableNotification = new("Enable", true, "Enable notification when GApple is used.");
+
+        [SettingGroup("Notification")]
+        public readonly Value<string> NotificationText = new("GApple eaten!", "Text to display when GApple is used.(%hp:Current HP percentage)");
 
         private PRNoel Player => utils.game.SceneGame.PrNoelInstance;
 

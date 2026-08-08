@@ -7,11 +7,11 @@ namespace AliceInCradleHack.patch
     /// </summary>
     public abstract class Patch
     {
-        protected Harmony Harmony { get; }
+        protected Harmony harmony { get; }
 
         protected Patch()
         {
-            Harmony = new Harmony(GetType().FullName.ToLowerInvariant());
+            harmony = new Harmony(GetType().FullName.ToLowerInvariant());
         }
 
         /// <summary>

@@ -11,12 +11,12 @@ namespace AliceInCradleHack.patch.patches
     {
         public override void Apply()
         {
-            Harmony.PatchAll(typeof(M2dM2AttackablePatch).Assembly);
+            harmony.CreateClassProcessor(typeof(M2dM2AttackablePatch)).Patch();
         }
 
         public override void Remove()
         {
-            Harmony.UnpatchAll(Harmony.Id);
+            harmony.UnpatchAll(harmony.Id);
         }
 
         private static class M2dM2AttackablePatch

@@ -100,8 +100,10 @@ namespace AliceInCradleHack.command.commands
                 Console.WriteLine($"Setting '{settingKey}' not found in module '{moduleName}'.");
                 return;
             }
-            module.Settings.SetValueByPath(settingKey, settingValue);
-            Console.WriteLine($"Setting '{settingKey}' of module '{moduleName}' set to '{settingValue}'.");
+            if (Manager.SetSettingValue(moduleName, settingKey, settingValue))
+                Console.WriteLine($"Setting '{settingKey}' of module '{moduleName}' set to '{settingValue}'.");
+            else
+                Console.WriteLine($"Failed to set '{settingKey}' of module '{moduleName}'.");
         }
 
         private void ListModuleSettings(string moduleName)
@@ -114,7 +116,7 @@ namespace AliceInCradleHack.command.commands
             }
             module.Settings.GetAllLeafNodes().ForEach(node =>
             {
-                Console.WriteLine($"{node.GetPath()} : {Convert.ToString(node.GetValue())} - {node.Description}");
+                Console.WriteLine($"{node.GetPath()} : {Convert.ToString(node.GetValueObject())} - {node.Description}");
             });
         }
 

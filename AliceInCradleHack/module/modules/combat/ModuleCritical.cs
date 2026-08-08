@@ -1,4 +1,4 @@
-using AliceInCradleHack.module.settings;
+using AliceInCradleHack.config;
 using AliceInCradleHack.utils.client;
 using AliceInCradleHack.utils.game;
 using static AliceInCradleHack.events.DamageEvents;
@@ -13,13 +13,15 @@ namespace AliceInCradleHack.module.modules.combat
         public override string Version => "1.0.0";
         public override string Category => "Combat";
 
-        public override SettingNode Settings { get; } = new SettingBuilder()
-            .Add("Multiplier", "Damage multiplier", 2.0d)
-            .Group("CriticalNotification", "Critical notification")
-                .Add("EnableNotification", "Enable critical hit notification", true)
-                .Add("NotificationText", "Text to display on critical hit.(%a:The damage;%m:The multiplier;%b:The damage after multiplier)", "SilenceFix >> Critical Notification. %a=>%b")
-                .Back()
-            .Build();
+        public readonly RangedValue<double> Multiplier = new(2.0d, "Damage multiplier") { Min = 0.1, Max = 10.0 };
+
+        [SettingGroup("CriticalNotification", "Critical notification")]
+        public readonly Value<bool> EnableNotification = new(true, "Enable critical hit notification");
+
+        [SettingGroup("CriticalNotification")]
+        public readonly Value<string> NotificationText = new(
+            "SilenceFix >> Critical Notification. %a=>%b",
+            "Text to display on critical hit.(%a:The damage;%m:The multiplier;%b:The damage after multiplier)");
 
         public override void Enable()
         {
@@ -37,16 +39,16 @@ namespace AliceInCradleHack.module.modules.combat
 
         private void DoCriticalHit(object sender, HpDamage.PreDamageEventArgs e)
         {
-            if (e.AttackInfo.AttackFrom.GetType() != Player.TypeNoel) return;
+            if (!ReferenceEquals(e.AttackInfo.AttackFrom, NelM2DBase.PlayerNoel)) return;
 
             int originalDamage = e.Val;
-            double multiplier = (double)Settings.GetValueByPath("Multiplier");
+            double multiplier = Multiplier;
             int newDamage = (int)(originalDamage * multiplier);
             e.Val = newDamage;
 
-            if ((bool)Settings.GetValueByPath("CriticalNotification.EnableNotification"))
+            if (EnableNotification)
             {
-                string notificationText = (string)Settings.GetValueByPath("CriticalNotification.NotificationText");
+                string notificationText = NotificationText;
                 notificationText = notificationText.Replace("%a", originalDamage.ToString())
                                                    .Replace("%m", multiplier.ToString())
                                                    .Replace("%b", newDamage.ToString());
