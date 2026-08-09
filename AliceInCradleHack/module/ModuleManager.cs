@@ -81,13 +81,13 @@ namespace AliceInCradleHack.module
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Failed to initialize module {module.Name}: {ex.Message}");
+                    Log.Error($"Failed to initialize module {module.Name}", ex);
                     _modules.TryRemove(module.Name, out _);
                 }
             }
             else
             {
-                Console.WriteLine($"Module already exists, skip registration {module.Name}");
+                Log.Warn($"Module already exists, skip registration {module.Name}");
             }
         }
 
@@ -125,7 +125,7 @@ namespace AliceInCradleHack.module
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Failed to enable module {moduleName}: {ex.Message}");
+                    Log.Error($"Failed to enable module {moduleName}", ex);
                 }
             }
         }
@@ -149,7 +149,7 @@ namespace AliceInCradleHack.module
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Failed to disable module {moduleName}: {ex.Message}");
+                    Log.Error($"Failed to disable module {moduleName}", ex);
                 }
             }
         }
@@ -258,7 +258,7 @@ namespace AliceInCradleHack.module
             var module = GetModuleByName(moduleName);
             if (module?.Settings == null)
             {
-                Console.WriteLine($"Module '{moduleName}' not found");
+                Log.Warn($"Module '{moduleName}' not found");
                 return false;
             }
             try
@@ -268,7 +268,7 @@ namespace AliceInCradleHack.module
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to export settings of '{moduleName}': {ex.Message}");
+                Log.Error($"Failed to export settings of '{moduleName}'", ex);
                 return false;
             }
         }
@@ -281,7 +281,7 @@ namespace AliceInCradleHack.module
             var module = GetModuleByName(moduleName);
             if (module?.Settings == null)
             {
-                Console.WriteLine($"Module '{moduleName}' not found");
+                Log.Warn($"Module '{moduleName}' not found");
                 return false;
             }
             try
@@ -293,7 +293,7 @@ namespace AliceInCradleHack.module
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to import settings of '{moduleName}': {ex.Message}");
+                Log.Error($"Failed to import settings of '{moduleName}'", ex);
                 return false;
             }
         }
@@ -316,7 +316,7 @@ namespace AliceInCradleHack.module
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to export all settings: {ex.Message}");
+                Log.Error("Failed to export all settings", ex);
                 return false;
             }
         }
@@ -331,7 +331,7 @@ namespace AliceInCradleHack.module
             {
                 if (!File.Exists(filePath))
                 {
-                    Console.WriteLine($"Settings file not found: {filePath}");
+                    Log.Warn($"Settings file not found: {filePath}");
                     return false;
                 }
 
@@ -343,7 +343,7 @@ namespace AliceInCradleHack.module
                     var module = GetModuleByName(property.Name);
                     if (module?.Settings == null)
                     {
-                        Console.WriteLine($"Warning: Module '{property.Name}' not found, skipping...");
+                        Log.Warn($"Module '{property.Name}' not found, skipping...");
                         success = false;
                         continue;
                     }
@@ -363,7 +363,7 @@ namespace AliceInCradleHack.module
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to import all settings: {ex.Message}");
+                Log.Error("Failed to import all settings", ex);
                 return false;
             }
         }
@@ -392,7 +392,7 @@ namespace AliceInCradleHack.module
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to apply settings of '{moduleName}': {ex.Message}");
+                Log.Error($"Failed to apply settings of '{moduleName}'", ex);
                 return false;
             }
         }

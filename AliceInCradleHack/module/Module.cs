@@ -11,12 +11,17 @@ namespace AliceInCradleHack.module
     /// </summary>
     public abstract class Module
     {
-        public abstract string Name { get; }
-        public abstract string Description { get; }
-        public abstract string Author { get; }
-        public abstract string Version { get; }
+        protected Module(string name, string description, string category)
+        {
+            Name = name;
+            Description = description;
+            Category = category;
+        }
+
+        public string Name { get; }
+        public string Description { get; }
+        public string Category { get; }
         public virtual bool IsEnabled { get; set; }
-        public virtual string Category => "General";
 
         /// <summary>
         /// The root config of this module. Created by ModuleManager during registration.
@@ -28,9 +33,9 @@ namespace AliceInCradleHack.module
         /// </summary>
         internal Value<bool> EnabledValue { get; set; }
 
-        public abstract void Initialize();
-        public abstract void Enable();
-        public abstract void Disable();
+        public virtual void Initialize() { }
+        public virtual void Enable() { }
+        public virtual void Disable() { }
 
         /// <summary>
         /// Scans instance fields for config values and attaches them to <see cref="Settings"/>.

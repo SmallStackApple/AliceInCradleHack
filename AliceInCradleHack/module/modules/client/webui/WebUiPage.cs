@@ -46,7 +46,6 @@ h1 .sub { color: var(--muted); font-size: 13px; font-weight: 400; margin-left: 8
 .card-head:hover { background: var(--panel2); }
 .mod-info { flex: 1; min-width: 0; }
 .mod-name { font-size: 15px; font-weight: 600; }
-.mod-name .badge { font-size: 11px; color: var(--muted); font-weight: 400; margin-left: 8px; }
 .mod-desc { color: var(--muted); font-size: 12px; margin-top: 3px; }
 .chevron { color: var(--muted); margin-left: 12px; transition: transform .15s; font-size: 12px; }
 .card.open .chevron { transform: rotate(90deg); }
@@ -146,7 +145,6 @@ function renderModule(m) {
   head.innerHTML =
     '<div class=""mod-info"">' +
       '<div class=""mod-name"">' + esc(m.name) +
-        '<span class=""badge"">' + esc(m.version) + ' · ' + esc(m.author) + '</span>' +
       '</div>' +
       '<div class=""mod-desc"">' + esc(m.description || '') + '</div>' +
     '</div>' +

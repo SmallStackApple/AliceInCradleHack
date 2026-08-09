@@ -1,3 +1,4 @@
+using AliceInCradleHack.utils.client;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -79,7 +80,7 @@ namespace AliceInCradleHack.config.group
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to set mode of '{GetPath()}': {ex.Message}");
+                Log.Error($"Failed to set mode of '{GetPath()}'", ex);
                 return false;
             }
         }
@@ -104,7 +105,7 @@ namespace AliceInCradleHack.config.group
             if (!string.IsNullOrEmpty(active))
             {
                 try { SetActiveByName(active); }
-                catch (Exception ex) { Console.WriteLine($"Unable to deserialize active mode of '{GetPath()}': {ex.Message}"); }
+                catch (Exception ex) { Log.Error($"Unable to deserialize active mode of '{GetPath()}'", ex); }
             }
 
             if (obj["choices"] is JObject choices)
@@ -122,7 +123,7 @@ namespace AliceInCradleHack.config.group
                     }
                     if (modeToken is not JObject modeObj) continue;
                     try { mode.FromJToken(modeObj); }
-                    catch (Exception ex) { Console.WriteLine($"Unable to deserialize mode '{mode.Name}' of '{GetPath()}': {ex.Message}"); }
+                    catch (Exception ex) { Log.Error($"Unable to deserialize mode '{mode.Name}' of '{GetPath()}'", ex); }
                 }
             }
 

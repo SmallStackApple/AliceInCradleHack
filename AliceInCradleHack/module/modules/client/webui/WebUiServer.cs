@@ -1,3 +1,4 @@
+using AliceInCradleHack.utils.client;
 using System;
 using System.Net;
 using System.Threading;
@@ -71,7 +72,7 @@ namespace AliceInCradleHack.module.modules.client.webui
                 catch (InvalidOperationException) { break; }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"WebUI accept error: {ex.Message}");
+                    Log.Error("WebUI accept error", ex);
                     continue;
                 }
 
@@ -87,7 +88,7 @@ namespace AliceInCradleHack.module.modules.client.webui
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"WebUI request error: {ex.Message}");
+                Log.Error("WebUI request error", ex);
                 try
                 {
                     context.Response.StatusCode = 500;
