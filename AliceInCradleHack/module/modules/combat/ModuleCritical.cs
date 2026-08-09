@@ -7,11 +7,9 @@ namespace AliceInCradleHack.module.modules.combat
 {
     public class ModuleCritical : Module
     {
-        public override string Name => "Critical";
-        public override string Description => "Boost player attack damage.";
-        public override string Author => "SmallStackApple";
-        public override string Version => "1.0.0";
-        public override string Category => "Combat";
+        public ModuleCritical() : base("Critical", "Boost player attack damage.", "Combat")
+        {
+        }
 
         public readonly RangedValue<double> Multiplier = new(2.0d, "Damage multiplier") { Min = 0.1, Max = 10.0 };
 

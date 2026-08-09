@@ -74,8 +74,6 @@ namespace AliceInCradleHack.command.commands
             Console.WriteLine($"Name: {module.Name}");
             Console.WriteLine($"Category: {module.Category}");
             Console.WriteLine($"Description: {module.Description}");
-            Console.WriteLine($"Author: {module.Author}");
-            Console.WriteLine($"Version: {module.Version}");
             Console.WriteLine($"Enabled: {module.IsEnabled}");
         }
 

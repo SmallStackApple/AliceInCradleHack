@@ -1,3 +1,4 @@
+using AliceInCradleHack.utils.client;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -42,7 +43,7 @@ namespace AliceInCradleHack.config
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to deserialize enum choice '{GetPath()}': {ex.Message}");
+                Log.Error($"Failed to deserialize enum choice '{GetPath()}'", ex);
             }
         }
     }
@@ -83,7 +84,7 @@ namespace AliceInCradleHack.config
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to parse '{value}' for '{GetPath()}': {ex.Message}");
+                Log.Error($"Failed to parse '{value}' for '{GetPath()}'", ex);
                 return false;
             }
         }
@@ -123,7 +124,7 @@ namespace AliceInCradleHack.config
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to deserialize multi choice '{GetPath()}': {ex.Message}");
+                Log.Error($"Failed to deserialize multi choice '{GetPath()}'", ex);
             }
         }
     }

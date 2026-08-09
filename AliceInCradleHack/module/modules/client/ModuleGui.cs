@@ -5,12 +5,11 @@ namespace AliceInCradleHack.module.modules.client
 {
     public class ModuleGui : Module
     {
-        public override string Name => "Gui";
-        public override string Description => "The Heads-Up Display (HUD) module.";
-        public override string Author => "SmallStackApple";
-        public override string Version => "0.0.0";
+        public ModuleGui() : base("Gui", "The Heads-Up Display (HUD) module.", "Client")
+        {
+        }
+
         public override bool IsEnabled { get; set; } = true;
-        public override string Category => "Client";
 
         public readonly Value<bool> ShowDynamicIsland = new(true, "Show dynamic island on the top of the screen.");
 

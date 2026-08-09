@@ -1,3 +1,4 @@
+using AliceInCradleHack.utils.client;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,11 +23,11 @@ namespace AliceInCradleHack.extension
         {
             if (!Directory.Exists(directory))
             {
-                Console.WriteLine($"Extension directory not found: {directory}");
+                Log.Warn($"Extension directory not found: {directory}");
                 return;
             }
 
-            Console.WriteLine($"Scanning extensions from: {directory}");
+            Log.Info($"Scanning extensions from: {directory}");
 
             foreach (var dllPath in Directory.GetFiles(directory, "*.dll"))
             {
@@ -40,7 +41,7 @@ namespace AliceInCradleHack.extension
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Failed to load {fileName}: {ex.Message}");
+                    Log.Error($"Failed to load {fileName}", ex);
                 }
             }
         }
@@ -75,7 +76,7 @@ namespace AliceInCradleHack.extension
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Failed to instantiate extension {type.FullName}: {ex.Message}");
+                    Log.Error($"Failed to instantiate extension {type.FullName}", ex);
                 }
             }
         }
@@ -87,7 +88,7 @@ namespace AliceInCradleHack.extension
 
             if (_extensions.ContainsKey(ext.Name))
             {
-                Console.WriteLine($"Extension '{ext.Name}' already registered, skipping.");
+                Log.Warn($"Extension '{ext.Name}' already registered, skipping.");
                 return;
             }
 
@@ -96,11 +97,11 @@ namespace AliceInCradleHack.extension
                 ext.Load();
                 ext.IsLoaded = true;
                 _extensions[ext.Name] = ext;
-                Console.WriteLine($"Loaded extension: {ext.Name} v{ext.GetType().Assembly.GetName().Version}");
+                Log.Info($"Loaded extension: {ext.Name} v{ext.GetType().Assembly.GetName().Version}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to load extension '{ext.Name}': {ex.Message}");
+                Log.Error($"Failed to load extension '{ext.Name}'", ex);
             }
         }
 
@@ -113,11 +114,11 @@ namespace AliceInCradleHack.extension
                 ext.Unload();
                 ext.IsLoaded = false;
                 _extensions.Remove(name);
-                Console.WriteLine($"Unloaded extension: {name}");
+                Log.Info($"Unloaded extension: {name}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to unload extension '{name}': {ex.Message}");
+                Log.Error($"Failed to unload extension '{name}'", ex);
             }
         }
 

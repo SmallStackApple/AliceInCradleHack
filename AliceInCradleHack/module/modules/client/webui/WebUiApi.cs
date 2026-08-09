@@ -54,8 +54,6 @@ namespace AliceInCradleHack.module.modules.client.webui
                     {
                         name = m.Name,
                         description = m.Description,
-                        author = m.Author,
-                        version = m.Version,
                         category = m.Category,
                         isEnabled = m.IsEnabled,
                         isSelf = m.Name == SelfModuleName

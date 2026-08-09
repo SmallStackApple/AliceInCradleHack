@@ -1,3 +1,4 @@
+using AliceInCradleHack.utils.client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -94,14 +95,14 @@ namespace AliceInCradleHack.config
                     var obj = JObject.Parse(File.ReadAllText(file, Encoding.UTF8));
                     string storedName = obj["name"]?.ToString();
                     if (storedName != null && !config.MatchesName(storedName))
-                        Console.WriteLine($"Config name mismatch: expected '{config.Name}', file contains '{storedName}'");
+                        Log.Warn($"Config name mismatch: expected '{config.Name}', file contains '{storedName}'");
                     config.FromJToken(obj);
-                    Console.WriteLine($"Loaded config '{config.Name}'.");
+                    Log.Info($"Loaded config '{config.Name}'.");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Unable to load config '{config.Name}': {ex.Message}");
+                Log.Error($"Unable to load config '{config.Name}'", ex);
             }
 
             // Store back so new values are written and stale entries are cleaned up.
@@ -132,7 +133,7 @@ namespace AliceInCradleHack.config
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Unable to store config '{config.Name}': {ex.Message}");
+                Log.Error($"Unable to store config '{config.Name}'", ex);
             }
         }
 
@@ -159,7 +160,7 @@ namespace AliceInCradleHack.config
                         archive.CreateEntryFromFile(file, Path.GetFileName(file));
                 }
             }
-            Console.WriteLine($"Backup created: {zipPath}");
+            Log.Info($"Backup created: {zipPath}");
             return Path.GetFileNameWithoutExtension(zipPath);
         }
 
@@ -171,7 +172,7 @@ namespace AliceInCradleHack.config
             string zipPath = Path.Combine(BackupFolder, fileName + ".zip");
             if (!File.Exists(zipPath))
             {
-                Console.WriteLine($"Backup file does not exist: {zipPath}");
+                Log.Warn($"Backup file does not exist: {zipPath}");
                 return false;
             }
 
@@ -185,7 +186,7 @@ namespace AliceInCradleHack.config
                 }
             }
             LoadAll();
-            Console.WriteLine($"Backup restored: {zipPath}");
+            Log.Info($"Backup restored: {zipPath}");
             return true;
         }
     }

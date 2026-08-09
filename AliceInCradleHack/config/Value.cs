@@ -1,3 +1,4 @@
+using AliceInCradleHack.utils.client;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -135,7 +136,7 @@ namespace AliceInCradleHack.config
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to set '{GetPath()}' from '{_inner}' to '{value}': {ex.Message}");
+                Log.Error($"Failed to set '{GetPath()}' from '{_inner}' to '{value}'", ex);
                 return;
             }
 
@@ -143,7 +144,7 @@ namespace AliceInCradleHack.config
             foreach (var listener in _changedListeners)
             {
                 try { listener(current); }
-                catch (Exception ex) { Console.WriteLine($"OnChanged listener of '{GetPath()}' failed: {ex.Message}"); }
+                catch (Exception ex) { Log.Error($"OnChanged listener of '{GetPath()}' failed", ex); }
             }
         }
 
@@ -184,7 +185,7 @@ namespace AliceInCradleHack.config
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to set '{GetPath()}' to '{value}': {ex.Message}");
+                Log.Error($"Failed to set '{GetPath()}' to '{value}'", ex);
                 return false;
             }
         }
@@ -198,7 +199,7 @@ namespace AliceInCradleHack.config
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to parse '{value}' for '{GetPath()}': {ex.Message}");
+                Log.Error($"Failed to parse '{value}' for '{GetPath()}'", ex);
                 return false;
             }
         }
@@ -228,7 +229,7 @@ namespace AliceInCradleHack.config
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to deserialize value '{GetPath()}': {ex.Message}");
+                Log.Error($"Failed to deserialize value '{GetPath()}'", ex);
             }
         }
 

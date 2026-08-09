@@ -15,7 +15,7 @@ namespace AliceInCradleHack.utils.client
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[AliceInCradleHack][Notification] ShowNotification exception: {ex.Message}");
+                Log.Error("ShowNotification exception", ex);
             }
         }
     }

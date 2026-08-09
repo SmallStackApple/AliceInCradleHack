@@ -1,4 +1,5 @@
 using AliceInCradleHack.command.commands;
+using AliceInCradleHack.utils.client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,7 +32,7 @@ namespace AliceInCradleHack.command
         public void Initialize()
         {
             if (_initialized) return;
-            Console.WriteLine("Registering initial commands...");
+            Log.Info("Registering initial commands...");
             List<Command> initialCommands = new()
             {
                 new CommandCommandManager(),
@@ -75,10 +76,7 @@ namespace AliceInCradleHack.command
                     }
                     catch (Exception ex)
                     {
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine($"Error executing command '{commandName}': {ex.Message}");
-                        Console.WriteLine(ex.StackTrace);
-                        Console.ResetColor();
+                        Log.Error($"Error executing command '{commandName}'", ex);
                     }
                 }
                 else
@@ -88,7 +86,7 @@ namespace AliceInCradleHack.command
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error processing command: {ex.Message}");
+                Log.Error("Error processing command", ex);
             }
         }
 
@@ -122,7 +120,7 @@ namespace AliceInCradleHack.command
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error in command loop: {ex.Message}");
+                    Log.Error("Error in command loop", ex);
                 }
             }
         }

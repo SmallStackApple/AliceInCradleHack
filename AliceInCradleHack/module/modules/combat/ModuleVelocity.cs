@@ -5,10 +5,9 @@ namespace AliceInCradleHack.module.modules.combat
 {
     public class ModuleVelocity : Module
     {
-        public override string Name => "Velocity";
-        public override string Description => "Remove knockback.";
-        public override string Author => "SmallStackApple";
-        public override string Version => "1.0.0";
+        public ModuleVelocity() : base("Velocity", "Remove knockback.", "Combat")
+        {
+        }
 
         private readonly Harmony harmony = new("aliceincradlehack.modules.combat.velocity");
 

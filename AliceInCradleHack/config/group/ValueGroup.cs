@@ -1,3 +1,4 @@
+using AliceInCradleHack.utils.client;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
@@ -176,7 +177,7 @@ namespace AliceInCradleHack.config.group
 
         public override bool SetValueObject(object value)
         {
-            Console.WriteLine($"'{GetPath()}' is a group, cannot set value");
+            Log.Warn($"'{GetPath()}' is a group, cannot set value");
             return false;
         }
 
@@ -239,7 +240,7 @@ namespace AliceInCradleHack.config.group
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Unable to deserialize value '{child.GetPath()}': {ex.Message}");
+                    Log.Error($"Unable to deserialize value '{child.GetPath()}'", ex);
                 }
             }
         }

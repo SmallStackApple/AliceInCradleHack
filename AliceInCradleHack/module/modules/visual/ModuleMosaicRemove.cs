@@ -4,11 +4,9 @@ namespace AliceInCradleHack.module.modules.visual
 {
     public class ModuleMosaicRemove : Module
     {
-        public override string Name => "MosaicRemove";
-        public override string Description => "Removes mosaic from the game.";
-        public override string Author => "SmallStackApple";
-        public override string Version => "1.0.0";
-        public override string Category => "Visual";
+        public ModuleMosaicRemove() : base("MosaicRemove", "Removes mosaic from the game.", "Visual")
+        {
+        }
 
         private readonly Harmony _harmony = new("aliceincradlehack.modules.visual.mosaicremove");
 

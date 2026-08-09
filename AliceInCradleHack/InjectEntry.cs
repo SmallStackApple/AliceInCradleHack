@@ -78,54 +78,46 @@ namespace AliceInCradleHack
                 SetupConsole();
                 PrintSplash();
 
-                Console.WriteLine("Initializing...");
+                Log.Info("Initializing...");
 
-                Console.WriteLine("-Main folder...");
+                Log.Info("Resolving main folder...");
                 string mainFolder = MainFolder.GetMainFolder();
-                Console.WriteLine("done: " + mainFolder);
+                Log.Info("Main folder: " + mainFolder);
 
-                Console.WriteLine("-Dependency resolver...");
+                Log.Info("Registering dependency resolver...");
                 RegisterAssemblyResolver(mainFolder);
-                Console.WriteLine("done");
 
-                Console.WriteLine("-Patches...");
+                Log.Init();
+
+                Log.Info("Applying patches...");
                 PatchManager.Instance.Initialize();
-                Console.WriteLine("done");
 
-                Console.WriteLine("-Commands...");
+                Log.Info("Registering commands...");
                 CommandManager.Instance.Initialize();
-                Console.WriteLine("done");
 
-                Console.WriteLine("-Modules...");
+                Log.Info("Initializing modules...");
                 ModuleManager.Instance.Initialize();
-                Console.WriteLine("done");
 
-                Console.WriteLine("-Extensions...");
+                Log.Info("Loading extensions...");
                 string extensionsDir = Path.Combine(mainFolder, "Extensions");
                 ExtensionManager.Instance.LoadFromDirectory(extensionsDir);
-                Console.WriteLine("done");
 
-                Console.WriteLine("Initialization complete.");
-
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("Injection successful!");
-                Console.ResetColor();
+                Log.Info("Initialization complete.");
+                Log.Info("Injection successful!");
 
                 CommandManager.Instance.RunCommandLoop();
             }
             catch (Exception ex)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Injection failed: " + ex.Message);
-                Console.WriteLine(ex.StackTrace);
-                Console.WriteLine("Please eject the DLL.");
-                Console.ResetColor();
+                Log.Error("Injection failed", ex);
+                Log.Error("Please eject the DLL.");
             }
         }
 
         // Note: ejecting the DLL with SharpInjector crashes the host process, reason unknown.
         private static void Eject()
         {
+            Log.Shutdown();
             FreeConsole();
         }
     }

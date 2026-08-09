@@ -1,4 +1,5 @@
 using AliceInCradleHack.config;
+using AliceInCradleHack.utils.client;
 using AliceInCradleHack.utils.game;
 using NAudio.Wave;
 using System;
@@ -9,11 +10,9 @@ namespace AliceInCradleHack.module.modules.misc
 {
     public class ModuleKillSound : Module
     {
-        public override string Name => "KillSound";
-        public override string Description => "Plays a sound when you kill an enemy.";
-        public override string Author => "SmallStackApple";
-        public override string Version => "1.0.0";
-        public override string Category => "Misc";
+        public ModuleKillSound() : base("KillSound", "Plays a sound when you kill an enemy.", "Misc")
+        {
+        }
 
         public readonly RangedValue<int> Volume = new(100, 0, 100, "%", "Volume of the kill sound (0-100).");
 
@@ -49,7 +48,7 @@ namespace AliceInCradleHack.module.modules.misc
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error disposing audio resources: " + ex.Message);
+                Log.Error("Error disposing audio resources", ex);
             }
         }
 
@@ -61,13 +60,13 @@ namespace AliceInCradleHack.module.modules.misc
             string soundFilePath = SoundFilePath;
             if (string.IsNullOrWhiteSpace(soundFilePath))
             {
-                Console.WriteLine("Kill sound file not found: path is empty.");
+                Log.Warn("Kill sound file not found: path is empty.");
                 return;
             }
 
             if (!File.Exists(soundFilePath))
             {
-                Console.WriteLine($"Kill sound file not found: {soundFilePath}");
+                Log.Warn($"Kill sound file not found: {soundFilePath}");
                 return;
             }
 
@@ -85,7 +84,7 @@ namespace AliceInCradleHack.module.modules.misc
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error playing kill sound (NAudio): " + ex.Message);
+                Log.Error("Error playing kill sound (NAudio)", ex);
                 DisposeAudio();
             }
         }

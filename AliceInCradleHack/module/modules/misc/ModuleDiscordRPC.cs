@@ -5,11 +5,9 @@ namespace AliceInCradleHack.module.modules.misc
 {
     public class ModuleDiscordRPC : Module
     {
-        public override string Name => "DiscordRPC";
-        public override string Description => "Enables Discord Rich Presence integration.";
-        public override string Author => "SmallStackApple";
-        public override string Version => "1.0.0";
-        public override string Category => "Misc";
+        public ModuleDiscordRPC() : base("DiscordRPC", "Enables Discord Rich Presence integration.", "Misc")
+        {
+        }
 
         public readonly Value<string> Details = new("Playing Alice in Cradle", "The details line of the Discord Rich Presence.");
 

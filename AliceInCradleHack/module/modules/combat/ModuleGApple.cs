@@ -5,11 +5,9 @@ namespace AliceInCradleHack.module.modules.combat
 {
     public class ModuleGApple : Module
     {
-        public override string Name => "GApple";
-        public override string Description => "Auto use buff item";
-        public override string Author => "SmallStackApple";
-        public override string Version => "1.0.0";
-        public override string Category => "Combat";
+        public ModuleGApple() : base("GApple", "Auto use buff item", "Combat")
+        {
+        }
 
         public readonly RangedValue<int> MinHp = new("MinHP", 50, 0, 100, "%", "Minimum HP percentage to activate GApple.");
 

@@ -1,3 +1,4 @@
+using AliceInCradleHack.utils.client;
 using AliceInCradleHack.utils.game;
 using m2d;
 using nel;
@@ -63,7 +64,7 @@ namespace AliceInCradleHack.events
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[AliceInCradleHack][DamageEvents] PreFix exception: {ex}");
+                    Log.Error("DamageEvents PreFix exception", ex);
                 }
             }
 
@@ -84,7 +85,7 @@ namespace AliceInCradleHack.events
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[AliceInCradleHack][DamageEvents] PostFix exception: {ex}");
+                    Log.Error("DamageEvents PostFix exception", ex);
                 }
             }
 
