@@ -13,7 +13,10 @@ namespace AliceInCradleHack.module.modules.combat
 
         public override void Enable()
         {
-            harmony.PatchAll(typeof(ModuleVelocity).Assembly);
+            harmony.Patch(
+                AccessTools.Method(typeof(M2Attackable), nameof(M2Attackable.addKnockbackVelocity)),
+                prefix: new HarmonyMethod(typeof(ModuleVelocity), nameof(AddKnockbackVelocityPrefix))
+            );
         }
 
         public override void Disable()
@@ -25,8 +28,6 @@ namespace AliceInCradleHack.module.modules.combat
         {
         }
 
-        [HarmonyPatch(typeof(M2Attackable), nameof(M2Attackable.addKnockbackVelocity))]
-        [HarmonyPrefix]
         public static bool AddKnockbackVelocityPrefix(object __instance)
         {
             return false;
