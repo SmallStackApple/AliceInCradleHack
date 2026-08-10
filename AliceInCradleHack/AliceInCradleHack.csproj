@@ -692,6 +692,7 @@
     <Compile Include="module\modules\combat\ModuleVelocity.cs" />
     <Compile Include="module\modules\misc\ModuleDiscordRPC.cs" />
     <Compile Include="module\modules\misc\ModuleKillSound.cs" />
+    <Compile Include="module\modules\misc\ModuleHitSound.cs" />
     <Compile Include="module\modules\visual\ModuleMosaicRemove.cs" />
     <Compile Include="patch\Patch.cs" />
     <Compile Include="patch\PatchManager.cs" />
