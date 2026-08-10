@@ -38,6 +38,7 @@ namespace AliceInCradleHack.module
                 new ModuleMosaicRemove(),
                 new ModuleDiscordRPC(),
                 new ModuleKillSound(),
+                new ModuleHitSound(),
                 new ModuleCritical(),
                 new ModuleVelocity(),
                 new ModuleKeepSprint(),
