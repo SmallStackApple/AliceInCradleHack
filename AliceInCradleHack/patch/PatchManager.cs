@@ -23,6 +23,7 @@ namespace AliceInCradleHack.patch
             List<Patch> builtInPatches = new()
             {
                 new PatchM2dM2Attackable(),
+                new PatchXxIN(),
                 // Add other patch instances here
             };
             foreach (var patch in builtInPatches)
