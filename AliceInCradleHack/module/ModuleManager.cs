@@ -40,6 +40,7 @@ namespace AliceInCradleHack.module
                 new ModuleKillSound(),
                 new ModuleCritical(),
                 new ModuleVelocity(),
+                new ModuleKeepSprint(),
                 new ModuleWebUi(),
                 // Add other module instances here
             };

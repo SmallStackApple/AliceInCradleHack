@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="ILRepacker" AfterTargets="MoveNuGetDependenciesToLibFolder">
+    <ItemGroup>
+      <InputAssemblies Include="$(TargetPath)" />
+      <InputAssemblies Include="$(MSBuildProjectDirectory)\..\packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll" />
+      <ILRepackLibraryPath Include="$(OutputPath)" />
+      <ILRepackLibraryPath Include="$(OutputPath)lib" />
+      <ILRepackLibraryPath Include="$(MSBuildProjectDirectory)\GameDLL\Managed" />
+      <ILRepackLibraryPath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8.1" />
+    </ItemGroup>
+    <ILRepack
+        Parallel="true"
+        Internalize="true"
+        InputAssemblies="@(InputAssemblies)"
+        LibraryPath="@(ILRepackLibraryPath)"
+        TargetKind="Dll"
+        OutputFile="$(TargetPath)" />
+    <Delete Files="$(OutputPath)lib\Newtonsoft.Json.dll"
+            Condition="Exists('$(OutputPath)lib\Newtonsoft.Json.dll')" />
+    <ItemGroup>
+      <ILRepackTempDirs Include="$([System.IO.Directory]::GetDirectories('$(OutputPath)', 'ILRepack-*'))" />
+    </ItemGroup>
+    <RemoveDir Directories="@(ILRepackTempDirs)" Condition="@(ILRepackTempDirs) != ''" />
+  </Target>
+</Project>

@@ -46,7 +46,14 @@ namespace AliceInCradleHack.patch
         {
             foreach (var patch in _patches)
             {
-                patch.Apply();
+                try
+                {
+                    patch.Apply();
+                }
+                catch (Exception ex)
+                {
+                    utils.client.Log.Error($"Failed to apply patch {patch.GetType().Name}", ex);
+                }
             }
         }
 
