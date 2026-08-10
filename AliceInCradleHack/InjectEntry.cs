@@ -89,6 +89,8 @@ namespace AliceInCradleHack
 
                 Log.Init();
 
+                Log.Info("Runtime: " + RuntimeInformation.FrameworkDescription + " (CLR " + Environment.Version + ")");
+
                 Log.Info("Applying patches...");
                 PatchManager.Instance.Initialize();
 

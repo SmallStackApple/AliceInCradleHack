@@ -49,7 +49,7 @@ namespace AliceInCradleHack.utils.client
         public static void Error(string message) => Write(LogLevel.Error, message);
 
         public static void Error(string message, Exception ex) =>
-            Write(LogLevel.Error, $"{message}: {ex.Message}{Environment.NewLine}{ex.StackTrace}");
+            Write(LogLevel.Error, $"{message}: {ex}");
 
         public static void Shutdown()
         {
