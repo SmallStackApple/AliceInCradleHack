@@ -11,7 +11,7 @@ namespace AliceInCradleHack.module.modules.combat
         {
         }
 
-        public readonly RangedValue<double> Multiplier = new(2.0d, "Damage multiplier") { Min = 0.1, Max = 10.0 };
+        public readonly RangedValue<double> Multiplier = new(2.0d, "Damage multiplier") { Min = 0.1, Max = double.MaxValue };
 
         [SettingGroup("CriticalNotification", "Critical notification")]
         public readonly Value<bool> EnableNotification = new(true, "Enable critical hit notification");

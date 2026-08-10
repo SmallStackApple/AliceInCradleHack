@@ -1,3 +1,4 @@
+using AliceInCradleHack.module.modules.client.island;
 using AliceInCradleHack.utils.game;
 using System;
 
@@ -10,8 +11,20 @@ namespace AliceInCradleHack.utils.client
             try
             {
                 if (string.IsNullOrEmpty(message)) return;
-
                 UILog.AddAlert(message, type);
+            }
+            catch (Exception ex)
+            {
+                Log.Error("ShowNotification exception", ex);
+            }
+        }
+
+        public static void ShowNotificationByDynamicIsland(string message)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(message)) return;
+                NotificationHudElement.Push(message);
             }
             catch (Exception ex)
             {

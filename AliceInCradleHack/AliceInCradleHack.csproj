@@ -49,9 +49,6 @@
       <HintPath>..\packages\DiscordRichPresence.1.6.1.70\lib\net45\DiscordRPC.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Kaleidoscopic">
-      <HintPath>ModDLL\Infdev\Kaleidoscopic.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.Bcl.HashCode, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.HashCode.6.0.0\lib\net462\Microsoft.Bcl.HashCode.dll</HintPath>
     </Reference>
@@ -560,20 +557,12 @@
       <HintPath>GameDLL\Managed\UnityEngine.UIElementsModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.UIElementsNativeModule">
-      <HintPath>GameDLL\Managed\UnityEngine.UIElementsNativeModule.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="UnityEngine.UIModule">
       <HintPath>GameDLL\Managed\UnityEngine.UIModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.UmbraModule">
       <HintPath>GameDLL\Managed\UnityEngine.UmbraModule.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="UnityEngine.UNETModule">
-      <HintPath>GameDLL\Managed\UnityEngine.UNETModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.UnityAnalyticsCommonModule">
@@ -681,6 +670,14 @@
     <Compile Include="module\Module.cs" />
     <Compile Include="module\ModuleManager.cs" />
     <Compile Include="module\SettingAttributes.cs" />
+    <Compile Include="module\modules\client\island\DynamicIsland.cs" />
+    <Compile Include="module\modules\client\island\GuiBehaviour.cs" />
+    <Compile Include="module\modules\client\island\HudElement.cs" />
+    <Compile Include="module\modules\client\island\IHudElement.cs" />
+    <Compile Include="module\modules\client\island\ImGuiRenderUtil.cs" />
+    <Compile Include="module\modules\client\island\ModuleDynamicIsland.cs" />
+    <Compile Include="module\modules\client\island\NotificationHudElement.cs" />
+    <Compile Include="module\modules\client\island\WatermarkHudElement.cs" />
     <Compile Include="module\modules\client\ModuleGui.cs" />
     <Compile Include="module\modules\client\ModuleWebUi.cs" />
     <Compile Include="module\modules\client\webui\WebUiApi.cs" />
@@ -698,7 +695,9 @@
     <Compile Include="patch\PatchManager.cs" />
     <Compile Include="patch\patches\PatchM2dM2Attackable.cs" />
     <Compile Include="patch\patches\PatchNelSceneGame.cs" />
+    <Compile Include="patch\patches\PatchXxIN.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="utils\animation\SpringAnimation.cs" />
     <Compile Include="utils\client\Log.cs" />
     <Compile Include="utils\client\MainFolder.cs" />
     <Compile Include="utils\client\Notification.cs" />

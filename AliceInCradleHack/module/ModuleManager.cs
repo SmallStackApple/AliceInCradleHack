@@ -1,5 +1,6 @@
 using AliceInCradleHack.config;
 using AliceInCradleHack.module.modules.client;
+using AliceInCradleHack.module.modules.client.island;
 using AliceInCradleHack.module.modules.combat;
 using AliceInCradleHack.module.modules.misc;
 using AliceInCradleHack.module.modules.visual;
@@ -43,6 +44,8 @@ namespace AliceInCradleHack.module
                 new ModuleVelocity(),
                 new ModuleKeepSprint(),
                 new ModuleWebUi(),
+                new ModuleGui(),
+                new ModuleDynamicIsland(),
                 // Add other module instances here
             };
 
