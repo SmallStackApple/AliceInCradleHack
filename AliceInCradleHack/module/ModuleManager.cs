@@ -126,6 +126,7 @@ namespace AliceInCradleHack.module
                     module.IsEnabled = true;
                     module.EnabledValue?.Set(true);
                     Notification.ShowNotificationByUILog($"Enabled {module.Name}", nel.UILogRow.TYPE.ALERT);
+                    Notification.ShowNotificationByDynamicIsland($"Enabled {module.Name}");
                     StoreModuleConfig(module);
                 }
                 catch (Exception ex)
@@ -150,6 +151,7 @@ namespace AliceInCradleHack.module
                     module.IsEnabled = false;
                     module.EnabledValue?.Set(false);
                     Notification.ShowNotificationByUILog($"Disabled {module.Name}", nel.UILogRow.TYPE.ALERT);
+                    Notification.ShowNotificationByDynamicIsland($"Disabled {module.Name}");
                     StoreModuleConfig(module);
                 }
                 catch (Exception ex)
