@@ -15,7 +15,11 @@ namespace AliceInCradleHack.module.modules.client.island
 
         public static float FontSize { get; set; } = 14f;
 
-        public static float SubFontSize => FontSize * 0.75f;
+        public static float SubFontSize { get; set; } = 10.5f;
+
+        public static float TitleSubtitleSpacing { get; set; } = 0f;
+
+        public static float ClientNameFontSize { get; set; } = 14f;
 
         private static readonly Dictionary<int, GUIStyle> BackgroundStyles = new();
         private static GUIStyle _labelStyle;
@@ -37,23 +41,22 @@ namespace AliceInCradleHack.module.modules.client.island
             return style;
         }
 
-        private static GUIStyle LabelStyle
+        private static GUIStyle LabelStyle => LabelStyleFor(FontSize);
+
+        private static GUIStyle LabelStyleFor(float fontSize)
         {
-            get
+            if (_labelStyle == null)
             {
-                if (_labelStyle == null)
+                _labelStyle = new GUIStyle
                 {
-                    _labelStyle = new GUIStyle
-                    {
-                        alignment = TextAnchor.MiddleCenter,
-                        richText = true,
-                        wordWrap = false
-                    };
-                }
-                _labelStyle.fontSize = Mathf.Max(8, Mathf.RoundToInt(FontSize));
-                _labelStyle.normal.textColor = TextColor;
-                return _labelStyle;
+                    alignment = TextAnchor.MiddleCenter,
+                    richText = true,
+                    wordWrap = false
+                };
             }
+            _labelStyle.fontSize = Mathf.Max(8, Mathf.RoundToInt(fontSize));
+            _labelStyle.normal.textColor = TextColor;
+            return _labelStyle;
         }
 
         private static GUIStyle SubLabelStyle
@@ -85,28 +88,30 @@ namespace AliceInCradleHack.module.modules.client.island
             GUI.color = previous;
         }
 
-        public static void DrawLabel(Rect rect, string text, float alpha)
+        public static void DrawLabel(Rect rect, string text, float alpha, float titleFontSize = -1f)
         {
             var previous = GUI.color;
             GUI.color = new Color(1f, 1f, 1f, Mathf.Clamp01(alpha));
-            GUI.Label(rect, text, LabelStyle);
+            GUI.Label(rect, text, titleFontSize >= 0f ? LabelStyleFor(titleFontSize) : LabelStyle);
             GUI.color = previous;
         }
 
-        public static void DrawLabel(Rect rect, string title, string subtitle, float alpha)
+        public static void DrawLabel(Rect rect, string title, string subtitle, float alpha, float titleFontSize = -1f)
         {
             if (string.IsNullOrEmpty(subtitle))
             {
-                DrawLabel(rect, title, alpha);
+                DrawLabel(rect, title, alpha, titleFontSize);
                 return;
             }
             var previous = GUI.color;
             GUI.color = new Color(1f, 1f, 1f, Mathf.Clamp01(alpha));
-            float titleHeight = LabelStyle.CalcSize(new GUIContent(title)).y;
+            var titleStyle = titleFontSize >= 0f ? LabelStyleFor(titleFontSize) : LabelStyle;
+            float titleHeight = titleStyle.CalcSize(new GUIContent(title)).y;
             float subHeight = SubLabelStyle.CalcSize(new GUIContent(subtitle)).y;
-            float y = rect.y + (rect.height - titleHeight - subHeight) / 2f;
-            GUI.Label(new Rect(rect.x, y, rect.width, titleHeight), title, LabelStyle);
-            GUI.Label(new Rect(rect.x, y + titleHeight, rect.width, subHeight), subtitle, SubLabelStyle);
+            float totalHeight = titleHeight + TitleSubtitleSpacing + subHeight;
+            float y = rect.y + (rect.height - totalHeight) / 2f;
+            GUI.Label(new Rect(rect.x, y, rect.width, titleHeight), title, titleStyle);
+            GUI.Label(new Rect(rect.x, y + titleHeight + TitleSubtitleSpacing, rect.width, subHeight), subtitle, SubLabelStyle);
             GUI.color = previous;
         }
 
@@ -115,25 +120,27 @@ namespace AliceInCradleHack.module.modules.client.island
             return LabelStyle.CalcSize(new GUIContent(text)).x;
         }
 
-        public static Vector2 MeasureSize(string title, string subtitle)
+        public static Vector2 MeasureSize(string title, string subtitle, float titleFontSize = -1f)
         {
-            var titleSize = LabelStyle.CalcSize(new GUIContent(title));
+            var titleStyle = titleFontSize >= 0f ? LabelStyleFor(titleFontSize) : LabelStyle;
+            var titleSize = titleStyle.CalcSize(new GUIContent(title));
             if (string.IsNullOrEmpty(subtitle)) return titleSize;
             var subSize = SubLabelStyle.CalcSize(new GUIContent(subtitle));
-            return new Vector2(Mathf.Max(titleSize.x, subSize.x), titleSize.y + subSize.y);
+            return new Vector2(Mathf.Max(titleSize.x, subSize.x), titleSize.y + TitleSubtitleSpacing + subSize.y);
         }
 
         private static float SeparatorGap => FontSize * 0.6f;
 
         private static float SeparatorWidth => SubLabelStyle.CalcSize(new GUIContent("|")).x;
 
-        public static Vector2 MeasureSegments(IReadOnlyList<(string Title, string Subtitle)> segments)
+        public static Vector2 MeasureSegments(IReadOnlyList<(string Title, string Subtitle)> segments, float titleFontSize = -1f)
         {
             float width = 0f;
             float height = 0f;
             for (int i = 0; i < segments.Count; i++)
             {
-                var size = MeasureSize(segments[i].Title, segments[i].Subtitle);
+                float fontSize = i == 0 && titleFontSize >= 0f ? titleFontSize : FontSize;
+                var size = MeasureSize(segments[i].Title, segments[i].Subtitle, fontSize);
                 width += size.x;
                 height = Mathf.Max(height, size.y);
                 if (i < segments.Count - 1)
@@ -144,28 +151,30 @@ namespace AliceInCradleHack.module.modules.client.island
             return new Vector2(width, height);
         }
 
-        public static void DrawSegment(Rect rect, string title, string subtitle, float alpha)
+        public static void DrawSegment(Rect rect, string title, string subtitle, float alpha, float titleFontSize = -1f)
         {
-            DrawLabel(rect, title, subtitle, alpha);
+            DrawLabel(rect, title, subtitle, alpha, titleFontSize);
         }
 
-        public static void DrawSegments(Rect rect, IReadOnlyList<(string Title, string Subtitle)> segments, float alpha)
+        public static void DrawSegments(Rect rect, IReadOnlyList<(string Title, string Subtitle)> segments, float alpha, float titleFontSize = -1f)
         {
             if (segments == null || segments.Count == 0) return;
             if (segments.Count == 1)
             {
-                DrawSegment(rect, segments[0].Title, segments[0].Subtitle, alpha);
+                DrawSegment(rect, segments[0].Title, segments[0].Subtitle, alpha,
+                    titleFontSize >= 0f ? titleFontSize : FontSize);
                 return;
             }
             var previous = GUI.color;
             GUI.color = new Color(1f, 1f, 1f, Mathf.Clamp01(alpha));
-            var total = MeasureSegments(segments);
+            var total = MeasureSegments(segments, titleFontSize);
             float cursorX = rect.x + (rect.width - total.x) / 2f;
             for (int i = 0; i < segments.Count; i++)
             {
-                var size = MeasureSize(segments[i].Title, segments[i].Subtitle);
+                float fontSize = i == 0 && titleFontSize >= 0f ? titleFontSize : FontSize;
+                var size = MeasureSize(segments[i].Title, segments[i].Subtitle, fontSize);
                 DrawSegment(new Rect(cursorX, rect.y, size.x, rect.height),
-                    segments[i].Title, segments[i].Subtitle, alpha);
+                    segments[i].Title, segments[i].Subtitle, alpha, fontSize);
                 cursorX += size.x;
                 if (i < segments.Count - 1)
                 {

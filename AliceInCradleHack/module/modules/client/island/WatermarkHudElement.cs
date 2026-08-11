@@ -8,11 +8,13 @@ namespace AliceInCradleHack.module.modules.client.island
     {
         public override bool HasBackground => true;
 
+        public static string ClientNameColorHex { get; set; } = "#7EE787";
+
         private static string Title
         {
             get
             {
-                return $"<color=#7EE787><b>{Client.ClientName}</b></color>";
+                return $"<color={ClientNameColorHex}><b>{Client.ClientName}</b></color>";
             }
         }
 
@@ -38,7 +40,7 @@ namespace AliceInCradleHack.module.modules.client.island
         {
             get
             {
-                var size = ImGuiRenderUtil.MeasureSegments(CurrentSegments());
+                var size = ImGuiRenderUtil.MeasureSegments(CurrentSegments(), ImGuiRenderUtil.ClientNameFontSize);
                 return new IHudElement.Size(
                     Mathf.Min(size.x + 8f, 640f),
                     Mathf.Max(size.y, DynamicIsland.Instance.ContentHeight));
@@ -47,7 +49,7 @@ namespace AliceInCradleHack.module.modules.client.island
 
         public override void Render(float x, float y, float width, float height, float alpha)
         {
-            ImGuiRenderUtil.DrawSegments(new Rect(x, y, width, height), CurrentSegments(), alpha);
+            ImGuiRenderUtil.DrawSegments(new Rect(x, y, width, height), CurrentSegments(), alpha, ImGuiRenderUtil.ClientNameFontSize);
         }
     }
 }
