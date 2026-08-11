@@ -78,8 +78,6 @@ namespace AliceInCradleHack.module.modules.client.island
             _lastFrameTimestamp = now;
             deltaSec = Math.Min(deltaSec, 0.033333335f);
 
-            ImGuiRenderUtil.FontSize = ContentHeight * 0.5f;
-
             var visibleElement = _activeElementSelector.Visible();
             if (visibleElement == null)
             {
