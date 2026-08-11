@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace AliceInCradleHack.module.modules.client.island
@@ -7,29 +8,51 @@ namespace AliceInCradleHack.module.modules.client.island
     {
         public override bool HasBackground => true;
 
-        private static string Text
+        private static string Title
+        {
+            get
+            {
+                return "<color=#7EE787><b>AliceInCradleHack</b></color>";
+            }
+        }
+
+        private static string Version
         {
             get
             {
                 var version = typeof(InjectEntry).Assembly.GetName().Version;
-                return $"<color=#7EE787><b>AliceInCradleHack</b></color> <color=#FFFFFF66>|</color> " +
-                       $"v{version.Major}.{version.Minor}.{version.Build} <color=#FFFFFF66>|</color> " +
-                       $"<color=#FFFFFFBF>{DateTime.Now:HH:mm:ss}</color>";
+                return $"v{version.Major}.{version.Minor}.{version.Build}";
             }
+        }
+
+        private static (string, string, string, string) Texts => (Title, Version, $"{DateTime.Now:yyyy/MM/dd}", $"{DateTime.Now:HH:mm:ss}");
+
+        private static readonly List<(string Title, string Subtitle)> Segments = new(3);
+
+        private static List<(string Title, string Subtitle)> CurrentSegments()
+        {
+            var (title, version, date, time) = Texts;
+            Segments.Clear();
+            Segments.Add((title, null));
+            Segments.Add(("Version", version));
+            Segments.Add((date, time));
+            return Segments;
         }
 
         public override IHudElement.Size HudSize
         {
             get
             {
-                float width = ImGuiRenderUtil.MeasureWidth(Text);
-                return new IHudElement.Size(Mathf.Min(width + 8f, 640f), DynamicIsland.Instance.ContentHeight);
+                var size = ImGuiRenderUtil.MeasureSegments(CurrentSegments());
+                return new IHudElement.Size(
+                    Mathf.Min(size.x + 8f, 640f),
+                    Mathf.Max(size.y, DynamicIsland.Instance.ContentHeight));
             }
         }
 
         public override void Render(float x, float y, float width, float height, float alpha)
         {
-            ImGuiRenderUtil.DrawLabel(new Rect(x, y, width, height), Text, alpha);
+            ImGuiRenderUtil.DrawSegments(new Rect(x, y, width, height), CurrentSegments(), alpha);
         }
     }
 }

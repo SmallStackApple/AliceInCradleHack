@@ -11,33 +11,40 @@ namespace AliceInCradleHack.module.modules.client.island
 
         private static readonly object Sync = new();
         private static readonly Stopwatch Clock = Stopwatch.StartNew();
-        private static string _current;
+        private static string _currentTitle;
+        private static string _currentSubtitle;
         private static long _currentDeadline;
 
         public static void Push(string message)
         {
-            if (string.IsNullOrEmpty(message)) return;
+            Push(message, null);
+        }
+
+        public static void Push(string title, string subtitle)
+        {
+            if (string.IsNullOrEmpty(title)) return;
             lock (Sync)
             {
-                _current = message;
+                _currentTitle = title;
+                _currentSubtitle = subtitle;
                 _currentDeadline = Clock.ElapsedMilliseconds + DurationMs;
             }
         }
 
-        private static string CurrentText()
+        private static (string Title, string Subtitle)? Current()
         {
             lock (Sync)
             {
-                long now = Clock.ElapsedMilliseconds;
-                if (_current != null && now >= _currentDeadline)
+                if (_currentTitle != null && Clock.ElapsedMilliseconds >= _currentDeadline)
                 {
-                    _current = null;
+                    _currentTitle = null;
+                    _currentSubtitle = null;
                 }
-                return _current;
+                return _currentTitle == null ? null : (_currentTitle, _currentSubtitle);
             }
         }
 
-        public override bool IsVisible => CurrentText() != null;
+        public override bool IsVisible => Current() != null;
 
         public override bool HasBackground => true;
 
@@ -45,18 +52,20 @@ namespace AliceInCradleHack.module.modules.client.island
         {
             get
             {
-                string text = CurrentText();
-                if (text == null) return new IHudElement.Size(0f, DynamicIsland.Instance.ContentHeight);
-                float width = ImGuiRenderUtil.MeasureWidth(text);
-                return new IHudElement.Size(Mathf.Min(width + Padding, MaxWidth), DynamicIsland.Instance.ContentHeight);
+                var current = Current();
+                if (current == null) return new IHudElement.Size(0f, DynamicIsland.Instance.ContentHeight);
+                var size = ImGuiRenderUtil.MeasureSize(current.Value.Title, current.Value.Subtitle);
+                return new IHudElement.Size(
+                    Mathf.Min(size.x + Padding, MaxWidth),
+                    Mathf.Max(size.y, DynamicIsland.Instance.ContentHeight));
             }
         }
 
         public override void Render(float x, float y, float width, float height, float alpha)
         {
-            string text = CurrentText();
-            if (text == null) return;
-            ImGuiRenderUtil.DrawLabel(new Rect(x, y, width, height), text, alpha);
+            var current = Current();
+            if (current == null) return;
+            ImGuiRenderUtil.DrawSegment(new Rect(x, y, width, height), current.Value.Title, current.Value.Subtitle, alpha);
         }
     }
 }

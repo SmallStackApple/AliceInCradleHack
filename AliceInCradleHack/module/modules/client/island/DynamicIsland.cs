@@ -33,6 +33,12 @@ namespace AliceInCradleHack.module.modules.client.island
 
         public float ContentHeight { get; set; } = 28f;
 
+        public float TopMargin { get; set; } = 25f;
+
+        public float PaddingX { get; set; } = 15f;
+
+        public float PaddingY { get; set; } = 1.5f;
+
         private readonly List<IHudElement> _elements = new()
         {
             new NotificationHudElement(),
@@ -114,21 +120,20 @@ namespace AliceInCradleHack.module.modules.client.island
             _heightAnim.Update(deltaSec);
             _transitionAnim.Update(deltaSec);
 
-            float islandWidth = Math.Max(0f, _widthAnim.CurrentValue + 30f);
-            float islandHeight = Math.Max(0f, _heightAnim.CurrentValue + 3f);
+            float islandWidth = Math.Max(0f, _widthAnim.CurrentValue + PaddingX * 2f);
+            float islandHeight = Math.Max(0f, _heightAnim.CurrentValue + PaddingY * 2f);
             float islandX = (Screen.width - islandWidth) / 2f;
             const float anchorSize = 25f;
-            const float topMargin = 25f;
-            float anchorCenterY = topMargin + anchorSize / 2f;
+            float anchorCenterY = TopMargin + anchorSize / 2f;
             float activeY = _activeElement.HudAnchor == IHudElement.Alignment.CENTER
                 ? anchorCenterY - islandHeight / 2f
-                : topMargin;
+                : TopMargin;
             float islandY;
             if (_outgoingElement != null && progress < 1f)
             {
                 float outgoingY = _outgoingElement.HudAnchor == IHudElement.Alignment.CENTER
                     ? anchorCenterY - islandHeight / 2f
-                    : topMargin;
+                    : TopMargin;
                 islandY = Mathf.LerpUnclamped(outgoingY, activeY, progress);
             }
             else
