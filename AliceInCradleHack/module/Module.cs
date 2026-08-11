@@ -56,7 +56,7 @@ namespace AliceInCradleHack.module
                 if (nameAttr != null)
                     value.Name = nameAttr.Name;
                 else if (System.String.IsNullOrEmpty(value.Name))
-                    value.Name = ToLowerCamel(field.Name);
+                    value.Name = field.Name;
 
                 var descAttr = field.GetCustomAttribute<SettingDescriptionAttribute>();
                 if (descAttr != null)
@@ -81,12 +81,6 @@ namespace AliceInCradleHack.module
             var created = new ValueGroup(name, description);
             Settings.Add(created);
             return created;
-        }
-
-        private static string ToLowerCamel(string name)
-        {
-            if (System.String.IsNullOrEmpty(name) || char.IsLower(name[0])) return name;
-            return char.ToLowerInvariant(name[0]) + name.Substring(1);
         }
     }
 }
