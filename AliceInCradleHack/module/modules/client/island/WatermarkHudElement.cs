@@ -12,29 +12,24 @@ namespace AliceInCradleHack.module.modules.client.island
         {
             get
             {
-                return "<color=#7EE787><b>AliceInCradleHack</b></color>";
+                return $"<color=#7EE787><b>{Client.ClientName}</b></color>";
             }
         }
 
-        private static string Version
-        {
-            get
-            {
-                var version = typeof(InjectEntry).Assembly.GetName().Version;
-                return $"v{version.Major}.{version.Minor}.{version.Build}";
-            }
-        }
+        private static string VersionType => Client.VersionType;
 
-        private static (string, string, string, string) Texts => (Title, Version, $"{DateTime.Now:yyyy/MM/dd}", $"{DateTime.Now:HH:mm:ss}");
+        private static string Version => $"v{Client.Version}-{(Client.GitHash != "unknow" ? Client.GitHash.Substring(0, 7) : "unknow")}";
+
+        private static (string, string, string, string, string) Texts => (Title, Version, VersionType, $"{DateTime.Now:yyyy/MM/dd}", $"{DateTime.Now:HH:mm:ss}");
 
         private static readonly List<(string Title, string Subtitle)> Segments = new(3);
 
         private static List<(string Title, string Subtitle)> CurrentSegments()
         {
-            var (title, version, date, time) = Texts;
+            var (title, version, versionType, date, time) = Texts;
             Segments.Clear();
             Segments.Add((title, null));
-            Segments.Add(("Version", version));
+            Segments.Add((versionType, version));
             Segments.Add((date, time));
             return Segments;
         }

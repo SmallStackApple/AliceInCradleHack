@@ -668,6 +668,7 @@
     <Compile Include="events\XxINEvents.cs" />
     <Compile Include="extension\Extension.cs" />
     <Compile Include="extension\ExtensionManager.cs" />
+    <Compile Include="Client.cs" />
     <Compile Include="InjectEntry.cs" />
     <Compile Include="module\Module.cs" />
     <Compile Include="module\ModuleManager.cs" />
@@ -720,6 +721,25 @@
     <Folder Include="GameDLL\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="GenerateGitVersion" BeforeTargets="BeforeCompile">
+    <PropertyGroup>
+      <GeneratedFileDir>$(IntermediateOutputPath)Generated</GeneratedFileDir>
+      <GeneratedFile>$(GeneratedFileDir)\GitVersion.cs</GeneratedFile>
+    </PropertyGroup>
+    <MakeDir Directories="$(GeneratedFileDir)" Condition="!Exists('$(GeneratedFileDir)')" />
+    <Exec Command="git rev-parse HEAD" WorkingDirectory="$(MSBuildProjectDirectory)" IgnoreExitCode="true" ConsoleToMSBuild="true" StandardOutputImportance="Low" StandardErrorImportance="Low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="GitHash" />
+    </Exec>
+    <PropertyGroup>
+      <GitHash Condition="'$(GitHash)' == ''">unknow</GitHash>
+      <GitHash>$([System.String]::Copy('$(GitHash)').Trim())</GitHash>
+      <GitVersionContent>namespace AliceInCradleHack&#xD;&#xA;{&#xD;&#xA;    public static partial class Client&#xD;&#xA;    {&#xD;&#xA;        public const string GitHash = &quot;$(GitHash)&quot;%3B&#xD;&#xA;    }&#xD;&#xA;}</GitVersionContent>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(GeneratedFile)" Overwrite="true" Lines="$(GitVersionContent)" />
+    <ItemGroup>
+      <Compile Include="$(GeneratedFile)" />
+    </ItemGroup>
+  </Target>
   <Target Name="MoveNuGetDependenciesToLibFolder" AfterTargets="AfterBuild">
     <PropertyGroup>
       <OutputDir>$(OutputPath)</OutputDir>
