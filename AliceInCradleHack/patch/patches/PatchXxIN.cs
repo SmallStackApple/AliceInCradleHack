@@ -1,4 +1,4 @@
-using AliceInCradleHack.module.modules.client.island;
+using AliceInCradleHack.events;
 using HarmonyLib;
 
 namespace AliceInCradleHack.patch.patches
@@ -9,6 +9,7 @@ namespace AliceInCradleHack.patch.patches
         {
             harmony.Patch(
                 original: AccessTools.Method(typeof(XX.IN), "Update"),
+                prefix: new HarmonyMethod(typeof(PatchXxIN), nameof(UpdatePrefix)),
                 postfix: new HarmonyMethod(typeof(PatchXxIN), nameof(UpdatePostfix))
             );
         }
@@ -18,9 +19,14 @@ namespace AliceInCradleHack.patch.patches
             harmony.UnpatchAll(harmony.Id);
         }
 
-        private static void UpdatePostfix()
+        private static void UpdatePrefix(object __instance)
         {
-            GuiBehaviour.EnsureCreated();
+            XxINEvents.PreUpdate(__instance);
+        }
+
+        private static void UpdatePostfix(object __instance)
+        {
+            XxINEvents.PostUpdate(__instance);
         }
     }
 }

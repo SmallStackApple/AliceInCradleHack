@@ -1,4 +1,5 @@
 using AliceInCradleHack.config;
+using AliceInCradleHack.events;
 using UnityEngine;
 
 namespace AliceInCradleHack.module.modules.client.island
@@ -30,6 +31,11 @@ namespace AliceInCradleHack.module.modules.client.island
 
         public override void Initialize()
         {
+            if (IsEnabled)
+            {
+                XxINEvents.EventPostUpdate += OnXxInPostUpdate;
+            }
+
             Height.OnChanged(height => DynamicIsland.Instance.ContentHeight = height);
             TopMargin.OnChanged(margin => DynamicIsland.Instance.TopMargin = margin);
             PaddingX.OnChanged(padding => DynamicIsland.Instance.PaddingX = padding);
@@ -47,13 +53,20 @@ namespace AliceInCradleHack.module.modules.client.island
 
         public override void Enable()
         {
+            XxINEvents.EventPostUpdate += OnXxInPostUpdate;
             ApplySettings();
             DynamicIsland.Instance.Enabled = true;
         }
 
         public override void Disable()
         {
+            XxINEvents.EventPostUpdate -= OnXxInPostUpdate;
             DynamicIsland.Instance.Enabled = false;
+        }
+
+        private void OnXxInPostUpdate(object sender, XxINEvents.UpdateEventArgs e)
+        {
+            GuiBehaviour.EnsureCreated();
         }
 
         private void ApplySettings()
