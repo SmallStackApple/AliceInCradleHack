@@ -140,6 +140,147 @@ namespace AliceInCradleHack.config
         // Backup / restore
 
         /// <summary>
+        /// Serializes every registered root config into a single JSON object keyed by config name.
+        /// </summary>
+        public static string ExportAllToJson()
+        {
+            var all = new JObject();
+            foreach (var config in _configs)
+                all[config.Name] = config.ToJToken();
+            return all.ToString(Formatting.Indented);
+        }
+
+        /// <summary>
+        /// Applies a single merged JSON object (as produced by <see cref="ExportAllToJson"/>) to the
+        /// registered root configs and stores them. Unknown entries are skipped with a warning.
+        /// </summary>
+        public static bool ImportAllFromJson(string json)
+        {
+            if (string.IsNullOrWhiteSpace(json)) return false;
+            try
+            {
+                var all = JObject.Parse(json);
+                bool success = true;
+                foreach (var property in all.Properties())
+                {
+                    var config = FindConfig(property.Name);
+                    if (config == null)
+                    {
+                        Log.Warn($"Config '{property.Name}' not found, skipping...");
+                        success = false;
+                        continue;
+                    }
+                    if (property.Value is not JObject configObj) continue;
+                    config.FromJToken(configObj);
+                    Store(config);
+                }
+                return success;
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Unable to import config JSON", ex);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Saves all root configs into a single file named "{name}.json" inside the configs folder.
+        /// Returns the file name (without extension), or null on failure, an invalid name, or a name
+        /// that collides with a registered config.
+        /// </summary>
+        public static string SaveAllToFile(string name)
+        {
+            string safeName = SanitizeFileName(name);
+            if (safeName == null) return null;
+            if (FindConfig(safeName) != null)
+            {
+                Log.Warn($"Cannot save config as '{safeName}': name conflicts with a registered config");
+                return null;
+            }
+            try
+            {
+                string path = Path.Combine(ConfigsFolder, safeName + ".json");
+                File.WriteAllText(path, ExportAllToJson(), Encoding.UTF8);
+                Log.Info($"Saved config to {path}");
+                return safeName;
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Unable to save config file '{name}'", ex);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Loads a single-file config "{name}.json" from the configs folder and applies it.
+        /// Names that collide with registered configs are rejected.
+        /// </summary>
+        public static bool LoadAllFromFile(string name)
+        {
+            string safeName = SanitizeFileName(name);
+            if (safeName == null) return false;
+            if (FindConfig(safeName) != null)
+            {
+                Log.Warn($"Cannot load config '{safeName}': name conflicts with a registered config");
+                return false;
+            }
+            try
+            {
+                string path = Path.Combine(ConfigsFolder, safeName + ".json");
+                if (!File.Exists(path))
+                {
+                    Log.Warn($"Config file does not exist: {path}");
+                    return false;
+                }
+                return ImportAllFromJson(File.ReadAllText(path, Encoding.UTF8));
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Unable to load config file '{name}'", ex);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Lists single-file configs (excluding the per-config runtime files) saved in the configs folder.
+        /// </summary>
+        public static string[] ListSavedFiles()
+        {
+            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var config in _configs)
+                names.Add(config.Name.ToLowerInvariant());
+            var result = new List<string>();
+            try
+            {
+                if (!Directory.Exists(ConfigsFolder)) return Array.Empty<string>();
+                foreach (var file in Directory.GetFiles(ConfigsFolder, "*.json"))
+                {
+                    string baseName = Path.GetFileNameWithoutExtension(file);
+                    if (!names.Contains(baseName.ToLowerInvariant()))
+                        result.Add(baseName);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Unable to list saved config files", ex);
+            }
+            result.Sort(StringComparer.OrdinalIgnoreCase);
+            return result.ToArray();
+        }
+
+        private static string SanitizeFileName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return null;
+            var invalid = Path.GetInvalidFileNameChars();
+            var builder = new StringBuilder(name.Trim());
+            foreach (char c in invalid)
+                builder.Replace(c, '_');
+            string safe = builder.ToString();
+            if (safe.Length == 0) return null;
+            return safe;
+        }
+
+        /// <summary>
         /// Creates a zip backup of all config files. Returns the backup file name (without extension).
         /// </summary>
         public static string Backup(string fileName)

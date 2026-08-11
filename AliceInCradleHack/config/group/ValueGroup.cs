@@ -58,6 +58,9 @@ namespace AliceInCradleHack.config.group
         public Value<string> Text(string name, string defaultValue, string description = null)
             => AddValue(new Value<string>(name, defaultValue, description, ValueType.Text));
 
+        public ColorValue Color(string name, string defaultValue, string description = null)
+            => AddValue(new ColorValue(name, defaultValue, description));
+
         public RangedValue<int> Int(string name, int defaultValue, int min, int max, string suffix = "", string description = null)
             => AddValue(new RangedValue<int>(name, defaultValue, min, max, suffix, description));
 

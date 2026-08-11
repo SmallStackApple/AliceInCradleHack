@@ -101,6 +101,15 @@ namespace AliceInCradleHack.module
         /// </summary>
         private void ApplyEnabledStates()
         {
+            ReapplyEnabledStates();
+        }
+
+        /// <summary>
+        /// Re-applies the persisted enabled states to every module, enabling or disabling
+        /// modules whose <c>__IsEnabled</c> flag disagrees with their current state.
+        /// </summary>
+        public void ReapplyEnabledStates()
+        {
             foreach (var module in _modules.Values)
             {
                 bool shouldBeEnabled = module.EnabledValue?.Get() ?? module.IsEnabled;
