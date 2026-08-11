@@ -655,6 +655,7 @@
     <Compile Include="command\commands\CommandNotify.cs" />
     <Compile Include="config\Config.cs" />
     <Compile Include="config\ConfigSystem.cs" />
+    <Compile Include="config\ColorValue.cs" />
     <Compile Include="config\EnumChoiceValue.cs" />
     <Compile Include="config\group\ModeValueGroup.cs" />
     <Compile Include="config\group\ToggleableValueGroup.cs" />

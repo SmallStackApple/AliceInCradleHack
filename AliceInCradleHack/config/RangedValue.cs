@@ -4,13 +4,28 @@ using System.Globalization;
 namespace AliceInCradleHack.config
 {
     /// <summary>
+    /// Non-generic view of a <see cref="RangedValue{T}"/>, for tools (WebUI) that cannot
+    /// easily use the generic type.
+    /// </summary>
+    public interface IRangedValue
+    {
+        object MinObject { get; }
+        object MaxObject { get; }
+        string Suffix { get; }
+    }
+
+    /// <summary>
     /// A numeric value constrained to a [Min, Max] range. Incoming values are clamped.
     /// </summary>
-    public class RangedValue<T> : Value<T> where T : IComparable<T>
+    public class RangedValue<T> : Value<T>, IRangedValue where T : IComparable<T>
     {
         public T Min { get; set; }
         public T Max { get; set; }
         public string Suffix { get; set; } = "";
+
+        object IRangedValue.MinObject => Min;
+        object IRangedValue.MaxObject => Max;
+        string IRangedValue.Suffix => Suffix;
 
         public RangedValue(T defaultValue, string description = null)
             : base(defaultValue, description, GuessRangedType()) { }

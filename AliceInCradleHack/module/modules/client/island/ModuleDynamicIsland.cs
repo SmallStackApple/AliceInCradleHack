@@ -16,9 +16,9 @@ namespace AliceInCradleHack.module.modules.client.island
         public readonly RangedValue<float> PaddingX = new(15f, 0f, 64f, "px", "Horizontal padding between content and the island edges.");
         public readonly RangedValue<float> PaddingY = new(1.5f, 0f, 32f, "px", "Vertical padding between content and the island edges.");
         public readonly RangedValue<float> BackgroundOpacity = new(0.16f, 0f, 1f, "", "Opacity of the dynamic island background.");
-        public readonly Value<string> BackgroundColor = new("#000000", "Background color of the dynamic island (hex).");
-        public readonly Value<string> TextColor = new("#FFFFFF", "Color of primary text (hex).");
-        public readonly Value<string> SubTextColor = new("#BFBFBF", "Color of secondary sub text (hex).");
+        public readonly ColorValue BackgroundColor = new("#000000", "Background color of the dynamic island (hex).");
+        public readonly ColorValue TextColor = new("#FFFFFF", "Color of primary text (hex).");
+        public readonly ColorValue SubTextColor = new("#BFBFBF", "Color of secondary sub text (hex).");
         public readonly RangedValue<int> NotificationDuration = new(3000, 250, 10000, "ms", "How long a notification remains visible.");
         public readonly RangedValue<float> NotificationPadding = new(8f, 0f, 32f, "px", "Horizontal padding around notification text.");
         public readonly RangedValue<float> NotificationMaxWidth = new(640f, 100f, 1200f, "px", "Maximum width of a notification.");

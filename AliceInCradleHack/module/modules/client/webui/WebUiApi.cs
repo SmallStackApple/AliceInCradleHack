@@ -69,7 +69,7 @@ namespace AliceInCradleHack.module.modules.client.webui
                 var module = manager.GetModuleByName(moduleName);
                 if (module == null)
                 {
-                    WriteError(context, 404, $"模块不存在: {moduleName}");
+                    WriteError(context, 404, $"Module not found: {moduleName}");
                     return;
                 }
 
@@ -78,7 +78,7 @@ namespace AliceInCradleHack.module.modules.client.webui
                 {
                     if (moduleName == SelfModuleName && module.IsEnabled)
                     {
-                        WriteError(context, 400, "不能从网页关闭 WebUI 自身，请在控制台执行 module toggle WebUI");
+                        WriteError(context, 400, "Cannot disable WebUI itself from the web page. Use the console command: module toggle WebUI");
                         return;
                     }
                     manager.ToggleModule(moduleName);
@@ -92,15 +92,27 @@ namespace AliceInCradleHack.module.modules.client.webui
                     var settings = module.Settings.GetAllLeafNodes().Select(n =>
                     {
                         object value = n.GetValueObject();
-                        return new
+                        var result = new JObject
                         {
-                            path = n.GetPath(),
-                            name = n.Name,
-                            description = n.Description,
-                            type = value?.GetType().Name ?? "String",
-                            value,
-                            isEditable = IsNodeEditable(n)
+                            ["path"] = n.GetPath(),
+                            ["name"] = n.Name,
+                            ["description"] = n.Description,
+                            ["type"] = n.Type.ToString(),
+                            ["value"] = value == null ? JValue.CreateNull() : JToken.FromObject(value),
+                            ["isEditable"] = IsNodeEditable(n)
                         };
+                        if (n is IRangedValue ranged)
+                        {
+                            result["min"] = ranged.MinObject == null ? JValue.CreateNull() : JToken.FromObject(ranged.MinObject);
+                            result["max"] = ranged.MaxObject == null ? JValue.CreateNull() : JToken.FromObject(ranged.MaxObject);
+                            result["suffix"] = ranged.Suffix ?? "";
+                        }
+                        if (n.Type == AliceInCradleHack.config.ValueType.EnumChoice || n.Type == AliceInCradleHack.config.ValueType.MultiChoice)
+                        {
+                            var choices = GetEnumChoices(n);
+                            if (choices != null) result["choices"] = choices;
+                        }
+                        return result;
                     });
                     WriteJson(context, settings);
                     return;
@@ -109,35 +121,26 @@ namespace AliceInCradleHack.module.modules.client.webui
                 // POST /api/modules/{name}/settings  body: {"path": "...", "value": ...}
                 if (context.Request.HttpMethod == "POST" && segments.Length == 4 && segments[3] == "settings")
                 {
-                    var body = ReadBody(context);
-                    JObject payload;
-                    try
-                    {
-                        payload = JObject.Parse(body);
-                    }
-                    catch (Exception)
-                    {
-                        WriteError(context, 400, "请求体不是合法的 JSON");
-                        return;
-                    }
+                    var payload = ParseBody(context);
+                    if (payload == null) return;
 
                     string settingPath = payload["path"]?.ToString();
                     if (string.IsNullOrWhiteSpace(settingPath))
                     {
-                        WriteError(context, 400, "缺少 path 字段");
+                        WriteError(context, 400, "Missing 'path' field");
                         return;
                     }
 
                     if (!IsNodeEditable(manager.GetSettingNode(moduleName, settingPath)))
                     {
-                        WriteError(context, 400, "该设置为只读");
+                        WriteError(context, 400, "This setting is read-only");
                         return;
                     }
 
                     object value = UnwrapToken(payload["value"]);
                     if (!manager.SetSettingValue(moduleName, settingPath, value))
                     {
-                        WriteError(context, 400, "设置失败，请检查值类型是否正确");
+                        WriteError(context, 400, "Failed to apply setting. Check the value type.");
                         return;
                     }
 
@@ -146,12 +149,117 @@ namespace AliceInCradleHack.module.modules.client.webui
                 }
             }
 
+            // /api/config/...
+            if (segments.Length >= 2 && segments[1] == "config")
+            {
+                // GET /api/config/export  -> download a single merged JSON
+                if (context.Request.HttpMethod == "GET" && segments.Length == 3 && segments[2] == "export")
+                {
+                    WriteDownload(context, ConfigSystem.ExportAllToJson(), "aic-hack-config.json");
+                    return;
+                }
+
+                // POST /api/config/import  body: merged JSON
+                if (context.Request.HttpMethod == "POST" && segments.Length == 3 && segments[2] == "import")
+                {
+                    string body = ReadBody(context);
+                    if (!ConfigSystem.ImportAllFromJson(body))
+                    {
+                        WriteError(context, 400, "Import failed: invalid or incompatible JSON");
+                        return;
+                    }
+                    manager.ReapplyEnabledStates();
+                    WriteJson(context, new { ok = true, message = "Config imported." });
+                    return;
+                }
+
+                // GET /api/config/files  -> list saved single-file configs
+                if (context.Request.HttpMethod == "GET" && segments.Length == 3 && segments[2] == "files")
+                {
+                    WriteJson(context, ConfigSystem.ListSavedFiles());
+                    return;
+                }
+
+                // POST /api/config/save  body: {"name": "..."}
+                if (context.Request.HttpMethod == "POST" && segments.Length == 3 && segments[2] == "save")
+                {
+                    var payload = ParseBody(context);
+                    if (payload == null) return;
+                    string name = payload["name"]?.ToString();
+                    if (string.IsNullOrWhiteSpace(name))
+                    {
+                        WriteError(context, 400, "Missing 'name' field");
+                        return;
+                    }
+                    string saved = ConfigSystem.SaveAllToFile(name);
+                    if (saved == null)
+                    {
+                        WriteError(context, 400, "Failed to save config");
+                        return;
+                    }
+                    WriteJson(context, new { ok = true, name = saved, message = $"Config saved as '{saved}'." });
+                    return;
+                }
+
+                // POST /api/config/load  body: {"name": "..."}
+                if (context.Request.HttpMethod == "POST" && segments.Length == 3 && segments[2] == "load")
+                {
+                    var payload = ParseBody(context);
+                    if (payload == null) return;
+                    string name = payload["name"]?.ToString();
+                    if (string.IsNullOrWhiteSpace(name))
+                    {
+                        WriteError(context, 400, "Missing 'name' field");
+                        return;
+                    }
+                    if (!ConfigSystem.LoadAllFromFile(name))
+                    {
+                        WriteError(context, 400, "Failed to load config");
+                        return;
+                    }
+                    manager.ReapplyEnabledStates();
+                    WriteJson(context, new { ok = true, name = name, message = $"Config '{name}' loaded." });
+                    return;
+                }
+            }
+
             WriteError(context, 404, "Not found");
+        }
+
+        private static JObject ParseBody(HttpListenerContext context)
+        {
+            string body = ReadBody(context);
+            try
+            {
+                return JObject.Parse(body);
+            }
+            catch (Exception)
+            {
+                WriteError(context, 400, "Request body is not valid JSON");
+                return null;
+            }
         }
 
         private static bool IsNodeEditable(Value node)
         {
             return node != null && node is not ValueGroup && node.IsEditable;
+        }
+
+        private static JArray GetEnumChoices(Value node)
+        {
+            try
+            {
+                var choices = node.GetType().GetProperty("Choices")?.GetValue(node) as System.Collections.IEnumerable;
+                if (choices == null) return null;
+                var array = new JArray();
+                foreach (var choice in choices)
+                    array.Add(choice?.ToString());
+                return array;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         private static object UnwrapToken(JToken token)
@@ -174,6 +282,18 @@ namespace AliceInCradleHack.module.modules.client.webui
         private static void WriteError(HttpListenerContext context, int statusCode, string message)
         {
             WriteJson(context, new { error = message }, statusCode);
+        }
+
+        private static void WriteDownload(HttpListenerContext context, string content, string fileName)
+        {
+            byte[] buffer = Encoding.UTF8.GetBytes(content);
+            var response = context.Response;
+            response.StatusCode = 200;
+            response.ContentType = "application/json; charset=utf-8";
+            response.ContentLength64 = buffer.Length;
+            response.AddHeader("Content-Disposition", $"attachment; filename=\"{fileName}\"");
+            response.OutputStream.Write(buffer, 0, buffer.Length);
+            response.Close();
         }
 
         private static void WriteText(HttpListenerContext context, string content, string contentType, int statusCode = 200)

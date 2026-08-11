@@ -10,6 +10,7 @@ namespace AliceInCradleHack.config
         Float,
         Double,
         Text,
+        Color,
         EnumChoice,
         MultiChoice,
         Group,
