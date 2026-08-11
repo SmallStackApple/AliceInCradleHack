@@ -665,6 +665,7 @@
     <Compile Include="config\Value.cs" />
     <Compile Include="config\ValueType.cs" />
     <Compile Include="events\DamageEvents.cs" />
+    <Compile Include="events\XxINEvents.cs" />
     <Compile Include="extension\Extension.cs" />
     <Compile Include="extension\ExtensionManager.cs" />
     <Compile Include="InjectEntry.cs" />
