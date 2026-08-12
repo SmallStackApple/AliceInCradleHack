@@ -690,10 +690,13 @@
     <Compile Include="module\modules\combat\ModuleGApple.cs" />
     <Compile Include="module\modules\combat\ModuleKeepSprint.cs" />
     <Compile Include="module\modules\combat\ModuleVelocity.cs" />
+    <Compile Include="module\modules\combat\ModuleTpAura.cs" />
     <Compile Include="module\modules\misc\ModuleDiscordRPC.cs" />
     <Compile Include="module\modules\misc\ModuleKillSound.cs" />
     <Compile Include="module\modules\misc\ModuleHitSound.cs" />
     <Compile Include="module\modules\visual\ModuleMosaicRemove.cs" />
+    <Compile Include="module\modules\visual\ModuleHypixel.cs" />
+    <Compile Include="module\modules\visual\HypixelHud.cs" />
     <Compile Include="patch\Patch.cs" />
     <Compile Include="patch\PatchManager.cs" />
     <Compile Include="patch\patches\PatchM2dM2Attackable.cs" />
@@ -719,6 +722,9 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="GameDLL\" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resources\fonts\Minecraft.ttf" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateGitVersion" BeforeTargets="BeforeCompile">
