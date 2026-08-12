@@ -37,12 +37,14 @@ namespace AliceInCradleHack.module
             var builtInModules = new List<Module>
             {
                 new ModuleMosaicRemove(),
+                new ModuleHypixel(),
                 new ModuleDiscordRPC(),
                 new ModuleKillSound(),
                 new ModuleHitSound(),
                 new ModuleCritical(),
                 new ModuleVelocity(),
                 new ModuleKeepSprint(),
+                new ModuleTpAura(),
                 new ModuleWebUi(),
                 new ModuleGui(),
                 new ModuleDynamicIsland(),
