@@ -4,17 +4,21 @@ namespace AliceInCradleHack
 {
     public class InjectEntry
     {
-        private static readonly Thread _injectThread = new(Client.Initialize);
-
         // Entry point invoked by the injector: AliceInCradleHack.InjectEntry:Inject()
         private static void Inject()
         {
-            _injectThread.SetApartmentState(ApartmentState.STA);
-            _injectThread.Start();
+            var injectThread = new Thread(Client.Initialize)
+            {
+                IsBackground = true
+            };
+            injectThread.SetApartmentState(ApartmentState.STA);
+            injectThread.Start();
         }
 
+        // Note: ejecting the DLL with SharpInjector crashes the host process, reason unknown.
         private static void Eject()
         {
+            Client.Dispose();
         }
     }
 }

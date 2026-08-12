@@ -45,6 +45,47 @@ An injection hack for Alice In Cradle
 - 本倡议与 GPLv3 协议核心条款不冲突，二次开发、分发等行为仍需严格遵循协议要求（如保留版权声明、衍生作品开源、不得附加额外限制等）；
 - 本项目及衍生作品的版权归属原作者及贡献者，使用时请遵守相关法律法规与 GPLv3 协议。
 
+## 扩展开发 (Extension)
+
+### 目录结构
+扩展 DLL 放置于 `<主目录>\Extensions\`，初始化时会被自动扫描加载。每个扩展可携带一个 `lib` 子目录存放其依赖。
+
+```
+<主目录>\
+├── Extensions\
+│   ├── MyExtension.dll
+│   └── lib\          ← 该扩展的依赖（可选）
+```
+
+### 最小示例
+扩展需继承 `AliceInCradleHack.extension.Extension`，实现 `Initialize()` 与 `Dispose()`：
+
+```csharp
+public class MyExtension : Extension
+{
+    public override string Name => "MyExtension";
+    public override string Description => "示例扩展";
+
+    public override void Initialize()
+    {
+        // 在这里可直接调用现有 Manager 或游戏 API
+        ModuleManager.Instance.EnableModule("Critical");
+        CommandManager.Instance.RegisterCommand(new MyCommand());
+    }
+
+    public override void Dispose()
+    {
+        // 必须撤销 Initialize 中注册的所有资源
+        CommandManager.Instance.UnregisterCommand("mycmd");
+    }
+}
+```
+
+### 规则
+- 扩展与主程序运行在同一个 AppDomain，可直接访问 `ModuleManager`、`CommandManager`、`PatchManager` 等单例；
+- `Dispose()` 中必须撤销本扩展注册的命令、模块、Harmony 补丁等资源；
+- 扩展 DLL 无法从内存卸载（宿主导入的普通程序集），`Dispose` 只释放托管资源，DLL 需等游戏进程退出才释放。
+
 # English
 
 ## Introduction
@@ -83,3 +124,44 @@ This project and all **derivative works** developed based on it are licensed und
 ### Supplementary Notes
 - This initiative is not in conflict with the core clauses of the GPLv3 license. Secondary development, distribution and other behaviors must still strictly comply with the license requirements (such as retaining copyright notices, open sourcing derivative works, and not adding additional restrictions, etc.);
 - The copyright of this project and its derivative works belongs to the original author and contributors. Please comply with relevant laws, regulations and the GPLv3 license when using it.
+
+## Extension Development
+
+### Directory Layout
+Extension DLLs are placed under `<mainFolder>\Extensions\` and are scanned automatically during initialization. Each extension may ship a `lib` subfolder next to it for its dependencies.
+
+```
+<mainFolder>\
+├── Extensions\
+│   ├── MyExtension.dll
+│   └── lib\          <- this extension's dependencies (optional)
+```
+
+### Minimal Example
+Inherit `AliceInCradleHack.extension.Extension` and implement `Initialize()` / `Dispose()`:
+
+```csharp
+public class MyExtension : Extension
+{
+    public override string Name => "MyExtension";
+    public override string Description => "Example extension";
+
+    public override void Initialize()
+    {
+        // Call existing managers or game APIs directly from here
+        ModuleManager.Instance.EnableModule("Critical");
+        CommandManager.Instance.RegisterCommand(new MyCommand());
+    }
+
+    public override void Dispose()
+    {
+        // Undo everything registered in Initialize
+        CommandManager.Instance.UnregisterCommand("mycmd");
+    }
+}
+```
+
+### Rules
+- Extensions run in the same AppDomain as the main program, so singletons like `ModuleManager`, `CommandManager` and `PatchManager` are directly accessible;
+- `Dispose()` must undo every command, module, Harmony patch, etc. that the extension registered;
+- Extension DLLs cannot be unloaded from memory (they are ordinary injected assemblies); `Dispose` only releases managed resources, and the DLL is freed when the game process exits.

@@ -15,7 +15,7 @@ namespace AliceInCradleHack.config
         public static EnumChoiceValue<LogFileMode> FileMode { get; private set; }
 
         /// <summary>
-        /// Creates, registers and loads the config. Called once by <see cref="Log.Init"/>.
+        /// Creates, registers and loads the config. Called once by <see cref="Log.Initialize"/>.
         /// </summary>
         public static Config Register()
         {

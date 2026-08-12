@@ -669,6 +669,7 @@
     <Compile Include="extension\Extension.cs" />
     <Compile Include="extension\ExtensionManager.cs" />
     <Compile Include="Client.cs" />
+    <Compile Include="IClientComponent.cs" />
     <Compile Include="InjectEntry.cs" />
     <Compile Include="module\Module.cs" />
     <Compile Include="module\ModuleManager.cs" />
@@ -706,8 +707,9 @@
     <Compile Include="utils\animation\SpringAnimation.cs" />
     <Compile Include="utils\client\Log.cs" />
     <Compile Include="utils\client\MainFolder.cs" />
-    <Compile Include="utils\client\Notification.cs" />
-    <Compile Include="utils\game\M2Attackable.cs" />
+    <Compile Include="utils\client\ConsoleHost.cs" />
+    <Compile Include="utils\client\DependencyResolver.cs" />
+    <Compile Include="utils\client\Notification.cs" />    <Compile Include="utils\game\M2Attackable.cs" />
     <Compile Include="utils\game\NelItemManager.cs" />
     <Compile Include="utils\game\NelM2DBase.cs" />
     <Compile Include="utils\game\Player.cs" />

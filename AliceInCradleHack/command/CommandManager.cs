@@ -9,11 +9,14 @@ namespace AliceInCradleHack.command
 {
     /// <summary>
     /// Command manager (singleton). Registers commands and runs the console input loop.
+    /// <see cref="Initialize"/> both registers the built-in commands and starts the input
+    /// loop; <see cref="Dispose"/> stops the loop and clears the command registry.
     /// </summary>
-    public class CommandManager
+    public class CommandManager : IClientComponent
     {
         private readonly Dictionary<string, Command> _commands = new(StringComparer.OrdinalIgnoreCase);
         private readonly Thread _commandThread;
+        private volatile bool _stopRequested;
         private bool _initialized;
 
         private static readonly Lazy<CommandManager> _lazyInstance = new(() => new CommandManager());
@@ -23,15 +26,21 @@ namespace AliceInCradleHack.command
 
         private CommandManager()
         {
-            _commandThread = new Thread(CommandLoop);
+            _commandThread = new Thread(CommandLoop)
+            {
+                Name = "CommandLoop",
+                IsBackground = true
+            };
         }
 
         /// <summary>
-        /// Registers the built-in commands. Only effective on the first call.
+        /// Registers the built-in commands and starts the console input loop.
+        /// Idempotent; only the first call has an effect.
         /// </summary>
         public void Initialize()
         {
             if (_initialized) return;
+
             Log.Info("Registering initial commands...");
             List<Command> initialCommands = new()
             {
@@ -44,15 +53,33 @@ namespace AliceInCradleHack.command
             {
                 RegisterCommand(command);
             }
+
             _initialized = true;
+            _commandThread.Start();
         }
 
         /// <summary>
-        /// Registers a new command.
+        /// Registers a new command. Duplicate names are skipped with a warning.
         /// </summary>
         public void RegisterCommand(Command command)
         {
+            if (command == null)
+                throw new ArgumentNullException(nameof(command));
+
+            if (_commands.ContainsKey(command.Name))
+            {
+                Log.Warn($"Command '{command.Name}' already registered, skipping.");
+                return;
+            }
             _commands.Add(command.Name, command);
+        }
+
+        /// <summary>
+        /// Removes a previously registered command by name.
+        /// </summary>
+        public bool UnregisterCommand(string name)
+        {
+            return !string.IsNullOrWhiteSpace(name) && _commands.Remove(name);
         }
 
         /// <summary>
@@ -102,11 +129,34 @@ namespace AliceInCradleHack.command
         }
 
         /// <summary>
-        /// Reads user input and executes commands until the console closes.
+        /// Stops the command loop and clears the command registry. If the loop does not exit
+        /// within a short timeout (e.g. it is blocked on <see cref="Console.ReadLine"/>), the
+        /// background thread is abandoned.
+        /// </summary>
+        public void Dispose()
+        {
+            if (!_initialized && _commands.Count == 0) return;
+
+            _stopRequested = true;
+            try { _commandThread.Interrupt(); }
+            catch { /* thread may not be started yet */ }
+
+            if (_commandThread != Thread.CurrentThread && _commandThread.IsAlive)
+            {
+                if (!_commandThread.Join(TimeSpan.FromSeconds(2)))
+                    Log.Warn("Command loop did not exit in time; abandoning thread.");
+            }
+
+            _commands.Clear();
+            _initialized = false;
+        }
+
+        /// <summary>
+        /// Reads user input and executes commands until <see cref="Dispose"/> is called.
         /// </summary>
         private void CommandLoop()
         {
-            while (true)
+            while (!_stopRequested)
             {
                 try
                 {
@@ -114,23 +164,21 @@ namespace AliceInCradleHack.command
                     string input = Console.ReadLine();
                     if (string.IsNullOrEmpty(input))
                     {
+                        if (_stopRequested) break;
                         continue;
                     }
                     ExecuteCommand(input);
                 }
+                catch (ThreadInterruptedException)
+                {
+                    if (_stopRequested) break;
+                }
                 catch (Exception ex)
                 {
+                    if (_stopRequested) break;
                     Log.Error("Error in command loop", ex);
                 }
             }
-        }
-
-        /// <summary>
-        /// Starts the command loop on a background thread.
-        /// </summary>
-        public void RunCommandLoop()
-        {
-            _commandThread.Start();
         }
     }
 }

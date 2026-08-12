@@ -24,7 +24,7 @@ namespace AliceInCradleHack.utils.client
         /// Registers and loads the "Log" config, then opens the file sink if enabled.
         /// Safe to call multiple times; only the first call has an effect.
         /// </summary>
-        public static void Init()
+        public static void Initialize()
         {
             lock (_lock)
             {
@@ -51,10 +51,15 @@ namespace AliceInCradleHack.utils.client
         public static void Error(string message, Exception ex) =>
             Write(LogLevel.Error, $"{message}: {ex}");
 
-        public static void Shutdown()
+        /// <summary>
+        /// Closes the file sink and resets the logger so it can be initialized again.
+        /// Safe to call at any time.
+        /// </summary>
+        public static void Dispose()
         {
             lock (_lock)
             {
+                _initialized = false;
                 CloseWriterNoLock();
             }
         }

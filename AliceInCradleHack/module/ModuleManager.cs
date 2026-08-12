@@ -20,9 +20,10 @@ namespace AliceInCradleHack.module
     /// Module manager (singleton). Handles module registration, initialization,
     /// enable/disable lifecycle and settings access.
     /// </summary>
-    public class ModuleManager
+    public class ModuleManager : IClientComponent
     {
         private readonly ConcurrentDictionary<string, Module> _modules = new();
+        private bool _initialized;
 
         private static readonly Lazy<ModuleManager> _lazyInstance = new(() => new ModuleManager());
         public static ModuleManager Instance => _lazyInstance.Value;
@@ -31,9 +32,12 @@ namespace AliceInCradleHack.module
 
         /// <summary>
         /// Registers and initializes all built-in modules, then loads their configs.
+        /// Idempotent; only the first call has an effect.
         /// </summary>
         public void Initialize()
         {
+            if (_initialized) return;
+
             var builtInModules = new List<Module>
             {
                 new ModuleMosaicRemove(),
@@ -58,6 +62,31 @@ namespace AliceInCradleHack.module
 
             ConfigSystem.LoadAll();
             ApplyEnabledStates();
+            _initialized = true;
+        }
+
+        /// <summary>
+        /// Disables every enabled module and clears the module registry.
+        /// Shutdown does not persist the disabled state. Safe to call more than once.
+        /// </summary>
+        public void Dispose()
+        {
+            foreach (var module in _modules.Values.ToArray())
+            {
+                if (!module.IsEnabled) continue;
+                try
+                {
+                    module.Disable();
+                    module.IsEnabled = false;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"Failed to disable module {module.Name} during shutdown", ex);
+                }
+            }
+
+            _modules.Clear();
+            _initialized = false;
         }
 
         /// <summary>
@@ -96,6 +125,29 @@ namespace AliceInCradleHack.module
             {
                 Log.Warn($"Module already exists, skip registration {module.Name}");
             }
+        }
+
+        /// <summary>
+        /// Unregisters a module: disables it if enabled, then removes it from the registry.
+        /// </summary>
+        public bool UnregisterModule(string moduleName)
+        {
+            if (string.IsNullOrWhiteSpace(moduleName)) return false;
+            if (!_modules.TryRemove(moduleName, out var module)) return false;
+
+            try
+            {
+                if (module.IsEnabled)
+                {
+                    module.Disable();
+                    module.IsEnabled = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Failed to disable module '{moduleName}' during unregister", ex);
+            }
+            return true;
         }
 
         /// <summary>

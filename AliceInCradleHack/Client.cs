@@ -4,10 +4,10 @@ using AliceInCradleHack.module;
 using AliceInCradleHack.patch;
 using AliceInCradleHack.utils.client;
 using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
+using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading;
 
 namespace AliceInCradleHack
 {
@@ -17,24 +17,10 @@ namespace AliceInCradleHack
         public const string VersionType = "beta";
         public const string Version = "0.0.1";
 
-        [DllImport("kernel32.dll")]
-        private static extern bool AllocConsole();
-
-        [DllImport("kernel32.dll")]
-        private static extern bool FreeConsole();
-
-        private static void SetupConsole()
-        {
-            AllocConsole();
-
-            // Redirect input and output to the new console.
-            Console.SetOut(new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
-            Console.SetIn(new StreamReader(Console.OpenStandardInput()));
-            Console.Title = "AliceInCradleHack Console";
-
-            // Swallow Ctrl+C so the host game process is not terminated.
-            Console.CancelKeyPress += (sender, e) => e.Cancel = true;
-        }
+        private static readonly object _lifecycleLock = new();
+        private static readonly List<IClientComponent> _components = new();
+        private static bool _initialized;
+        private static bool _disposed;
 
         private static void PrintSplash()
         {
@@ -50,27 +36,22 @@ namespace AliceInCradleHack
             );
         }
 
-        // Loads dependencies from mainFolder\lib.
-        private static void RegisterAssemblyResolver(string mainFolder)
-        {
-            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
-            {
-                string assemblyName = new AssemblyName(args.Name).Name + ".dll";
-                string assemblyPath = Path.Combine(mainFolder + "\\lib", assemblyName);
-
-                if (File.Exists(assemblyPath))
-                {
-                    return Assembly.LoadFrom(assemblyPath);
-                }
-                return null;
-            };
-        }
-
         public static void Initialize()
         {
+            lock (_lifecycleLock)
+            {
+                if (_initialized) return;
+                if (_disposed)
+                {
+                    Console.WriteLine("AliceInCradleHack has already been shut down.");
+                    return;
+                }
+                _initialized = true;
+            }
+
             try
             {
-                SetupConsole();
+                ConsoleHost.Instance.Initialize();
                 PrintSplash();
 
                 Log.Info("Initializing...");
@@ -80,42 +61,89 @@ namespace AliceInCradleHack
                 Log.Info("Main folder: " + mainFolder);
 
                 Log.Info("Registering dependency resolver...");
-                RegisterAssemblyResolver(mainFolder);
+                DependencyResolver.Instance.RegisterDirectory(Path.Combine(mainFolder, "lib"));
 
-                Log.Init();
-
+                Log.Initialize();
                 Log.Info("Runtime: " + RuntimeInformation.FrameworkDescription + " (CLR " + Environment.Version + ")");
 
                 Log.Info("Applying patches...");
-                PatchManager.Instance.Initialize();
+                Start(PatchManager.Instance);
 
                 Log.Info("Registering commands...");
-                CommandManager.Instance.Initialize();
+                Start(CommandManager.Instance);
 
                 Log.Info("Initializing modules...");
-                ModuleManager.Instance.Initialize();
+                Start(ModuleManager.Instance);
 
                 Log.Info("Loading extensions...");
-                string extensionsDir = Path.Combine(mainFolder, "Extensions");
-                ExtensionManager.Instance.LoadFromDirectory(extensionsDir);
+                Start(ExtensionManager.Instance);
 
                 Log.Info("Initialization complete.");
                 Log.Info("Injection successful!");
-
-                CommandManager.Instance.RunCommandLoop();
             }
             catch (Exception ex)
             {
                 Log.Error("Injection failed", ex);
                 Log.Error("Please eject the DLL.");
+                DisposeComponents();
+                lock (_lifecycleLock) _initialized = false;
             }
         }
 
-        // Note: ejecting the DLL with SharpInjector crashes the host process, reason unknown.
-        private static void Eject()
+        /// <summary>
+        /// Shuts the hack down in reverse order of initialization: extensions, modules,
+        /// commands, patches, then the log file and the console. Note: ejecting the DLL with
+        /// SharpInjector crashes the host process, reason unknown.
+        /// </summary>
+        public static void Dispose()
         {
-            Log.Shutdown();
-            FreeConsole();
+            lock (_lifecycleLock)
+            {
+                if (_disposed) return;
+                _disposed = true;
+            }
+
+            try
+            {
+                Log.Info("Shutting down...");
+                DisposeComponents();
+            }
+            finally
+            {
+                Log.Dispose();
+                ConsoleHost.Instance.Dispose();
+            }
+        }
+
+        private static void Start(IClientComponent component)
+        {
+            component.Initialize();
+            lock (_lifecycleLock)
+            {
+                _components.Add(component);
+            }
+        }
+
+        private static void DisposeComponents()
+        {
+            IClientComponent[] components;
+            lock (_lifecycleLock)
+            {
+                components = _components.ToArray();
+                _components.Clear();
+            }
+
+            for (int i = components.Length - 1; i >= 0; i--)
+            {
+                try
+                {
+                    components[i].Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"Failed to dispose {components[i].GetType().Name}", ex);
+                }
+            }
         }
     }
 }
