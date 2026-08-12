@@ -14,6 +14,15 @@ namespace AliceInCradleHack.extension
         public abstract string Description { get; }
         public bool IsLoaded { get; internal set; }
 
+        /// <summary>
+        /// Absolute path of this extension's own folder, e.g.
+        /// <c>&lt;mainFolder&gt;\Extensions\MyExtension</c>. Set by <see cref="ExtensionManager"/>
+        /// before <see cref="Initialize"/> is called, so it is safe to read inside
+        /// <see cref="Initialize"/>. Use it to locate the extension's config/data resources,
+        /// which are isolated per extension and never shared.
+        /// </summary>
+        public string CurrentFolder { get; internal set; }
+
         public abstract void Initialize();
         public abstract void Dispose();
     }

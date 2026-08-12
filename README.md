@@ -48,14 +48,22 @@ An injection hack for Alice In Cradle
 ## 扩展开发 (Extension)
 
 ### 目录结构
-扩展 DLL 放置于 `<主目录>\Extensions\`，初始化时会被自动扫描加载。每个扩展可携带一个 `lib` 子目录存放其依赖。
+扩展以**一级子目录**的形式放置于 `<主目录>\Extensions\` 下，初始化时每个子目录会被自动扫描加载。
+每个扩展独占一个文件夹，依赖放在自己的 `lib\` 子目录中，互不共享，实现依赖隔离。
+`Extensions\` 根目录下的 DLL 不会被加载。
 
 ```
 <主目录>\
 ├── Extensions\
-│   ├── MyExtension.dll
-│   └── lib\          ← 该扩展的依赖（可选）
+│   ├── MyExtension\
+│   │   ├── MyExtension.dll
+│   │   └── lib\          ← 该扩展私有的依赖（可选）
+│   └── AnotherExtension\
+│       └── AnotherExtension.dll
 ```
+
+扩展可通过 `CurrentFolder` 属性读取自己所在文件夹的绝对路径（在 `Initialize()` 之前由
+`ExtensionManager` 赋值），用于定位自己的配置、数据等资源。
 
 ### 最小示例
 扩展需继承 `AliceInCradleHack.extension.Extension`，实现 `Initialize()` 与 `Dispose()`：
@@ -83,6 +91,8 @@ public class MyExtension : Extension
 
 ### 规则
 - 扩展与主程序运行在同一个 AppDomain，可直接访问 `ModuleManager`、`CommandManager`、`PatchManager` 等单例；
+- 每个扩展独占一个 `Extensions\<扩展名>\` 文件夹，依赖放在自己的 `lib\` 子目录中；
+- `CurrentFolder` 在 `Initialize()` 之前被赋值，指向扩展自己的文件夹，可在 `Initialize()` 中使用；
 - `Dispose()` 中必须撤销本扩展注册的命令、模块、Harmony 补丁等资源；
 - 扩展 DLL 无法从内存卸载（宿主导入的普通程序集），`Dispose` 只释放托管资源，DLL 需等游戏进程退出才释放。
 
@@ -128,14 +138,23 @@ This project and all **derivative works** developed based on it are licensed und
 ## Extension Development
 
 ### Directory Layout
-Extension DLLs are placed under `<mainFolder>\Extensions\` and are scanned automatically during initialization. Each extension may ship a `lib` subfolder next to it for its dependencies.
+Each extension lives in its own first-level subfolder under `<mainFolder>\Extensions\` and is scanned
+automatically during initialization. Every extension owns a private `lib\` subfolder for its
+dependencies, so extensions never share dependency folders. DLLs placed directly under
+`Extensions\` root are not loaded.
 
 ```
 <mainFolder>\
 ├── Extensions\
-│   ├── MyExtension.dll
-│   └── lib\          <- this extension's dependencies (optional)
+│   ├── MyExtension\
+│   │   ├── MyExtension.dll
+│   │   └── lib\          <- this extension's private dependencies (optional)
+│   └── AnotherExtension\
+│       └── AnotherExtension.dll
 ```
+
+An extension can read its own folder's absolute path via the `CurrentFolder` property (assigned by
+`ExtensionManager` before `Initialize()` is called) to locate its config/data resources.
 
 ### Minimal Example
 Inherit `AliceInCradleHack.extension.Extension` and implement `Initialize()` / `Dispose()`:
@@ -163,5 +182,7 @@ public class MyExtension : Extension
 
 ### Rules
 - Extensions run in the same AppDomain as the main program, so singletons like `ModuleManager`, `CommandManager` and `PatchManager` are directly accessible;
+- Each extension owns a dedicated `Extensions\<extension>\` folder, with its dependencies in a private `lib\` subfolder;
+- `CurrentFolder` is assigned before `Initialize()` and points to the extension's own folder; it is ready to use inside `Initialize()`;
 - `Dispose()` must undo every command, module, Harmony patch, etc. that the extension registered;
 - Extension DLLs cannot be unloaded from memory (they are ordinary injected assemblies); `Dispose` only releases managed resources, and the DLL is freed when the game process exits.
