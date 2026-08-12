@@ -8,17 +8,41 @@ using System.Reflection;
 namespace AliceInCradleHack.extension
 {
     /// <summary>
-    /// Extension manager (singleton). Loads extension DLLs from a directory and manages their lifecycle.
+    /// Extension manager (singleton). Loads extension DLLs from a directory and manages their
+    /// lifecycle. <see cref="Initialize"/> scans &lt;mainFolder&gt;\Extensions;
+    /// <see cref="Dispose"/> unloads every loaded extension in reverse registration order.
+    /// Extensions run in the default AppDomain, so they can call the game and the client's
+    /// managers directly. Note: because assemblies are loaded with <see cref="Assembly.LoadFrom"/>
+    /// and never into a dedicated AppDomain, the DLL files stay resident until the host process
+    /// exits — "unloading" only releases the extension's managed resources.
     /// </summary>
-    public class ExtensionManager
+    public class ExtensionManager : IClientComponent
     {
-        private readonly Dictionary<string, Extension> _extensions = new();
+        private readonly Dictionary<string, Extension> _extensions = new(StringComparer.OrdinalIgnoreCase);
+        private readonly List<string> _loadOrder = new();
+        private readonly Dictionary<string, string> _extensionLibDirs = new(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _registeredLibDirs = new(StringComparer.OrdinalIgnoreCase);
+        private bool _initialized;
 
         private static readonly Lazy<ExtensionManager> _lazyInstance = new(() => new ExtensionManager());
         public static ExtensionManager Instance => _lazyInstance.Value;
 
         private ExtensionManager() { }
 
+        /// <summary>
+        /// Scans &lt;mainFolder&gt;\Extensions for extension DLLs. Idempotent.
+        /// </summary>
+        public void Initialize()
+        {
+            if (_initialized) return;
+            string extensionsDir = Path.Combine(MainFolder.GetMainFolder(), "Extensions");
+            LoadFromDirectory(extensionsDir);
+            _initialized = true;
+        }
+
+        /// <summary>
+        /// Scans a directory for extension DLLs and registers every Extension type found.
+        /// </summary>
         public void LoadFromDirectory(string directory)
         {
             if (!Directory.Exists(directory))
@@ -29,7 +53,7 @@ namespace AliceInCradleHack.extension
 
             Log.Info($"Scanning extensions from: {directory}");
 
-            foreach (var dllPath in Directory.GetFiles(directory, "*.dll"))
+            foreach (var dllPath in Directory.GetFiles(directory, "*.dll").OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
             {
                 var fileName = Path.GetFileName(dllPath);
                 if (fileName.Equals("AliceInCradleHack.dll", StringComparison.OrdinalIgnoreCase))
@@ -54,25 +78,46 @@ namespace AliceInCradleHack.extension
             // Resolve extension dependencies from a "lib" folder next to the extension DLL.
             if (Directory.Exists(libDir))
             {
-                AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+                lock (_registeredLibDirs)
                 {
-                    var name = new AssemblyName(args.Name).Name + ".dll";
-                    var path = Path.Combine(libDir, name);
-                    return File.Exists(path) ? Assembly.LoadFrom(path) : null;
-                };
+                    if (_registeredLibDirs.Add(libDir))
+                        DependencyResolver.Instance.RegisterDirectory(libDir);
+                }
             }
 
-            var assembly = Assembly.LoadFrom(dllPath);
-
-            foreach (var type in assembly.GetTypes())
+            Assembly assembly;
+            try
             {
-                if (type.IsAbstract || !type.IsSubclassOf(typeof(Extension)))
+                assembly = Assembly.LoadFrom(dllPath);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Failed to load assembly from {dllPath}", ex);
+                return;
+            }
+
+            Type[] types;
+            try
+            {
+                types = assembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException rtle)
+            {
+                // Types whose dependencies failed to resolve are null; keep what is loadable.
+                types = rtle.Types.Where(t => t != null).ToArray();
+                foreach (var loaderException in rtle.LoaderExceptions ?? Array.Empty<Exception>())
+                    Log.Error($"Type resolution failed in {Path.GetFileName(dllPath)}", loaderException);
+            }
+
+            foreach (var type in types)
+            {
+                if (type.IsAbstract || type.IsNotPublic || type.ContainsGenericParameters || !type.IsSubclassOf(typeof(Extension)))
                     continue;
 
                 try
                 {
-                    var ext = (Extension)Activator.CreateInstance(type);
-                    RegisterExtension(ext);
+                    if (Activator.CreateInstance(type) is Extension ext)
+                        RegisterExtension(ext, libDir);
                 }
                 catch (Exception ex)
                 {
@@ -83,8 +128,19 @@ namespace AliceInCradleHack.extension
 
         public void RegisterExtension(Extension ext)
         {
+            RegisterExtension(ext, null);
+        }
+
+        private void RegisterExtension(Extension ext, string libDir)
+        {
             if (ext == null)
                 throw new ArgumentNullException(nameof(ext));
+
+            if (string.IsNullOrWhiteSpace(ext.Name))
+            {
+                Log.Error($"Extension of type {ext.GetType().FullName} has an empty name, skipping.");
+                return;
+            }
 
             if (_extensions.ContainsKey(ext.Name))
             {
@@ -94,9 +150,12 @@ namespace AliceInCradleHack.extension
 
             try
             {
-                ext.Load();
+                ext.Initialize();
                 ext.IsLoaded = true;
                 _extensions[ext.Name] = ext;
+                _loadOrder.Add(ext.Name);
+                if (!string.IsNullOrEmpty(libDir))
+                    _extensionLibDirs[ext.Name] = libDir;
                 Log.Info($"Loaded extension: {ext.Name} v{ext.GetType().Assembly.GetName().Version}");
             }
             catch (Exception ex)
@@ -111,14 +170,27 @@ namespace AliceInCradleHack.extension
 
             try
             {
-                ext.Unload();
+                ext.Dispose();
                 ext.IsLoaded = false;
-                _extensions.Remove(name);
                 Log.Info($"Unloaded extension: {name}");
             }
             catch (Exception ex)
             {
                 Log.Error($"Failed to unload extension '{name}'", ex);
+            }
+            finally
+            {
+                _extensions.Remove(name);
+                _loadOrder.Remove(name);
+                if (_extensionLibDirs.TryGetValue(name, out var libDir))
+                {
+                    _extensionLibDirs.Remove(name);
+                    lock (_registeredLibDirs)
+                    {
+                        _registeredLibDirs.Remove(libDir);
+                    }
+                    DependencyResolver.Instance.UnregisterDirectory(libDir);
+                }
             }
         }
 
@@ -128,12 +200,20 @@ namespace AliceInCradleHack.extension
             return ext as T;
         }
 
-        public IEnumerable<Extension> GetAllExtensions() => _extensions.Values;
+        public IEnumerable<Extension> GetAllExtensions() => _extensions.Values.ToArray();
 
-        public void UnloadAll()
+        /// <summary>
+        /// Unloads every extension in reverse registration order. Safe to call more than once.
+        /// </summary>
+        public void Dispose()
         {
-            foreach (var name in _extensions.Keys.ToArray())
-                UnloadExtension(name);
+            if (_extensions.Count == 0 && !_initialized) return;
+
+            for (int i = _loadOrder.Count - 1; i >= 0; i--)
+            {
+                UnloadExtension(_loadOrder[i]);
+            }
+            _initialized = false;
         }
     }
 }
