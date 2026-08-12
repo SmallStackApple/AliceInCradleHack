@@ -8,8 +8,11 @@ using System.Reflection;
 namespace AliceInCradleHack.extension
 {
     /// <summary>
-    /// Extension manager (singleton). Loads extension DLLs from a directory and manages their
-    /// lifecycle. <see cref="Initialize"/> scans &lt;mainFolder&gt;\Extensions;
+    /// Extension manager (singleton). Loads extension DLLs from per-extension subdirectories under
+    /// &lt;mainFolder&gt;\Extensions and manages their lifecycle. Each extension is isolated in its
+    /// own folder (e.g. <c>Extensions\MyExtension\</c>), owns a private <c>lib\</c> subfolder for
+    /// its dependencies, and can read its folder via <see cref="Extension.CurrentFolder"/>.
+    /// <see cref="Initialize"/> scans <c>&lt;mainFolder&gt;\Extensions</c> one level deep;
     /// <see cref="Dispose"/> unloads every loaded extension in reverse registration order.
     /// Extensions run in the default AppDomain, so they can call the game and the client's
     /// managers directly. Note: because assemblies are loaded with <see cref="Assembly.LoadFrom"/>
@@ -20,7 +23,7 @@ namespace AliceInCradleHack.extension
     {
         private readonly Dictionary<string, Extension> _extensions = new(StringComparer.OrdinalIgnoreCase);
         private readonly List<string> _loadOrder = new();
-        private readonly Dictionary<string, string> _extensionLibDirs = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, string> _extensionFolders = new(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _registeredLibDirs = new(StringComparer.OrdinalIgnoreCase);
         private bool _initialized;
 
@@ -30,18 +33,42 @@ namespace AliceInCradleHack.extension
         private ExtensionManager() { }
 
         /// <summary>
-        /// Scans &lt;mainFolder&gt;\Extensions for extension DLLs. Idempotent.
+        /// Scans &lt;mainFolder&gt;\Extensions for extension folders. Idempotent.
         /// </summary>
         public void Initialize()
         {
             if (_initialized) return;
             string extensionsDir = Path.Combine(MainFolder.GetMainFolder(), "Extensions");
-            LoadFromDirectory(extensionsDir);
+            ScanExtensionsFolder(extensionsDir);
             _initialized = true;
         }
 
         /// <summary>
+        /// Scans &lt;Extensions&gt; one level deep and loads the extension DLLs found in each
+        /// subfolder. DLLs placed directly in the root are ignored, so every extension keeps its
+        /// own isolated folder. Extension folders named <c>lib</c> are not treated as extensions.
+        /// </summary>
+        public void ScanExtensionsFolder(string extensionsDir)
+        {
+            if (!Directory.Exists(extensionsDir))
+            {
+                Log.Warn($"Extension directory not found: {extensionsDir}");
+                return;
+            }
+
+            Log.Info($"Scanning extensions from: {extensionsDir}");
+
+            foreach (var dir in Directory.GetDirectories(extensionsDir).OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
+            {
+                if (Path.GetFileName(dir).Equals("lib", StringComparison.OrdinalIgnoreCase))
+                    continue;
+                LoadFromDirectory(dir);
+            }
+        }
+
+        /// <summary>
         /// Scans a directory for extension DLLs and registers every Extension type found.
+        /// The directory itself becomes the extension's <see cref="Extension.CurrentFolder"/>.
         /// </summary>
         public void LoadFromDirectory(string directory)
         {
@@ -50,8 +77,6 @@ namespace AliceInCradleHack.extension
                 Log.Warn($"Extension directory not found: {directory}");
                 return;
             }
-
-            Log.Info($"Scanning extensions from: {directory}");
 
             foreach (var dllPath in Directory.GetFiles(directory, "*.dll").OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
             {
@@ -75,7 +100,8 @@ namespace AliceInCradleHack.extension
             var dir = Path.GetDirectoryName(dllPath);
             var libDir = Path.Combine(dir, "lib");
 
-            // Resolve extension dependencies from a "lib" folder next to the extension DLL.
+            // Resolve extension dependencies from a "lib" folder inside the extension's own folder,
+            // so each extension's dependencies stay isolated from every other extension's.
             if (Directory.Exists(libDir))
             {
                 lock (_registeredLibDirs)
@@ -117,7 +143,7 @@ namespace AliceInCradleHack.extension
                 try
                 {
                     if (Activator.CreateInstance(type) is Extension ext)
-                        RegisterExtension(ext, libDir);
+                        RegisterExtension(ext, dir);
                 }
                 catch (Exception ex)
                 {
@@ -131,7 +157,7 @@ namespace AliceInCradleHack.extension
             RegisterExtension(ext, null);
         }
 
-        private void RegisterExtension(Extension ext, string libDir)
+        private void RegisterExtension(Extension ext, string folder)
         {
             if (ext == null)
                 throw new ArgumentNullException(nameof(ext));
@@ -150,12 +176,13 @@ namespace AliceInCradleHack.extension
 
             try
             {
+                ext.CurrentFolder = folder;
                 ext.Initialize();
                 ext.IsLoaded = true;
                 _extensions[ext.Name] = ext;
                 _loadOrder.Add(ext.Name);
-                if (!string.IsNullOrEmpty(libDir))
-                    _extensionLibDirs[ext.Name] = libDir;
+                if (!string.IsNullOrEmpty(folder))
+                    _extensionFolders[ext.Name] = folder;
                 Log.Info($"Loaded extension: {ext.Name} v{ext.GetType().Assembly.GetName().Version}");
             }
             catch (Exception ex)
@@ -182,9 +209,10 @@ namespace AliceInCradleHack.extension
             {
                 _extensions.Remove(name);
                 _loadOrder.Remove(name);
-                if (_extensionLibDirs.TryGetValue(name, out var libDir))
+                if (_extensionFolders.TryGetValue(name, out var folder))
                 {
-                    _extensionLibDirs.Remove(name);
+                    _extensionFolders.Remove(name);
+                    var libDir = Path.Combine(folder, "lib");
                     lock (_registeredLibDirs)
                     {
                         _registeredLibDirs.Remove(libDir);
