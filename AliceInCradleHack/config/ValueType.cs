@@ -13,6 +13,7 @@ namespace AliceInCradleHack.config
         Color,
         EnumChoice,
         MultiChoice,
+        List,
         Group,
         ToggleableGroup,
         ModeGroup,

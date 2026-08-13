@@ -272,6 +272,9 @@ function renderSetting(moduleName, s) {
     case 'EnumChoice':
       renderEnumChoice(ctrl, moduleName, s);
       break;
+    case 'List':
+      renderStringList(ctrl, moduleName, s);
+      break;
     default:
       renderText(ctrl, moduleName, s);
   }
@@ -391,6 +394,60 @@ function renderEnumChoice(ctrl, moduleName, s) {
   }
   sel.addEventListener('change', () => saveSetting(moduleName, s.path, sel.value));
   ctrl.appendChild(sel);
+}
+
+function renderStringList(ctrl, moduleName, s) {
+  const list = document.createElement('div');
+  list.style.display = 'flex';
+  list.style.flexDirection = 'column';
+  list.style.alignItems = 'stretch';
+  list.style.gap = '6px';
+  list.style.width = '320px';
+
+  const values = Array.isArray(s.value) ? s.value.slice() : [];
+  const save = () => saveSetting(moduleName, s.path, Array.from(list.querySelectorAll('input')).map(input => input.value));
+
+  const addItem = (value) => {
+    const line = document.createElement('div');
+    line.style.display = 'flex';
+    line.style.gap = '6px';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = value || '';
+    input.spellcheck = false;
+    input.style.flex = '1';
+    input.addEventListener('change', save);
+
+    const remove = document.createElement('button');
+    remove.className = 'btn';
+    remove.type = 'button';
+    remove.textContent = '×';
+    remove.title = 'Remove item';
+    remove.addEventListener('click', () => {
+      line.remove();
+      save();
+    });
+
+    line.appendChild(input);
+    line.appendChild(remove);
+    list.appendChild(line);
+  };
+
+  values.forEach(addItem);
+
+  const add = document.createElement('button');
+  add.className = 'btn';
+  add.type = 'button';
+  add.textContent = '+ Add';
+  add.addEventListener('click', () => {
+    addItem('');
+    const inputs = list.querySelectorAll('input');
+    inputs[inputs.length - 1].focus();
+  });
+
+  ctrl.appendChild(list);
+  ctrl.appendChild(add);
 }
 
 function renderText(ctrl, moduleName, s) {
