@@ -54,9 +54,10 @@ namespace AliceInCradleHack.module.modules.client.webui
                     {
                         name = m.Name,
                         description = m.Description,
-                        category = m.Category,
-                        isEnabled = m.IsEnabled,
-                        isSelf = m.Name == SelfModuleName
+                         category = m.Category,
+                         isEnabled = m.IsEnabled,
+                         keybind = m.Keybind.Get(),
+                         isSelf = m.Name == SelfModuleName
                     });
                 WriteJson(context, modules);
                 return;

@@ -60,6 +60,8 @@ h1 .sub { color: var(--muted); font-size: 13px; font-weight: 400; margin-left: 8
 .mod-desc { color: var(--muted); font-size: 12px; margin-top: 3px; }
 .chevron { color: var(--muted); margin-left: 12px; transition: transform .15s; font-size: 12px; }
 .card.open .chevron { transform: rotate(90deg); }
+.head-keybind { margin-left: 12px; }
+.head-keybind .keybind button { padding: 4px 8px; min-width: 78px; }
 .switch { position: relative; width: 42px; height: 22px; flex-shrink: 0; margin-left: 12px; }
 .switch input { opacity: 0; width: 100%; height: 100%; position: absolute; cursor: pointer; z-index: 2; margin: 0; }
 .switch .track {
@@ -94,6 +96,8 @@ h1 .sub { color: var(--muted); font-size: 13px; font-weight: 400; margin-left: 8
 }
 .setting-control input:focus, .setting-control select:focus { outline: none; border-color: var(--accent); }
 .setting-control input:disabled { opacity: .5; }
+.keybind { display: flex; gap: 6px; align-items: center; }
+.keybind button { min-width: 92px; }
 .setting-control .suffix { color: var(--muted); font-size: 12px; min-width: 18px; }
 .readonly-tag { color: var(--muted); font-size: 12px; }
 .empty { color: var(--muted); padding: 12px 16px; font-size: 13px; }
@@ -185,12 +189,19 @@ function renderModule(m) {
       '</div>' +
       '<div class=""mod-desc"">' + esc(m.description || '') + '</div>' +
     '</div>' +
+    '<div class=""head-keybind"" onclick=""event.stopPropagation()""></div>' +
     '<label class=""switch"" onclick=""event.stopPropagation()"">' +
       '<input type=""checkbox"" ' + (m.isEnabled ? 'checked ' : '') + (m.isSelf ? 'disabled title=""Cannot disable WebUI itself"" ' : '') + '>' +
       '<span class=""track""></span><span class=""thumb""></span>' +
     '</label>' +
     '<span class=""chevron"">▶</span>';
   card.appendChild(head);
+
+  renderKeybind(head.querySelector('.head-keybind'), m.name, {
+    path: 'Keybind',
+    value: m.keybind,
+    isEditable: true
+  });
 
   const settings = document.createElement('div');
   settings.className = 'settings';
@@ -235,7 +246,12 @@ async function loadSettings(name, container) {
     container.innerHTML = '<div class=""empty"">This module has no configurable options.</div>';
     return;
   }
-  for (const s of list) container.appendChild(renderSetting(name, s));
+  for (const s of list) {
+    if (s.path.toLowerCase() === 'keybind') continue;
+    container.appendChild(renderSetting(name, s));
+  }
+  if (!container.children.length)
+    container.innerHTML = '<div class=""empty"">This module has no configurable options.</div>';
 }
 
 function renderSetting(moduleName, s) {
@@ -274,6 +290,10 @@ function renderSetting(moduleName, s) {
       break;
     case 'List':
       renderStringList(ctrl, moduleName, s);
+      break;
+    case 'Text':
+      if (s.path.toLowerCase() === 'keybind') renderKeybind(ctrl, moduleName, s);
+      else renderText(ctrl, moduleName, s);
       break;
     default:
       renderText(ctrl, moduleName, s);
@@ -456,6 +476,83 @@ function renderText(ctrl, moduleName, s) {
   inp.value = s.value == null ? '' : String(s.value);
   inp.addEventListener('change', () => saveSetting(moduleName, s.path, inp.value));
   ctrl.appendChild(inp);
+}
+
+function renderKeybind(ctrl, moduleName, s) {
+  const wrap = document.createElement('div');
+  wrap.className = 'keybind';
+  const button = document.createElement('button');
+  button.className = 'btn';
+  button.type = 'button';
+  const clear = document.createElement('button');
+  clear.className = 'btn';
+  clear.type = 'button';
+  clear.textContent = 'Clear';
+  clear.title = 'Clear keybind';
+  let pendingListener = null;
+
+  const label = keyLabel(s.value);
+  button.textContent = label || 'Unbound';
+  button.title = 'Click, then press one key';
+  button.addEventListener('click', () => {
+    if (pendingListener) document.removeEventListener('keydown', pendingListener, true);
+    button.textContent = 'Press a key...';
+    button.disabled = true;
+    const listener = ev => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      document.removeEventListener('keydown', listener, true);
+      pendingListener = null;
+      const key = browserKeyToUnity(ev);
+      button.disabled = false;
+      if (!key) {
+        button.textContent = 'Unbound';
+        toast('This key is not supported', true);
+        return;
+      }
+      button.textContent = keyLabel(key);
+      saveSetting(moduleName, s.path, key);
+    };
+    pendingListener = listener;
+    document.addEventListener('keydown', listener, true);
+  });
+  clear.addEventListener('click', () => {
+    if (pendingListener) {
+      document.removeEventListener('keydown', pendingListener, true);
+      pendingListener = null;
+      button.disabled = false;
+    }
+    button.textContent = 'Unbound';
+    saveSetting(moduleName, s.path, '');
+  });
+  wrap.appendChild(button);
+  wrap.appendChild(clear);
+  ctrl.appendChild(wrap);
+}
+
+function browserKeyToUnity(ev) {
+  const code = ev.code || '';
+  if (/^Key[A-Z]$/.test(code)) return code.slice(3);
+  if (/^Digit[0-9]$/.test(code)) return 'Alpha' + code.slice(5);
+  if (/^F([1-9]|1[0-9]|2[0-4])$/.test(code)) return code;
+  const names = {
+    Space: 'Space', Enter: 'Return', Escape: 'Escape', Tab: 'Tab', Backspace: 'Backspace',
+    ArrowUp: 'UpArrow', ArrowDown: 'DownArrow', ArrowLeft: 'LeftArrow', ArrowRight: 'RightArrow',
+    Insert: 'Insert', Delete: 'Delete', Home: 'Home', End: 'End', PageUp: 'PageUp', PageDown: 'PageDown',
+    ShiftLeft: 'LeftShift', ShiftRight: 'RightShift', ControlLeft: 'LeftControl', ControlRight: 'RightControl',
+    AltLeft: 'LeftAlt', AltRight: 'RightAlt', CapsLock: 'CapsLock', NumLock: 'Numlock', ScrollLock: 'ScrollLock',
+    Numpad0: 'Keypad0', Numpad1: 'Keypad1', Numpad2: 'Keypad2', Numpad3: 'Keypad3', Numpad4: 'Keypad4',
+    Numpad5: 'Keypad5', Numpad6: 'Keypad6', Numpad7: 'Keypad7', Numpad8: 'Keypad8', Numpad9: 'Keypad9',
+    NumpadAdd: 'KeypadPlus', NumpadSubtract: 'KeypadMinus', NumpadMultiply: 'KeypadMultiply', NumpadDivide: 'KeypadDivide',
+    Minus: 'Minus', Equal: 'Equals', BracketLeft: 'LeftBracket', BracketRight: 'RightBracket',
+    Semicolon: 'Semicolon', Quote: 'Quote', Backquote: 'BackQuote', Comma: 'Comma', Period: 'Period', Slash: 'Slash', Backslash: 'Backslash'
+  };
+  return names[code] || null;
+}
+
+function keyLabel(value) {
+  if (!value) return '';
+  return String(value).replace('Alpha', '').replace('Keypad', 'Num ').replace('Return', 'Enter');
 }
 
 async function saveSetting(moduleName, path, value) {
