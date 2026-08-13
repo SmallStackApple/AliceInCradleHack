@@ -92,6 +92,8 @@ namespace AliceInCradleHack.module.modules.client.webui
                     var settings = module.Settings.GetAllLeafNodes().Select(n =>
                     {
                         object value = n.GetValueObject();
+                        if (n.Type == AliceInCradleHack.config.ValueType.EnumChoice && value != null)
+                            value = value.ToString();
                         var result = new JObject
                         {
                             ["path"] = n.GetPath(),
@@ -111,6 +113,10 @@ namespace AliceInCradleHack.module.modules.client.webui
                         {
                             var choices = GetEnumChoices(n);
                             if (choices != null) result["choices"] = choices;
+                        }
+                        else if (n is StringListValue list)
+                        {
+                            result["choices"] = new JArray(list.Items);
                         }
                         return result;
                     });
@@ -265,6 +271,8 @@ namespace AliceInCradleHack.module.modules.client.webui
         private static object UnwrapToken(JToken token)
         {
             if (token == null || token.Type == JTokenType.Null) return null;
+            if (token is JArray array)
+                return array.Values<string>().ToArray();
             return token is JValue jv ? jv.Value : token.ToString();
         }
 

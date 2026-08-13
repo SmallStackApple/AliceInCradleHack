@@ -76,6 +76,9 @@ namespace AliceInCradleHack.config.group
         public MultiChoiceValue<T> MultiChoice<T>(string name, IEnumerable<T> defaultValue = null, string description = null) where T : struct, Enum
             => AddValue(new MultiChoiceValue<T>(name, defaultValue, description));
 
+        public StringListValue List(string name, IEnumerable<string> defaultValue = null, string description = null)
+            => AddValue(new StringListValue(name, defaultValue, description));
+
         protected T AddValue<T>(T value) where T : Value
         {
             Add(value);

@@ -4,10 +4,19 @@ using HarmonyLib;
 using m2d;
 using nel;
 using System;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using XX;
 
 namespace AliceInCradleHack.module.modules.combat
 {
+    public enum TargetClassFilterMode
+    {
+        Disabled,
+        Whitelist,
+        Blacklist
+    }
+
     /// <summary>
     /// Port of Kaleidoscopic.Hacks.Neuvilette ("忿怒的报偿 / TP-Aura") rewritten
     /// for the module system. While a fully-charged White Arrow is held, teleports
@@ -20,9 +29,9 @@ namespace AliceInCradleHack.module.modules.combat
         {
         }
 
-        public readonly Value<bool> AttackNonLocalNoel = new("AttackNonLocalNoel", false, "Attack non-local Noel instances.");
-
-        private const int IntervalFrames = 5;
+        public readonly RangedValue<int> FireIntervalFrames = new("FireIntervalFrames", 5, 1, 60, "frames", "Frames between arrow bursts.");
+        public readonly EnumChoiceValue<TargetClassFilterMode> ClassFilterMode = new("ClassFilterMode", TargetClassFilterMode.Disabled, "How the target class list is applied.");
+        public readonly StringListValue TargetClassPatterns = new("TargetClassPatterns", null, "Class names or wildcard patterns used by the target filter.");
 
         private readonly Harmony harmony = new("aliceincradlehack.modules.combat.tpaura");
 
@@ -72,7 +81,7 @@ namespace AliceInCradleHack.module.modules.combat
             if (curMagic == null || skill.getChantCompletedRatio() < 1f || curMagic.kind != MGKIND.WHITEARROW)
                 return;
 
-            if (IN.totalframe % IntervalFrames != 0)
+            if (IN.totalframe % FireIntervalFrames.Get() != 0)
                 return;
 
             Map2d mp = pr.Mp;
@@ -86,7 +95,6 @@ namespace AliceInCradleHack.module.modules.combat
             M2Mover[] movers = mp.getVectorMover();
             if (movers == null || movers.Length == 0) return null;
 
-            bool includeOtherNoel = AttackNonLocalNoel.Get();
             PRNoel localNoel = AliceInCradleHack.utils.game.NelM2DBase.PlayerNoel;
             float px = pr.x;
             float py = pr.y;
@@ -96,23 +104,9 @@ namespace AliceInCradleHack.module.modules.combat
 
             foreach (M2Mover mover in movers)
             {
-                if (mover == null || mover.destructed) continue;
+                if (mover == null || mover.destructed || ReferenceEquals(mover, localNoel)) continue;
 
-                bool isTarget;
-                if (mover is NelEnemy)
-                {
-                    isTarget = true;
-                }
-                else if (includeOtherNoel && !ReferenceEquals(mover, localNoel))
-                {
-                    isTarget = true;
-                }
-                else
-                {
-                    isTarget = false;
-                }
-
-                if (!isTarget) continue;
+                if (!MatchesClassFilter(mover)) continue;
 
                 float dx = mover.x - px;
                 float dy = mover.y - py;
@@ -125,6 +119,33 @@ namespace AliceInCradleHack.module.modules.combat
             }
 
             return nearest;
+        }
+
+        private bool MatchesClassFilter(M2Mover mover)
+        {
+            TargetClassFilterMode mode = ClassFilterMode.Get();
+            if (mode == TargetClassFilterMode.Disabled) return true;
+
+            bool matches = false;
+            string typeName = mover.GetType().Name;
+            string fullName = mover.GetType().FullName;
+            foreach (string pattern in TargetClassPatterns.Items)
+            {
+                if (WildcardMatches(typeName, pattern) || WildcardMatches(fullName, pattern))
+                {
+                    matches = true;
+                    break;
+                }
+            }
+
+            return mode == TargetClassFilterMode.Whitelist ? matches : !matches;
+        }
+
+        private static bool WildcardMatches(string value, string pattern)
+        {
+            if (string.IsNullOrEmpty(value) || string.IsNullOrEmpty(pattern)) return false;
+            string regex = "^" + Regex.Escape(pattern).Replace("\\*", ".*") + "$";
+            return Regex.IsMatch(value, regex, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         }
 
         private void FireBurst(PR pr, M2PrSkill skill, MagicItem curMagic, M2Mover target)

@@ -662,6 +662,7 @@
     <Compile Include="config\group\ValueGroup.cs" />
     <Compile Include="config\LogConfig.cs" />
     <Compile Include="config\RangedValue.cs" />
+    <Compile Include="config\StringListValue.cs" />
     <Compile Include="config\Value.cs" />
     <Compile Include="config\ValueType.cs" />
     <Compile Include="events\DamageEvents.cs" />
