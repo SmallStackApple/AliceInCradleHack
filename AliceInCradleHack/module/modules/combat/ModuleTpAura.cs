@@ -30,6 +30,10 @@ namespace AliceInCradleHack.module.modules.combat
         }
 
         public readonly RangedValue<int> FireIntervalFrames = new("FireIntervalFrames", 5, 1, 60, "frames", "Frames between arrow bursts.");
+        public readonly RangedValue<float> TeleportDistance = new("TeleportDistance", 5.25f, 0.5f, 12f, "", "Distance to stop from the target when teleporting.");
+        public readonly RangedValue<float> HorizontalSpeed = new("HorizontalSpeed", 4f, 0f, 12f, "", "Initial horizontal speed of the white arrow.");
+        public readonly RangedValue<float> VerticalSpeed = new("VerticalSpeed", 2f, 0f, 12f, "", "Initial vertical speed of the white arrow.");
+        public readonly Value<bool> TargetEnemy = new("TargetEnemy", false, "Target NelEnemy and its subclasses.");
         public readonly EnumChoiceValue<TargetClassFilterMode> ClassFilterMode = new("ClassFilterMode", TargetClassFilterMode.Disabled, "How the target class list is applied.");
         public readonly StringListValue TargetClassPatterns = new("TargetClassPatterns", null, "Class names or wildcard patterns used by the target filter.");
 
@@ -104,9 +108,7 @@ namespace AliceInCradleHack.module.modules.combat
 
             foreach (M2Mover mover in movers)
             {
-                if (mover == null || mover.destructed || ReferenceEquals(mover, localNoel)) continue;
-
-                if (!MatchesClassFilter(mover)) continue;
+                if (mover == null || mover.destructed || ReferenceEquals(mover, localNoel) || !MatchesClassFilter(mover)) continue;
 
                 float dx = mover.x - px;
                 float dy = mover.y - py;
@@ -123,6 +125,9 @@ namespace AliceInCradleHack.module.modules.combat
 
         private bool MatchesClassFilter(M2Mover mover)
         {
+            if (TargetEnemy.Get() && typeof(NelEnemy).IsAssignableFrom(mover.GetType()))
+                return true;
+
             TargetClassFilterMode mode = ClassFilterMode.Get();
             if (mode == TargetClassFilterMode.Disabled) return true;
 
@@ -154,9 +159,9 @@ namespace AliceInCradleHack.module.modules.combat
             float cosA = (float)Math.Cos(angle);
             float sinA = (float)Math.Sin(angle);
             float scale = (float)Math.Sin(3.0 * angle) * 0.1f + 1f;
-            float forward = 5.25f * scale;
-            float vxMag = 4f * scale;
-            float vyMag = 2f * scale;
+            float forward = TeleportDistance.Get() * scale;
+            float vxMag = HorizontalSpeed.Get() * scale;
+            float vyMag = VerticalSpeed.Get() * scale;
 
             float targetX = target != null ? target.x : pr.x + cosA;
             float targetY = target != null ? target.y : pr.y + sinA;
