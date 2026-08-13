@@ -1,4 +1,5 @@
 using AliceInCradleHack.config;
+using AliceInCradleHack.events;
 using AliceInCradleHack.module.modules.client;
 using AliceInCradleHack.module.modules.client.island;
 using AliceInCradleHack.module.modules.combat;
@@ -13,6 +14,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace AliceInCradleHack.module
 {
@@ -62,6 +64,7 @@ namespace AliceInCradleHack.module
 
             ConfigSystem.LoadAll();
             ApplyEnabledStates();
+            XxINEvents.EventPostUpdate += OnPostUpdate;
             _initialized = true;
         }
 
@@ -85,6 +88,7 @@ namespace AliceInCradleHack.module
                 }
             }
 
+            XxINEvents.EventPostUpdate -= OnPostUpdate;
             _modules.Clear();
             _initialized = false;
         }
@@ -298,9 +302,44 @@ namespace AliceInCradleHack.module
         {
             var module = GetModuleByName(moduleName);
             if (module?.Settings == null) return false;
+            if (string.Equals(settingPath, nameof(Module.Keybind), StringComparison.OrdinalIgnoreCase))
+            {
+                string keybind = value?.ToString()?.Trim() ?? "";
+                if (string.IsNullOrEmpty(keybind))
+                {
+                    value = "";
+                }
+                else
+                {
+                    if (!Enum.TryParse(keybind, true, out KeyCode parsedKey) ||
+                        parsedKey == KeyCode.None || !Enum.IsDefined(typeof(KeyCode), parsedKey))
+                        return false;
+                    value = parsedKey.ToString();
+                }
+            }
             bool success = module.Settings.SetValueByPath(settingPath, value);
             if (success) StoreModuleConfig(module);
             return success;
+        }
+
+        private void OnPostUpdate(object sender, XxINEvents.UpdateEventArgs e)
+        {
+            foreach (var module in _modules.Values)
+            {
+                string keyName = module.Keybind.Get();
+                if (string.IsNullOrWhiteSpace(keyName)) continue;
+                if (!Enum.TryParse(keyName, true, out KeyCode key) || key == KeyCode.None) continue;
+
+                try
+                {
+                    if (Input.GetKeyDown(key))
+                        ToggleModule(module.Name);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"Failed to process keybind for module '{module.Name}'", ex);
+                }
+            }
         }
 
         /// <summary>

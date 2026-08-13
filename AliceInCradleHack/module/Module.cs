@@ -24,6 +24,11 @@ namespace AliceInCradleHack.module
         public virtual bool IsEnabled { get; set; }
 
         /// <summary>
+        /// Unity KeyCode name used to toggle this module. An empty value means unbound.
+        /// </summary>
+        public readonly Value<string> Keybind = new("");
+
+        /// <summary>
         /// The root config of this module. Created by ModuleManager during registration.
         /// </summary>
         public Config Settings { get; internal set; }
