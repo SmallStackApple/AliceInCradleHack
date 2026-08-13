@@ -96,7 +96,7 @@ namespace AliceInCradleHack.module.modules.combat
 
             foreach (M2Mover mover in movers)
             {
-                if (mover.destructed) continue;
+                if (mover == null || mover.destructed) continue;
 
                 bool isTarget;
                 if (mover is NelEnemy)
