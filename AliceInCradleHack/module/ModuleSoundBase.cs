@@ -11,6 +11,7 @@ namespace AliceInCradleHack.module
     /// </summary>
     public abstract class ModuleSoundBase : Module
     {
+        private readonly object _audioLock = new();
         private WaveOutEvent _outputDevice;
         private AudioFileReader _audioFileReader;
 
@@ -60,13 +61,22 @@ namespace AliceInCradleHack.module
 
         protected void DisposeAudio()
         {
+            WaveOutEvent outputDevice;
+            AudioFileReader audioFileReader;
+            lock (_audioLock)
+            {
+                // Clear the shared state before Stop raises PlaybackStopped synchronously.
+                outputDevice = _outputDevice;
+                audioFileReader = _audioFileReader;
+                _outputDevice = null;
+                _audioFileReader = null;
+            }
+
             try
             {
-                _outputDevice?.Stop();
-                _outputDevice?.Dispose();
-                _outputDevice = null;
-                _audioFileReader?.Dispose();
-                _audioFileReader = null;
+                outputDevice?.Stop();
+                outputDevice?.Dispose();
+                audioFileReader?.Dispose();
             }
             catch (Exception ex)
             {
