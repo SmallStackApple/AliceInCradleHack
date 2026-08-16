@@ -5,6 +5,7 @@ using AliceInCradleHack.module.modules.client.island;
 using AliceInCradleHack.module.modules.combat;
 using AliceInCradleHack.module.modules.misc;
 using AliceInCradleHack.module.modules.visual;
+using AliceInCradleHack.module.modules.visual.hypixel;
 using AliceInCradleHack.utils.client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

@@ -657,8 +657,8 @@
     <Compile Include="module\modules\misc\ModuleKillSound.cs" />
     <Compile Include="module\modules\misc\ModuleHitSound.cs" />
     <Compile Include="module\modules\visual\ModuleMosaicRemove.cs" />
-    <Compile Include="module\modules\visual\ModuleHypixel.cs" />
-    <Compile Include="module\modules\visual\HypixelHud.cs" />
+    <Compile Include="module\modules\visual\hypixel\ModuleHypixel.cs" />
+    <Compile Include="module\modules\visual\hypixel\HypixelHud.cs" />
     <Compile Include="patch\Patch.cs" />
     <Compile Include="patch\PatchManager.cs" />
     <Compile Include="patch\patches\PatchM2dM2Attackable.cs" />
