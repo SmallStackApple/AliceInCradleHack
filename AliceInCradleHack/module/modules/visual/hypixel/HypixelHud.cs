@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
-namespace AliceInCradleHack.module.modules.visual
+namespace AliceInCradleHack.module.modules.visual.hypixel
 {
     /// <summary>
     /// Fullscreen center overlay that renders Hypixel-style battle HUD text
@@ -258,11 +258,15 @@ namespace AliceInCradleHack.module.modules.visual
                     return;
                 }
 
-                if (AddFontResourceEx(path, FR_PRIVATE, IntPtr.Zero) != 0)
+                // AddFontResource first: it adds the font to the session font table so it is
+                // enumerable by Unity's CreateDynamicFontFromOSFont. AddFontResourceEx with
+                // FR_PRIVATE registers a private font that cannot be enumerated, which makes
+                // Unity fail to find it and silently fall back to a default font.
+                if (AddFontResource(path) != 0)
                 {
                     _fontRegistered = true;
                 }
-                else if (AddFontResource(path) != 0)
+                else if (AddFontResourceEx(path, FR_PRIVATE, IntPtr.Zero) != 0)
                 {
                     _fontRegistered = true;
                 }

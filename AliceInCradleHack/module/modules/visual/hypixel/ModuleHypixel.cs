@@ -3,7 +3,7 @@ using HarmonyLib;
 using m2d;
 using nel;
 
-namespace AliceInCradleHack.module.modules.visual
+namespace AliceInCradleHack.module.modules.visual.hypixel
 {
     /// <summary>
     /// Displays Hypixel-style battle HUD text (countdown, victory, defeat)
