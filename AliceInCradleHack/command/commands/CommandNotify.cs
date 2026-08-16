@@ -18,7 +18,7 @@ namespace AliceInCradleHack.command.commands
         {
             if (args.Length == 0)
             {
-                Console.WriteLine("Usage:" + Usage);
+                Console.WriteLine($"Usage: {Usage}");
                 return;
             }
             Notification.ShowNotificationByUILog(

@@ -36,27 +36,23 @@ namespace AliceInCradleHack.module.modules.client.island
 
         public override void Initialize()
         {
-            if (IsEnabled)
-            {
-                XxINEvents.EventPostUpdate += OnXxInPostUpdate;
-            }
-
-            Height.OnChanged(height => DynamicIsland.Instance.ContentHeight = height);
-            TopMargin.OnChanged(margin => DynamicIsland.Instance.TopMargin = margin);
-            PaddingX.OnChanged(padding => DynamicIsland.Instance.PaddingX = padding);
-            PaddingY.OnChanged(padding => DynamicIsland.Instance.PaddingY = padding);
-            FontSize.OnChanged(size => ImGuiRenderUtil.FontSize = size);
-            SubFontSize.OnChanged(size => ImGuiRenderUtil.SubFontSize = size);
-            ClientNameFontSize.OnChanged(size => ImGuiRenderUtil.ClientNameFontSize = size);
-            TitleSubtitleSpacing.OnChanged(spacing => ImGuiRenderUtil.TitleSubtitleSpacing = spacing);
-            BackgroundOpacity.OnChanged(opacity => ImGuiRenderUtil.BackgroundOpacity = opacity);
-            BackgroundColor.OnChanged(hex => ImGuiRenderUtil.BackgroundColor = ParseColor(hex, Color.black));
-            TextColor.OnChanged(hex => ImGuiRenderUtil.TextColor = ParseColor(hex, Color.white));
-            SubTextColor.OnChanged(hex => ImGuiRenderUtil.SubTextColor = ParseColor(hex, new Color(0.75f, 0.75f, 0.75f)));
-            ClientNameColor.OnChanged(hex => WatermarkHudElement.ClientNameColorHex = hex);
-            NotificationDuration.OnChanged(duration => NotificationHudElement.DurationMs = duration);
-            NotificationPadding.OnChanged(padding => NotificationHudElement.Padding = padding);
-            NotificationMaxWidth.OnChanged(width => NotificationHudElement.MaxWidth = width);
+            // Any setting change re-applies the whole settings block.
+            Height.OnChanged(_ => ApplySettings());
+            TopMargin.OnChanged(_ => ApplySettings());
+            PaddingX.OnChanged(_ => ApplySettings());
+            PaddingY.OnChanged(_ => ApplySettings());
+            FontSize.OnChanged(_ => ApplySettings());
+            SubFontSize.OnChanged(_ => ApplySettings());
+            ClientNameFontSize.OnChanged(_ => ApplySettings());
+            TitleSubtitleSpacing.OnChanged(_ => ApplySettings());
+            BackgroundOpacity.OnChanged(_ => ApplySettings());
+            BackgroundColor.OnChanged(_ => ApplySettings());
+            TextColor.OnChanged(_ => ApplySettings());
+            SubTextColor.OnChanged(_ => ApplySettings());
+            ClientNameColor.OnChanged(_ => ApplySettings());
+            NotificationDuration.OnChanged(_ => ApplySettings());
+            NotificationPadding.OnChanged(_ => ApplySettings());
+            NotificationMaxWidth.OnChanged(_ => ApplySettings());
 
             ApplySettings();
         }
@@ -64,7 +60,6 @@ namespace AliceInCradleHack.module.modules.client.island
         public override void Enable()
         {
             XxINEvents.EventPostUpdate += OnXxInPostUpdate;
-            ApplySettings();
             DynamicIsland.Instance.Enabled = true;
         }
 

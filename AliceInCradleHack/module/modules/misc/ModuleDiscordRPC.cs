@@ -14,25 +14,41 @@ namespace AliceInCradleHack.module.modules.misc
         public readonly Value<string> State = new("In Bug Wall", "The state line of the Discord Rich Presence.");
 
         private const string DiscordApplicationId = "1462025663203774514";
-        private static readonly DiscordRpcClient _rpcClient = new(DiscordApplicationId);
-
-        public override void Initialize()
-        {
-            _rpcClient.Initialize();
-        }
+        private DiscordRpcClient _rpcClient;
 
         public override void Enable()
         {
-            _rpcClient.SetPresence(new RichPresence()
+            var client = new DiscordRpcClient(DiscordApplicationId);
+            try
             {
-                Details = Details,
-                State = State
-            });
+                client.Initialize();
+                client.SetPresence(new RichPresence()
+                {
+                    Details = Details,
+                    State = State
+                });
+            }
+            catch
+            {
+                client.Dispose();
+                throw;
+            }
+
+            _rpcClient = client;
         }
 
         public override void Disable()
         {
-            _rpcClient.ClearPresence();
+            if (_rpcClient == null) return;
+            try
+            {
+                _rpcClient.ClearPresence();
+            }
+            finally
+            {
+                _rpcClient.Dispose();
+                _rpcClient = null;
+            }
         }
     }
 }

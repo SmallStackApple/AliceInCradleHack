@@ -7,7 +7,7 @@
       <ILRepackLibraryPath Include="$(OutputPath)" />
       <ILRepackLibraryPath Include="$(OutputPath)lib" />
       <ILRepackLibraryPath Include="$(MSBuildProjectDirectory)\GameDLL\Managed" />
-      <ILRepackLibraryPath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8.1" />
+      <ILRepackLibraryPath Include="$(TargetFrameworkRootPath)$(TargetFrameworkVersion)" />
     </ItemGroup>
     <ILRepack
         Parallel="true"

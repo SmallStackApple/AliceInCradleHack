@@ -9,8 +9,8 @@ namespace AliceInCradleHack.module.modules.client.island
         public static float Padding { get; set; } = 8f;
         public static float MaxWidth { get; set; } = 640f;
 
-        private static readonly object Sync = new();
-        private static readonly Stopwatch Clock = Stopwatch.StartNew();
+        private static readonly object _sync = new();
+        private static readonly Stopwatch _clock = Stopwatch.StartNew();
         private static string _currentTitle;
         private static string _currentSubtitle;
         private static long _currentDeadline;
@@ -23,19 +23,19 @@ namespace AliceInCradleHack.module.modules.client.island
         public static void Push(string title, string subtitle)
         {
             if (string.IsNullOrEmpty(title)) return;
-            lock (Sync)
+            lock (_sync)
             {
                 _currentTitle = title;
                 _currentSubtitle = subtitle;
-                _currentDeadline = Clock.ElapsedMilliseconds + DurationMs;
+                _currentDeadline = _clock.ElapsedMilliseconds + DurationMs;
             }
         }
 
         private static (string Title, string Subtitle)? Current()
         {
-            lock (Sync)
+            lock (_sync)
             {
-                if (_currentTitle != null && Clock.ElapsedMilliseconds >= _currentDeadline)
+                if (_currentTitle != null && _clock.ElapsedMilliseconds >= _currentDeadline)
                 {
                     _currentTitle = null;
                     _currentSubtitle = null;

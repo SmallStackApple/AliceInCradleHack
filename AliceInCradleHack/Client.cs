@@ -6,7 +6,6 @@ using AliceInCradleHack.utils.client;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace AliceInCradleHack
@@ -58,13 +57,13 @@ namespace AliceInCradleHack
 
                 Log.Info("Resolving main folder...");
                 string mainFolder = MainFolder.GetMainFolder();
-                Log.Info("Main folder: " + mainFolder);
+                Log.Info($"Main folder: {mainFolder}");
 
                 Log.Info("Registering dependency resolver...");
                 DependencyResolver.Instance.RegisterDirectory(Path.Combine(mainFolder, "lib"));
 
                 Log.Initialize();
-                Log.Info("Runtime: " + RuntimeInformation.FrameworkDescription + " (CLR " + Environment.Version + ")");
+                Log.Info($"Runtime: {RuntimeInformation.FrameworkDescription} (CLR {Environment.Version})");
 
                 Log.Info("Applying patches...");
                 Start(PatchManager.Instance);

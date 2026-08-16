@@ -123,13 +123,13 @@ namespace AliceInCradleHack.module.modules.client.island
             float islandX = (Screen.width - islandWidth) / 2f;
             const float anchorSize = 25f;
             float anchorCenterY = TopMargin + anchorSize / 2f;
-            float activeY = _activeElement.HudAnchor == IHudElement.Alignment.CENTER
+            float activeY = _activeElement.HudAnchor == IHudElement.Alignment.Center
                 ? anchorCenterY - islandHeight / 2f
                 : TopMargin;
             float islandY;
             if (_outgoingElement != null && progress < 1f)
             {
-                float outgoingY = _outgoingElement.HudAnchor == IHudElement.Alignment.CENTER
+                float outgoingY = _outgoingElement.HudAnchor == IHudElement.Alignment.Center
                     ? anchorCenterY - islandHeight / 2f
                     : TopMargin;
                 islandY = Mathf.LerpUnclamped(outgoingY, activeY, progress);

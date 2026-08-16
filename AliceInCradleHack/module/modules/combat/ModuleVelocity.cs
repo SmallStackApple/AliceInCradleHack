@@ -1,5 +1,4 @@
-using HarmonyLib;
-using m2d;
+using AliceInCradleHack.events;
 
 namespace AliceInCradleHack.module.modules.combat
 {
@@ -9,28 +8,23 @@ namespace AliceInCradleHack.module.modules.combat
         {
         }
 
-        private readonly Harmony harmony = new("aliceincradlehack.modules.combat.velocity");
-
-        public override void Enable()
-        {
-            harmony.Patch(
-                AccessTools.Method(typeof(M2Attackable), nameof(M2Attackable.addKnockbackVelocity)),
-                prefix: new HarmonyMethod(typeof(ModuleVelocity), nameof(AddKnockbackVelocityPrefix))
-            );
-        }
-
-        public override void Disable()
-        {
-            harmony.UnpatchAll(harmony.Id);
-        }
-
         public override void Initialize()
         {
         }
 
-        public static bool AddKnockbackVelocityPrefix(object __instance)
+        public override void Enable()
         {
-            return false;
+            DamageEvents.Knockback.EventPreKnockback += OnPreKnockback;
+        }
+
+        public override void Disable()
+        {
+            DamageEvents.Knockback.EventPreKnockback -= OnPreKnockback;
+        }
+
+        private static void OnPreKnockback(object sender, DamageEvents.Knockback.PreKnockbackEventArgs eventArgs)
+        {
+            eventArgs.Cancel = true;
         }
     }
 }

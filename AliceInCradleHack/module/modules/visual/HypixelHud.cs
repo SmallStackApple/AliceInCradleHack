@@ -11,7 +11,7 @@ namespace AliceInCradleHack.module.modules.visual
     /// Fullscreen center overlay that renders Hypixel-style battle HUD text
     /// (countdown, victory, defeat) using the embedded Minecraft font.
     /// </summary>
-    public class HypixelHud : MonoBehaviour
+    public class HypixelHud : OnGuiRenderer<HypixelHud>
     {
         private enum Phase
         {
@@ -20,10 +20,6 @@ namespace AliceInCradleHack.module.modules.visual
             Victory,
             Defeat
         }
-
-        private static bool _created;
-        private static bool _renderFailed;
-        private static HypixelHud _instance;
 
         public static float TitleFontSize = 48f;
         public static float SubtitleFontSize = 24f;
@@ -47,22 +43,9 @@ namespace AliceInCradleHack.module.modules.visual
         private static readonly Color ColorResultSubtitle = new(0.667f, 0.667f, 0.667f);
         private static readonly Color ColorDefeatTitle = new(1f, 0.333f, 0.333f);
 
-        public static HypixelHud Instance => _instance;
-
         public static void EnsureCreated()
         {
-            if (_created) return;
-            _created = true;
-            try
-            {
-                var host = new GameObject("AliceInCradleHack.HypixelHud");
-                UnityEngine.Object.DontDestroyOnLoad(host);
-                _instance = host.AddComponent<HypixelHud>();
-            }
-            catch (Exception ex)
-            {
-                Log.Error("Failed to create Hypixel HUD host object", ex);
-            }
+            EnsureCreated("AliceInCradleHack.HypixelHud");
         }
 
         public static void Clear()
@@ -136,20 +119,10 @@ namespace AliceInCradleHack.module.modules.visual
             }
         }
 
-        private void OnGUI()
+        protected override void Render()
         {
-            if (_renderFailed) return;
-            if (Event.current == null || Event.current.type != EventType.Repaint) return;
             if (_phase == Phase.None) return;
-            try
-            {
-                Draw();
-            }
-            catch (Exception ex)
-            {
-                _renderFailed = true;
-                Log.Error("Hypixel HUD render failed", ex);
-            }
+            Draw();
         }
 
         private static void Draw()

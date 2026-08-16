@@ -1,3 +1,4 @@
+using AliceInCradleHack.utils.client;
 using System;
 
 namespace AliceInCradleHack.events
@@ -27,7 +28,7 @@ namespace AliceInCradleHack.events
             }
             catch (Exception ex)
             {
-                utils.client.Log.Error("XxINEvents handler exception", ex);
+                Log.Error("XxINEvents handler exception", ex);
             }
         }
 

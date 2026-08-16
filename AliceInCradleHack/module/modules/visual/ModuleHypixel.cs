@@ -25,23 +25,18 @@ namespace AliceInCradleHack.module.modules.visual
 
         public override void Initialize()
         {
+            TitleFontSize.OnChanged(_ => ApplySettings());
+            SubtitleFontSize.OnChanged(_ => ApplySettings());
+            Offset.OnChanged(_ => ApplySettings());
+            CountdownInterval.OnChanged(_ => ApplySettings());
+            ResultDuration.OnChanged(_ => ApplySettings());
+
+            ApplySettings();
         }
 
         public override void Enable()
         {
             HypixelHud.EnsureCreated();
-
-            TitleFontSize.OnChanged(v => HypixelHud.TitleFontSize = v);
-            SubtitleFontSize.OnChanged(v => HypixelHud.SubtitleFontSize = v);
-            Offset.OnChanged(v => HypixelHud.Offset = v);
-            CountdownInterval.OnChanged(v => HypixelHud.CountdownInterval = v);
-            ResultDuration.OnChanged(v => HypixelHud.ResultDuration = v);
-
-            HypixelHud.TitleFontSize = TitleFontSize.Get();
-            HypixelHud.SubtitleFontSize = SubtitleFontSize.Get();
-            HypixelHud.Offset = Offset.Get();
-            HypixelHud.CountdownInterval = CountdownInterval.Get();
-            HypixelHud.ResultDuration = ResultDuration.Get();
 
             _harmony.Patch(
                 original: AccessTools.Method(typeof(M2LpSummon), nameof(M2LpSummon.openSummoner), new[] { typeof(M2Mover), typeof(IM2ManaWeedHitable), typeof(bool) }),
@@ -61,6 +56,15 @@ namespace AliceInCradleHack.module.modules.visual
         {
             _harmony.UnpatchAll(_harmony.Id);
             HypixelHud.Clear();
+        }
+
+        private void ApplySettings()
+        {
+            HypixelHud.TitleFontSize = TitleFontSize.Get();
+            HypixelHud.SubtitleFontSize = SubtitleFontSize.Get();
+            HypixelHud.Offset = Offset.Get();
+            HypixelHud.CountdownInterval = CountdownInterval.Get();
+            HypixelHud.ResultDuration = ResultDuration.Get();
         }
 
         private static void OpenSummonerPrefix()

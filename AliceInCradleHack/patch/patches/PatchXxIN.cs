@@ -7,7 +7,7 @@ namespace AliceInCradleHack.patch.patches
     {
         public override void Apply()
         {
-            harmony.Patch(
+            _harmony.Patch(
                 original: AccessTools.Method(typeof(XX.IN), "Update"),
                 prefix: new HarmonyMethod(typeof(PatchXxIN), nameof(UpdatePrefix)),
                 postfix: new HarmonyMethod(typeof(PatchXxIN), nameof(UpdatePostfix))
@@ -16,7 +16,7 @@ namespace AliceInCradleHack.patch.patches
 
         public override void Remove()
         {
-            harmony.UnpatchAll(harmony.Id);
+            _harmony.UnpatchAll(_harmony.Id);
         }
 
         private static void UpdatePrefix(object __instance)

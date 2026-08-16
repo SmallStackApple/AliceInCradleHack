@@ -20,20 +20,20 @@ namespace AliceInCradleHack.module.modules.client.island
 
         private static string VersionType => Client.VersionType;
 
-        private static string Version => $"v{Client.Version}-{(Client.GitHash != "unknow" ? Client.GitHash.Substring(0, 7) : "unknow")}";
+        private static string Version => $"v{Client.Version}-{(Client.GitHash != "unknown" ? Client.GitHash.Substring(0, 7) : "unknown")}";
 
         private static (string, string, string, string, string) Texts => (Title, Version, VersionType, $"{DateTime.Now:yyyy/MM/dd}", $"{DateTime.Now:HH:mm:ss}");
 
-        private static readonly List<(string Title, string Subtitle)> Segments = new(3);
+        private static readonly List<(string Title, string Subtitle)> _segments = new(3);
 
         private static List<(string Title, string Subtitle)> CurrentSegments()
         {
             var (title, version, versionType, date, time) = Texts;
-            Segments.Clear();
-            Segments.Add((title, null));
-            Segments.Add((versionType, version));
-            Segments.Add((date, time));
-            return Segments;
+            _segments.Clear();
+            _segments.Add((title, null));
+            _segments.Add((versionType, version));
+            _segments.Add((date, time));
+            return _segments;
         }
 
         public override IHudElement.Size HudSize

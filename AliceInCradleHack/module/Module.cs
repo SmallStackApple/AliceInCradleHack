@@ -44,7 +44,7 @@ namespace AliceInCradleHack.module
 
         /// <summary>
         /// Scans instance fields for config values and attaches them to <see cref="Settings"/>.
-        /// Root-level fields are named after the field (lowerCamelCase) unless overridden by
+        /// Root-level fields are named after the field unless overridden by
         /// <see cref="SettingNameAttribute"/>; <see cref="SettingGroupAttribute"/> nests a
         /// field inside a sub group.
         /// </summary>

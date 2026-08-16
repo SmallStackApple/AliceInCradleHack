@@ -29,15 +29,15 @@ namespace AliceInCradleHack.module.modules.combat
         {
         }
 
-        public readonly RangedValue<int> FireIntervalFrames = new("FireIntervalFrames", 5, 1, 60, "frames", "Frames between arrow bursts.");
-        public readonly RangedValue<float> TeleportDistance = new("TeleportDistance", 5.25f, 0.5f, 12f, "", "Distance to stop from the target when teleporting.");
-        public readonly RangedValue<float> HorizontalSpeed = new("HorizontalSpeed", 4f, 0f, 12f, "", "Initial horizontal speed of the white arrow.");
-        public readonly RangedValue<float> VerticalSpeed = new("VerticalSpeed", 2f, 0f, 12f, "", "Initial vertical speed of the white arrow.");
-        public readonly Value<bool> TargetEnemy = new("TargetEnemy", false, "Target NelEnemy and its subclasses.");
-        public readonly EnumChoiceValue<TargetClassFilterMode> ClassFilterMode = new("ClassFilterMode", TargetClassFilterMode.Disabled, "How the target class list is applied.");
-        public readonly StringListValue TargetClassPatterns = new("TargetClassPatterns", null, "Class names or wildcard patterns used by the target filter.");
+        public readonly RangedValue<int> FireIntervalFrames = new(5, 1, 60, "frames", "Frames between arrow bursts.");
+        public readonly RangedValue<float> TeleportDistance = new(5.25f, 0.5f, 12f, "", "Distance to stop from the target when teleporting.");
+        public readonly RangedValue<float> HorizontalSpeed = new(4f, 0f, 12f, "", "Initial horizontal speed of the white arrow.");
+        public readonly RangedValue<float> VerticalSpeed = new(2f, 0f, 12f, "", "Initial vertical speed of the white arrow.");
+        public readonly Value<bool> TargetEnemy = new(false, "Target NelEnemy and its subclasses.");
+        public readonly EnumChoiceValue<TargetClassFilterMode> ClassFilterMode = new(TargetClassFilterMode.Disabled, "How the target class list is applied.");
+        public readonly StringListValue TargetClassPatterns = new(null, "Class names or wildcard patterns used by the target filter.");
 
-        private readonly Harmony harmony = new("aliceincradlehack.modules.combat.tpaura");
+        private readonly Harmony _harmony = new("aliceincradlehack.modules.combat.tpaura");
 
         private static ModuleTpAura _instance;
         private static readonly Random _rng = new Random();
@@ -49,7 +49,7 @@ namespace AliceInCradleHack.module.modules.combat
         public override void Enable()
         {
             _instance = this;
-            harmony.Patch(
+            _harmony.Patch(
                 AccessTools.Method(typeof(PR), nameof(PR.runPre)),
                 prefix: new HarmonyMethod(typeof(ModuleTpAura), nameof(RunPrePrefix))
             );
@@ -58,7 +58,7 @@ namespace AliceInCradleHack.module.modules.combat
         public override void Disable()
         {
             _instance = null;
-            harmony.UnpatchAll(harmony.Id);
+            _harmony.UnpatchAll(_harmony.Id);
         }
 
         private static void RunPrePrefix(PR __instance)

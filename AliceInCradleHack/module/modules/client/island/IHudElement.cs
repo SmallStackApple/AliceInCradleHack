@@ -4,11 +4,11 @@ namespace AliceInCradleHack.module.modules.client.island
     {
         public enum Alignment
         {
-            TOP,
-            BOTTOM,
-            LEFT,
-            RIGHT,
-            CENTER
+            Top,
+            Bottom,
+            Left,
+            Right,
+            Center
         }
 
         public readonly struct Size
