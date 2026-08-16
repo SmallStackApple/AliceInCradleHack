@@ -109,7 +109,7 @@ namespace AliceInCradleHack.config
             Type = type == ValueType.Invalid ? GuessType() : type;
         }
 
-        private static ValueType GuessType()
+        protected static ValueType GuessType()
         {
             var t = typeof(T);
             if (t == typeof(bool)) return ValueType.Boolean;

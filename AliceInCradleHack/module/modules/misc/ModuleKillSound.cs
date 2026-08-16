@@ -1,14 +1,10 @@
 using AliceInCradleHack.config;
-using AliceInCradleHack.utils.client;
 using AliceInCradleHack.utils.game;
-using NAudio.Wave;
-using System;
-using System.IO;
 using static AliceInCradleHack.events.DamageEvents;
 
 namespace AliceInCradleHack.module.modules.misc
 {
-    public class ModuleKillSound : Module
+    public class ModuleKillSound : ModuleSoundBase
     {
         public ModuleKillSound() : base("KillSound", "Plays a sound when you kill an enemy.", "Misc")
         {
@@ -18,75 +14,24 @@ namespace AliceInCradleHack.module.modules.misc
 
         public readonly Value<string> SoundFilePath = new("kill_sound.wav", "Path to the sound file to play on kill.");
 
-        private WaveOutEvent _outputDevice;
-        private AudioFileReader _audioFileReader;
+        protected override float VolumeFactor => Volume.Get() / 100f;
 
         public override void Enable()
         {
-            HpDamage.EventPostEnemyGetDamageHandler += PlayKillSound;
+            HpDamage.EventPostEnemyGetDamageHandler += OnEnemyPostDamage;
         }
 
         public override void Disable()
         {
-            HpDamage.EventPostEnemyGetDamageHandler -= PlayKillSound;
+            HpDamage.EventPostEnemyGetDamageHandler -= OnEnemyPostDamage;
             DisposeAudio();
         }
 
-        public override void Initialize()
+        private void OnEnemyPostDamage(object sender, HpDamage.PostDamageEventArgs eventArgs)
         {
-        }
-
-        private void DisposeAudio()
-        {
-            try
-            {
-                _outputDevice?.Stop();
-                _outputDevice?.Dispose();
-                _outputDevice = null;
-                _audioFileReader?.Dispose();
-                _audioFileReader = null;
-            }
-            catch (Exception ex)
-            {
-                Log.Error("Error disposing audio resources", ex);
-            }
-        }
-
-        private void PlayKillSound(object sender, HpDamage.PostDamageEventArgs eventArgs)
-        {
-            if (M2Attackable.GetHp((m2d.M2Attackable)sender) != 0 || eventArgs.AttackInfo.AttackFrom.GetType() != Player.TypeNoel)
-                return;
-
-            string soundFilePath = SoundFilePath;
-            if (string.IsNullOrWhiteSpace(soundFilePath))
-            {
-                Log.Warn("Kill sound file not found: path is empty.");
-                return;
-            }
-
-            if (!File.Exists(soundFilePath))
-            {
-                Log.Warn($"Kill sound file not found: {soundFilePath}");
-                return;
-            }
-
-            try
-            {
-                DisposeAudio();
-
-                _audioFileReader = new AudioFileReader(soundFilePath);
-                _audioFileReader.Volume = Volume.Get() / 100f;
-
-                _outputDevice = new WaveOutEvent();
-                _outputDevice.Init(_audioFileReader);
-                _outputDevice.PlaybackStopped += (s, e) => DisposeAudio();
-                _outputDevice.Play();
-            }
-            catch (Exception ex)
-            {
-                Log.Error("Error playing kill sound (NAudio)", ex);
-                DisposeAudio();
-            }
+            if (!ReferenceEquals(eventArgs.AttackInfo?.AttackFrom, NelM2DBase.PlayerNoel)) return;
+            if (M2Attackable.GetHp(sender as m2d.M2Attackable) != 0) return;
+            PlaySound(SoundFilePath);
         }
     }
 }

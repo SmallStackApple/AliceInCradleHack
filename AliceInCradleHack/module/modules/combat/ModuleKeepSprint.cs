@@ -26,7 +26,7 @@ namespace AliceInCradleHack.module.modules.combat
         /// </summary>
         public readonly Value<bool> IncludeDashPunch = new(true, "Apply to dash punch as well (input-driven).");
 
-        private readonly Harmony harmony = new("aliceincradlehack.modules.combat.keepsprint");
+        private readonly Harmony _harmony = new("aliceincradlehack.modules.combat.keepsprint");
 
         private static readonly MethodInfo RefineMoveKeyMethod = AccessTools.Method(typeof(M2MoverPr), "refineMoveKey", new[] { typeof(bool) });
         private static readonly MethodInfo RunDashPunchMethod = AccessTools.Method(typeof(M2PrSkill), "runDashPunch");
@@ -44,14 +44,14 @@ namespace AliceInCradleHack.module.modules.combat
             _instance = this;
             if (RefineMoveKeyMethod != null)
             {
-                harmony.Patch(
+                _harmony.Patch(
                     RefineMoveKeyMethod,
                     postfix: new HarmonyMethod(typeof(ModuleKeepSprint), nameof(RefineMoveKeyPostfix))
                 );
             }
             if (RunDashPunchMethod != null)
             {
-                harmony.Patch(
+                _harmony.Patch(
                     RunDashPunchMethod,
                     postfix: new HarmonyMethod(typeof(ModuleKeepSprint), nameof(DashPunchPostfix))
                 );
@@ -61,7 +61,7 @@ namespace AliceInCradleHack.module.modules.combat
         public override void Disable()
         {
             _instance = null;
-            harmony.UnpatchAll(harmony.Id);
+            _harmony.UnpatchAll(_harmony.Id);
         }
 
         private static void RefineMoveKeyPostfix(M2MoverPr __instance)

@@ -4,11 +4,11 @@ namespace AliceInCradleHack.config
 {
     /// <summary>
     /// A color value stored as a hex string like "#RRGGBB" or "#RRGGBBAA".
-    /// Invalid values are rejected.
+    /// Invalid values are normalized to <c>#000000</c>.
     /// </summary>
     public class ColorValue : Value<string>
     {
-        private static readonly Regex HexPattern = new Regex("^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$", RegexOptions.Compiled);
+        private static readonly Regex _hexPattern = new Regex("^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$", RegexOptions.Compiled);
 
         public ColorValue(string name, string defaultValue, string description = null)
             : base(name, Normalize(defaultValue), description, ValueType.Color)
@@ -24,7 +24,7 @@ namespace AliceInCradleHack.config
         {
             if (value == null) return "#000000";
             var trimmed = value.Trim();
-            return HexPattern.IsMatch(trimmed) ? trimmed.ToUpperInvariant() : "#000000";
+            return _hexPattern.IsMatch(trimmed) ? trimmed.ToUpperInvariant() : "#000000";
         }
 
         protected override string Parse(string value)

@@ -8,6 +8,53 @@ namespace AliceInCradleHack.events
 {
     public static class DamageEvents
     {
+        public static class Knockback
+        {
+            public static event EventHandler<PreKnockbackEventArgs> EventPreKnockback;
+
+            /// <summary>
+            /// Fires the pre-knockback event. Returns true when a handler cancelled the knockback.
+            /// </summary>
+            public static bool PreKnockback(object instance, ref float v0, ref AttackInfo attackInfo, ref m2d.M2Attackable another)
+            {
+                if (instance == null) return false;
+
+                try
+                {
+                    var eventArgs = new PreKnockbackEventArgs(instance, v0, attackInfo, another);
+                    InvokeHandlers(EventPreKnockback, instance, eventArgs);
+                    v0 = eventArgs.V0;
+                    attackInfo = eventArgs.AttackInfo;
+                    another = eventArgs.Another;
+                    return eventArgs.Cancel;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("DamageEvents PreKnockback exception", ex);
+                    return false;
+                }
+            }
+
+            public class PreKnockbackEventArgs : EventArgs
+            {
+                public object Instance { get; }
+                public float V0 { get; set; }
+                public AttackInfo AttackInfo { get; set; }
+                public m2d.M2Attackable Another { get; set; }
+
+                /// <summary>Set to true to skip the original knockback.</summary>
+                public bool Cancel { get; set; }
+
+                public PreKnockbackEventArgs(object instance, float v0, AttackInfo attackInfo, m2d.M2Attackable another)
+                {
+                    Instance = instance;
+                    V0 = v0;
+                    AttackInfo = attackInfo;
+                    Another = another;
+                }
+            }
+        }
+
         public static class HpDamage
         {
             public static event EventHandler<PreDamageEventArgs> EventPreGetDamage;
@@ -19,8 +66,8 @@ namespace AliceInCradleHack.events
             public static event EventHandler<PreDamageEventArgs> EventPreEnemyGetDamageHandler;
             public static event EventHandler<PostDamageEventArgs> EventPostEnemyGetDamageHandler;
 
-            private static readonly Type TypeNoel = Player.TypeNoel;
-            private static readonly Type TypeEnemy = typeof(NelEnemy);
+            private static readonly Type _typeNoel = Player.TypeNoel;
+            private static readonly Type _typeEnemy = typeof(NelEnemy);
 
             private static void Dispatch<TArgs>(object instance, TArgs eventArgs,
                 EventHandler<TArgs> allHandler,
@@ -30,18 +77,18 @@ namespace AliceInCradleHack.events
             {
                 var instanceType = instance.GetType();
 
-                allHandler?.Invoke(instance, eventArgs);
-                if (instanceType == TypeNoel)
+                InvokeHandlers(allHandler, instance, eventArgs);
+                if (_typeNoel.IsAssignableFrom(instanceType))
                 {
-                    playerHandler?.Invoke(instance, eventArgs);
+                    InvokeHandlers(playerHandler, instance, eventArgs);
                 }
-                else if (instanceType.IsSubclassOf(TypeEnemy))
+                else if (_typeEnemy.IsAssignableFrom(instanceType))
                 {
-                    enemyHandler?.Invoke(instance, eventArgs);
+                    InvokeHandlers(enemyHandler, instance, eventArgs);
                 }
-                if (instanceType != TypeNoel)
+                if (!_typeNoel.IsAssignableFrom(instanceType))
                 {
-                    notPlayerHandler?.Invoke(instance, eventArgs);
+                    InvokeHandlers(notPlayerHandler, instance, eventArgs);
                 }
             }
 
@@ -120,6 +167,24 @@ namespace AliceInCradleHack.events
                     Force = (bool)args[1];
                     AttackInfo = (AttackInfo)args[2];
                     Result = result;
+                }
+            }
+        }
+
+        private static void InvokeHandlers<TArgs>(EventHandler<TArgs> handlers, object sender, TArgs eventArgs)
+            where TArgs : EventArgs
+        {
+            if (handlers == null) return;
+
+            foreach (EventHandler<TArgs> handler in handlers.GetInvocationList())
+            {
+                try
+                {
+                    handler.Invoke(sender, eventArgs);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("DamageEvents handler exception", ex);
                 }
             }
         }

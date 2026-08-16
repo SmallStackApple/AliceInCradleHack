@@ -15,23 +15,17 @@ namespace AliceInCradleHack.command
     public class CommandManager : IClientComponent
     {
         private readonly Dictionary<string, Command> _commands = new(StringComparer.OrdinalIgnoreCase);
-        private readonly Thread _commandThread;
+        private Thread _commandThread;
         private volatile bool _stopRequested;
         private bool _initialized;
+        private int _commandLoopGeneration;
 
         private static readonly Lazy<CommandManager> _lazyInstance = new(() => new CommandManager());
         public static CommandManager Instance => _lazyInstance.Value;
 
         public string Prompt { get; set; } = "> ";
 
-        private CommandManager()
-        {
-            _commandThread = new Thread(CommandLoop)
-            {
-                Name = "CommandLoop",
-                IsBackground = true
-            };
-        }
+        private CommandManager() { }
 
         /// <summary>
         /// Registers the built-in commands and starts the console input loop.
@@ -54,6 +48,13 @@ namespace AliceInCradleHack.command
                 RegisterCommand(command);
             }
 
+            _stopRequested = false;
+            int generation = unchecked(++_commandLoopGeneration);
+            _commandThread = new Thread(() => CommandLoop(generation))
+            {
+                Name = "CommandLoop",
+                IsBackground = true
+            };
             _initialized = true;
             _commandThread.Start();
         }
@@ -138,12 +139,16 @@ namespace AliceInCradleHack.command
             if (!_initialized && _commands.Count == 0) return;
 
             _stopRequested = true;
-            try { _commandThread.Interrupt(); }
+            unchecked { _commandLoopGeneration++; }
+
+            var commandThread = _commandThread;
+            _commandThread = null;
+            try { commandThread?.Interrupt(); }
             catch { /* thread may not be started yet */ }
 
-            if (_commandThread != Thread.CurrentThread && _commandThread.IsAlive)
+            if (commandThread != Thread.CurrentThread && commandThread?.IsAlive == true)
             {
-                if (!_commandThread.Join(TimeSpan.FromSeconds(2)))
+                if (!commandThread.Join(TimeSpan.FromSeconds(2)))
                     Log.Warn("Command loop did not exit in time; abandoning thread.");
             }
 
@@ -154,28 +159,28 @@ namespace AliceInCradleHack.command
         /// <summary>
         /// Reads user input and executes commands until <see cref="Dispose"/> is called.
         /// </summary>
-        private void CommandLoop()
+        private void CommandLoop(int generation)
         {
-            while (!_stopRequested)
+            while (!_stopRequested && generation == _commandLoopGeneration)
             {
                 try
                 {
                     Console.Write(Prompt);
                     string input = Console.ReadLine();
+                    if (_stopRequested || generation != _commandLoopGeneration) break;
                     if (string.IsNullOrEmpty(input))
                     {
-                        if (_stopRequested) break;
                         continue;
                     }
                     ExecuteCommand(input);
                 }
                 catch (ThreadInterruptedException)
                 {
-                    if (_stopRequested) break;
+                    if (_stopRequested || generation != _commandLoopGeneration) break;
                 }
                 catch (Exception ex)
                 {
-                    if (_stopRequested) break;
+                    if (_stopRequested || generation != _commandLoopGeneration) break;
                     Log.Error("Error in command loop", ex);
                 }
             }

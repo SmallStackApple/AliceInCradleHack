@@ -6,19 +6,21 @@ using m2d;
 namespace AliceInCradleHack.patch.patches
 {
     /// <summary>
-    /// Hooks M2Attackable.applyHpDamage to fire the damage events.
+    /// Hooks M2Attackable to fire the damage and knockback events.
     /// </summary>
     public class PatchM2dM2Attackable : Patch
     {
         public override void Apply()
         {
-            var replacements = harmony.CreateClassProcessor(typeof(ApplyHpDamage)).Patch();
-            Log.Info($"Patch {GetType().Name} applied ({replacements?.Count ?? 0} method(s) patched)");
+            var hpDamageReplacements = _harmony.CreateClassProcessor(typeof(ApplyHpDamage)).Patch();
+            var knockbackReplacements = _harmony.CreateClassProcessor(typeof(AddKnockbackVelocity)).Patch();
+            int count = (hpDamageReplacements?.Count ?? 0) + (knockbackReplacements?.Count ?? 0);
+            Log.Info($"Patch {GetType().Name} applied ({count} method(s) patched)");
         }
 
         public override void Remove()
         {
-            harmony.UnpatchAll(harmony.Id);
+            _harmony.UnpatchAll(_harmony.Id);
         }
 
         [HarmonyPatch(typeof(M2Attackable), "applyHpDamage")]
@@ -34,6 +36,16 @@ namespace AliceInCradleHack.patch.patches
             public static void PostApplyHpDamage(object __instance, ref int __result, object[] __args)
             {
                 DamageEvents.HpDamage.PostDamage(__instance, ref __result, __args);
+            }
+        }
+
+        [HarmonyPatch(typeof(M2Attackable), "addKnockbackVelocity")]
+        private static class AddKnockbackVelocity
+        {
+            [HarmonyPrefix]
+            public static bool PreAddKnockbackVelocity(object __instance, ref float v0, ref AttackInfo Atk, ref M2Attackable Another)
+            {
+                return !DamageEvents.Knockback.PreKnockback(__instance, ref v0, ref Atk, ref Another);
             }
         }
     }

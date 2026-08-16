@@ -6,7 +6,7 @@ namespace AliceInCradleHack.module.modules.client.island
 
         public virtual bool HasBackground => false;
 
-        public virtual IHudElement.Alignment HudAnchor => IHudElement.Alignment.TOP;
+        public virtual IHudElement.Alignment HudAnchor => IHudElement.Alignment.Top;
 
         public virtual IHudElement.Size HudSize => new(240f, 25f);
 

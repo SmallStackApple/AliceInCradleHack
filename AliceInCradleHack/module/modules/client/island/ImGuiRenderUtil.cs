@@ -21,14 +21,14 @@ namespace AliceInCradleHack.module.modules.client.island
 
         public static float ClientNameFontSize { get; set; } = 14f;
 
-        private static readonly Dictionary<int, GUIStyle> BackgroundStyles = new();
+        private static readonly Dictionary<int, GUIStyle> _backgroundStyles = new();
         private static GUIStyle _labelStyle;
         private static GUIStyle _subLabelStyle;
 
         private static GUIStyle BackgroundStyle(int radius)
         {
             radius = Mathf.Max(1, radius);
-            if (!BackgroundStyles.TryGetValue(radius, out var style))
+            if (!_backgroundStyles.TryGetValue(radius, out var style))
             {
                 var texture = CreateRoundedRectTexture(radius * 4, radius * 2, radius);
                 style = new GUIStyle
@@ -36,7 +36,7 @@ namespace AliceInCradleHack.module.modules.client.island
                     border = new RectOffset(radius, radius, radius, radius),
                     normal = { background = texture }
                 };
-                BackgroundStyles[radius] = style;
+                _backgroundStyles[radius] = style;
             }
             return style;
         }

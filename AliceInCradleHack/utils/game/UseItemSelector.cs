@@ -8,6 +8,20 @@ namespace AliceInCradleHack.utils.game
 
         public static nel.UseItemSelector Instance => NelItemManager.Instance?.USel;
 
-        public static nel.UseItemSelector.ItCell[] ACell => Instance != null ? (nel.UseItemSelector.ItCell[])FieldInfoACell.GetValue(Instance) : null;
+        public static nel.UseItemSelector.ItCell[] ACell => GetACell(Instance);
+
+        private static nel.UseItemSelector.ItCell[] GetACell(nel.UseItemSelector instance)
+        {
+            if (instance == null || FieldInfoACell == null) return null;
+
+            try
+            {
+                return FieldInfoACell.GetValue(instance) as nel.UseItemSelector.ItCell[];
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 }

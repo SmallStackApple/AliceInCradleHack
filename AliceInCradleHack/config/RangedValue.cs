@@ -28,10 +28,10 @@ namespace AliceInCradleHack.config
         string IRangedValue.Suffix => Suffix;
 
         public RangedValue(T defaultValue, string description = null)
-            : base(defaultValue, description, GuessRangedType()) { }
+            : base(defaultValue, description, GuessType()) { }
 
         public RangedValue(string name, T defaultValue, string description = null)
-            : base(name, defaultValue, description, GuessRangedType()) { }
+            : base(name, defaultValue, description, GuessType()) { }
 
         public RangedValue(T defaultValue, T min, T max, string suffix = "", string description = null)
             : this(defaultValue, description)
@@ -47,15 +47,6 @@ namespace AliceInCradleHack.config
             Min = min;
             Max = max;
             Suffix = suffix;
-        }
-
-        private static ValueType GuessRangedType()
-        {
-            var t = typeof(T);
-            if (t == typeof(int)) return ValueType.Int;
-            if (t == typeof(float)) return ValueType.Float;
-            if (t == typeof(double)) return ValueType.Double;
-            return ValueType.Invalid;
         }
 
         public override void Set(T value)

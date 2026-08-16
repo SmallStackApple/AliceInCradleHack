@@ -1,5 +1,3 @@
-using System;
-
 namespace AliceInCradleHack.config.group
 {
     /// <summary>

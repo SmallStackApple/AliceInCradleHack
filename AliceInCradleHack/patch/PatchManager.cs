@@ -31,6 +31,7 @@ namespace AliceInCradleHack.patch
             {
                 new PatchM2dM2Attackable(),
                 new PatchXxIN(),
+                new PatchNelSceneGame(),
                 // Add other patch instances here
             };
             foreach (var patch in builtInPatches)

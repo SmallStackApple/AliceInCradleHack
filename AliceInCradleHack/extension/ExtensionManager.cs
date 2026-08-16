@@ -99,6 +99,7 @@ namespace AliceInCradleHack.extension
         {
             var dir = Path.GetDirectoryName(dllPath);
             var libDir = Path.Combine(dir, "lib");
+            bool registeredLibDir = false;
 
             // Resolve extension dependencies from a "lib" folder inside the extension's own folder,
             // so each extension's dependencies stay isolated from every other extension's.
@@ -107,7 +108,10 @@ namespace AliceInCradleHack.extension
                 lock (_registeredLibDirs)
                 {
                     if (_registeredLibDirs.Add(libDir))
+                    {
                         DependencyResolver.Instance.RegisterDirectory(libDir);
+                        registeredLibDir = true;
+                    }
                 }
             }
 
@@ -119,6 +123,14 @@ namespace AliceInCradleHack.extension
             catch (Exception ex)
             {
                 Log.Error($"Failed to load assembly from {dllPath}", ex);
+                if (registeredLibDir)
+                {
+                    lock (_registeredLibDirs)
+                    {
+                        _registeredLibDirs.Remove(libDir);
+                    }
+                    DependencyResolver.Instance.UnregisterDirectory(libDir);
+                }
                 return;
             }
 

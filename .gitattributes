@@ -1,0 +1,15 @@
+# Default: normalize text files to LF in the repository.
+* text=auto eol=lf
+
+# Explicitly mark binary formats so they are never normalized.
+*.dll binary
+*.exe binary
+*.ttf binary
+*.otf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.wav binary
+*.ogg binary
+*.zip binary

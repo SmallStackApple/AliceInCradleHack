@@ -1,3 +1,4 @@
+using AliceInCradleHack.utils.client;
 using HarmonyLib;
 
 namespace AliceInCradleHack.module.modules.visual
@@ -18,6 +19,11 @@ namespace AliceInCradleHack.module.modules.visual
         {
             var original = AccessTools.Method("nel.MosaicShower:FnDrawMosaic");
             var prefix = AccessTools.Method(typeof(ModuleMosaicRemove), nameof(FnDrawMosaicPrefix));
+            if (original == null || prefix == null)
+            {
+                Log.Error("MosaicRemove patch target was not found.");
+                return;
+            }
             _harmony.Patch(original, new HarmonyMethod(prefix));
         }
 

@@ -63,7 +63,7 @@ namespace AliceInCradleHack.module
             }
 
             ConfigSystem.LoadAll();
-            ApplyEnabledStates();
+            ApplyEnabledStates(notify: false);
             XxINEvents.EventPostUpdate += OnPostUpdate;
             _initialized = true;
         }
@@ -115,8 +115,10 @@ namespace AliceInCradleHack.module
                 {
                     module.Settings = ConfigSystem.Root(new Config(module.Name, module.Description));
                     module.AutoRegisterSettings();
+                    bool defaultEnabled = module.IsEnabled;
+                    module.IsEnabled = false;
                     module.EnabledValue = module.Settings.Boolean(
-                        "__IsEnabled", module.IsEnabled, "Module enabled state", doNotInclude: true);
+                        "__IsEnabled", defaultEnabled, "Module enabled state", doNotInclude: true);
                     module.Initialize();
                 }
                 catch (Exception ex)
@@ -157,9 +159,12 @@ namespace AliceInCradleHack.module
         /// <summary>
         /// Applies the persisted enabled states after configs have been loaded.
         /// </summary>
-        private void ApplyEnabledStates()
+        private void ApplyEnabledStates(bool notify)
         {
-            ReapplyEnabledStates();
+            foreach (var module in _modules.Values)
+            {
+                SyncEnabledState(module, notify);
+            }
         }
 
         /// <summary>
@@ -168,14 +173,7 @@ namespace AliceInCradleHack.module
         /// </summary>
         public void ReapplyEnabledStates()
         {
-            foreach (var module in _modules.Values)
-            {
-                bool shouldBeEnabled = module.EnabledValue?.Get() ?? module.IsEnabled;
-                if (shouldBeEnabled && !module.IsEnabled)
-                    EnableModule(module.Name);
-                else if (!shouldBeEnabled && module.IsEnabled)
-                    DisableModule(module.Name);
-            }
+            ApplyEnabledStates(notify: true);
         }
 
         /// <summary>
@@ -183,24 +181,7 @@ namespace AliceInCradleHack.module
         /// </summary>
         public void EnableModule(string moduleName)
         {
-            if (string.IsNullOrWhiteSpace(moduleName)) return;
-
-            if (_modules.TryGetValue(moduleName, out var module) && !module.IsEnabled)
-            {
-                try
-                {
-                    module.Enable();
-                    module.IsEnabled = true;
-                    module.EnabledValue?.Set(true);
-                    Notification.ShowNotificationByUILog($"Enabled {module.Name}", nel.UILogRow.TYPE.ALERT);
-                    Notification.ShowNotificationByDynamicIsland($"Enabled {module.Name}");
-                    StoreModuleConfig(module);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error($"Failed to enable module {moduleName}", ex);
-                }
-            }
+            SetModuleEnabled(moduleName, enabled: true, notify: true);
         }
 
         /// <summary>
@@ -208,24 +189,46 @@ namespace AliceInCradleHack.module
         /// </summary>
         public void DisableModule(string moduleName)
         {
-            if (string.IsNullOrWhiteSpace(moduleName)) return;
+            SetModuleEnabled(moduleName, enabled: false, notify: true);
+        }
 
-            if (_modules.TryGetValue(moduleName, out var module) && module.IsEnabled)
+        private void SyncEnabledState(Module module, bool notify)
+        {
+            bool shouldBeEnabled = module.EnabledValue?.Get() ?? module.IsEnabled;
+            if (shouldBeEnabled && !module.IsEnabled)
+                SetModuleEnabled(module.Name, enabled: true, notify: notify);
+            else if (!shouldBeEnabled && module.IsEnabled)
+                SetModuleEnabled(module.Name, enabled: false, notify: notify);
+        }
+
+        private void SetModuleEnabled(string moduleName, bool enabled, bool notify)
+        {
+            if (string.IsNullOrWhiteSpace(moduleName)) return;
+            if (!_modules.TryGetValue(moduleName, out var module) || module.IsEnabled == enabled) return;
+
+            try
             {
-                try
-                {
+                if (enabled)
+                    module.Enable();
+                else
                     module.Disable();
-                    module.IsEnabled = false;
-                    module.EnabledValue?.Set(false);
-                    Notification.ShowNotificationByUILog($"Disabled {module.Name}", nel.UILogRow.TYPE.ALERT);
-                    Notification.ShowNotificationByDynamicIsland($"Disabled {module.Name}");
-                    StoreModuleConfig(module);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error($"Failed to disable module {moduleName}", ex);
-                }
+
+                module.IsEnabled = enabled;
+                module.EnabledValue?.Set(enabled);
+                if (notify) NotifyModuleStateChanged(module, enabled);
+                StoreModuleConfig(module);
             }
+            catch (Exception ex)
+            {
+                Log.Error($"Failed to {(enabled ? "enable" : "disable")} module {moduleName}", ex);
+            }
+        }
+
+        private static void NotifyModuleStateChanged(Module module, bool enabled)
+        {
+            string message = $"{(enabled ? "Enabled" : "Disabled")} {module.Name}";
+            Notification.ShowNotificationByUILog(message, nel.UILogRow.TYPE.ALERT);
+            Notification.ShowNotificationByDynamicIsland(message);
         }
 
         /// <summary>
@@ -460,11 +463,7 @@ namespace AliceInCradleHack.module
 
                     module.Settings.FromJToken(moduleObj);
 
-                    bool shouldBeEnabled = module.EnabledValue?.Get() ?? module.IsEnabled;
-                    if (shouldBeEnabled && !module.IsEnabled)
-                        EnableModule(module.Name);
-                    else if (!shouldBeEnabled && module.IsEnabled)
-                        DisableModule(module.Name);
+                    SyncEnabledState(module, notify: true);
 
                     StoreModuleConfig(module);
                 }
