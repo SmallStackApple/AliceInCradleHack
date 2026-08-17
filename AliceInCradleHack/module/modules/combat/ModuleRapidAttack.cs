@@ -70,15 +70,11 @@ namespace AliceInCradleHack.module.modules.combat
         /// <summary>IN.totalframe of the last synthetic release.</summary>
         private static int _lastAutoFireFrame = -1;
 
-        [ThreadStatic]
-        private static M2PrSkill _syntheticReleaseSkill;
-
         private static readonly MethodInfo PunchSpeedMethod = AccessTools.Method(typeof(M2PrSkill), "PunchSpeed");
         private static readonly MethodInfo GetCastingTimeScaleMethod = AccessTools.Method(typeof(PR), "getCastingTimeScale");
         private static readonly MethodInfo SetPunchDeclineTimeMethod = AccessTools.Method(typeof(M2PrSkill), "set_punch_decline_time");
         private static readonly MethodInfo RunPunchCheckMethod = AccessTools.Method(typeof(M2PrSkill), "runPunchCheck");
-        private static readonly MethodInfo IsAtkPdMethod = AccessTools.Method(typeof(M2PrAssistant), "isAtkPD", new[] { typeof(int) });
-        private static readonly MethodInfo IsAtkOMethod = AccessTools.Method(typeof(M2PrAssistant), "isAtkO");
+        private static readonly MethodInfo IsMagicOMethod = AccessTools.Method(typeof(M2PrAssistant), "isMagicO");
         private static readonly MethodInfo DigestShotgunHoldMpMethod = AccessTools.Method(typeof(M2PrSkill), "digestShotgunHoldMp");
         private static readonly MethodInfo RunPreMethod = AccessTools.Method(typeof(PR), nameof(PR.runPre));
 
@@ -127,23 +123,7 @@ namespace AliceInCradleHack.module.modules.combat
             {
                 _harmony.Patch(
                     RunPunchCheckMethod,
-                    prefix: new HarmonyMethod(typeof(ModuleRapidAttack), nameof(RunPunchCheckPrefix)),
-                    postfix: new HarmonyMethod(typeof(ModuleRapidAttack), nameof(RunPunchCheckPostfix)),
-                    finalizer: new HarmonyMethod(typeof(ModuleRapidAttack), nameof(RunPunchCheckFinalizer))
-                );
-            }
-            if (IsAtkPdMethod != null)
-            {
-                _harmony.Patch(
-                    IsAtkPdMethod,
-                    prefix: new HarmonyMethod(typeof(ModuleRapidAttack), nameof(IsAtkPdPrefix))
-                );
-            }
-            if (IsAtkOMethod != null)
-            {
-                _harmony.Patch(
-                    IsAtkOMethod,
-                    prefix: new HarmonyMethod(typeof(ModuleRapidAttack), nameof(IsAtkOPrefix))
+                    prefix: new HarmonyMethod(typeof(ModuleRapidAttack), nameof(RunPunchCheckPrefix))
                 );
             }
             if (DigestShotgunHoldMpMethod != null)
@@ -168,7 +148,6 @@ namespace AliceInCradleHack.module.modules.combat
             _instance = null;
             _retained = false;
             _shotgunSnapshotValid = false;
-            _syntheticReleaseSkill = null;
             _harmony.UnpatchAll(_harmony.Id);
         }
 
@@ -208,49 +187,20 @@ namespace AliceInCradleHack.module.modules.combat
             if (pr == null) return;
 
             if (!pr.is_alive || pr.isMoveScriptActive(false)) return;
+            // Town warp and Burst selection use punch_t as a long-press counter. Exclude
+            // only their magic-key input so ordinary non-combat light attacks still fire.
+            if (pr.isBurstAllocState() && IsMagicHeld(__instance)) return;
             if (!IsAttackHeld(pr)) return;
             if (!pr.isNormalState()) return;
             if (__instance.magic_t != 0f) return;
             if (PunchDeclineAccessor(__instance) > 0) return;
             if (IN.totalframe - _lastAutoFireFrame < module.AutoFireInterval.Get()) return;
 
-            // runPunchCheck fires a light attack through its release branch only when
-            // punch_t is negative and both input queries are false. Keep this scope live
-            // through changeState so forcePunchQuit does not clear the physical hold.
+            // A negative timer enters the native release branch on subsequent held frames.
+            // Do not override isAtkPD/isAtkO: the initial press and combinations must keep
+            // their real input state so getPunchVariation can select the requested skill.
             __instance.punch_t = -0.0001f;
-            _syntheticReleaseSkill = __instance;
             _lastAutoFireFrame = IN.totalframe;
-        }
-
-        private static void RunPunchCheckPostfix(M2PrSkill __instance)
-        {
-            if (ReferenceEquals(_syntheticReleaseSkill, __instance))
-            {
-                _syntheticReleaseSkill = null;
-            }
-        }
-
-        private static Exception RunPunchCheckFinalizer(M2PrSkill __instance, Exception __exception)
-        {
-            if (ReferenceEquals(_syntheticReleaseSkill, __instance))
-            {
-                _syntheticReleaseSkill = null;
-            }
-            return __exception;
-        }
-
-        private static bool IsAtkPdPrefix(M2PrAssistant __instance, ref bool __result)
-        {
-            if (!ReferenceEquals(__instance, _syntheticReleaseSkill)) return true;
-            __result = false;
-            return false;
-        }
-
-        private static bool IsAtkOPrefix(M2PrAssistant __instance, ref bool __result)
-        {
-            if (!ReferenceEquals(__instance, _syntheticReleaseSkill)) return true;
-            __result = false;
-            return false;
         }
 
         private static void DigestShotgunPrefix(M2PrSkill __instance)
@@ -345,6 +295,19 @@ namespace AliceInCradleHack.module.modules.combat
                 object attackInput = inputs?.Length > 18 ? inputs.GetValue(18) : null;
                 return attackInput != null && AttackInputIsOnMethod != null &&
                     (bool)AttackInputIsOnMethod.Invoke(attackInput, new object[] { false });
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static bool IsMagicHeld(M2PrSkill skill)
+        {
+            try
+            {
+                return skill != null && IsMagicOMethod != null &&
+                    (bool)IsMagicOMethod.Invoke(skill, null);
             }
             catch
             {
