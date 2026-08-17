@@ -246,7 +246,7 @@ namespace AliceInCradleHack.module.modules.visual.hypixel
         /// </summary>
         private static class MinecraftFontRenderer
         {
-            private const string ResourceName = "AliceInCradleHack.resources.fonts.Minecraft.ttf";
+            private const string ResourceName = "AliceInCradleHack.resources.fonts.Minecraft.otf";
 
             public sealed class Entry
             {
@@ -289,7 +289,7 @@ namespace AliceInCradleHack.module.modules.visual.hypixel
                     {
                         foreach (var name in assembly.GetManifestResourceNames())
                         {
-                            if (name.EndsWith("Minecraft.ttf", StringComparison.OrdinalIgnoreCase))
+                            if (name.EndsWith("Minecraft.otf", StringComparison.OrdinalIgnoreCase))
                             {
                                 stream = assembly.GetManifestResourceStream(name);
                                 break;
