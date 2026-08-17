@@ -8,11 +8,11 @@ namespace AliceInCradleHack.module.modules.combat
 {
     /// <summary>
     /// Keeps the player moving while performing light attacks (ground punch / air punch)
-    /// instead of being forced to a stop by the attack state.
+    /// or casting the magic shotgun instead of being forced to a stop by the attack state.
     /// </summary>
     public class ModuleKeepSprint : Module
     {
-        public ModuleKeepSprint() : base("KeepSprint", "Keep moving while light attacking (punch).", "Combat")
+        public ModuleKeepSprint() : base("KeepSprint", "Keep moving while light attacking (punch) or casting magic shotgun.", "Combat")
         {
         }
 
@@ -26,10 +26,20 @@ namespace AliceInCradleHack.module.modules.combat
         /// </summary>
         public readonly Value<bool> IncludeDashPunch = new(true, "Apply to dash punch as well (input-driven).");
 
+        /// <summary>
+        /// Also apply the effect to the magic shotgun (magic explode prepare / exploded states).
+        /// </summary>
+        public readonly Value<bool> IncludeMagicShotgun = new(true, "Apply to magic shotgun (magic explode) as well.");
+
         private readonly Harmony _harmony = new("aliceincradlehack.modules.combat.keepsprint");
 
         private static readonly MethodInfo RefineMoveKeyMethod = AccessTools.Method(typeof(M2MoverPr), "refineMoveKey", new[] { typeof(bool) });
         private static readonly MethodInfo RunDashPunchMethod = AccessTools.Method(typeof(M2PrSkill), "runDashPunch");
+        private static readonly MethodInfo ChangeStateMethod = AccessTools.Method(
+            typeof(PR),
+            "changeState",
+            new[] { AccessTools.Inner(typeof(PR), "STATE"), AccessTools.Inner(typeof(PR), "STATE") }
+        );
         private static readonly MethodInfo CalcWalkSpeedMethod = AccessTools.Method(typeof(PR), "calcWalkSpeed", new[] { typeof(int) });
         private static readonly AccessTools.FieldRef<M2Mover, M2Phys> PhyAccessor = AccessTools.FieldRefAccess<M2Mover, M2Phys>("Phy");
 
@@ -56,6 +66,14 @@ namespace AliceInCradleHack.module.modules.combat
                     postfix: new HarmonyMethod(typeof(ModuleKeepSprint), nameof(DashPunchPostfix))
                 );
             }
+            if (ChangeStateMethod != null)
+            {
+                _harmony.Patch(
+                    ChangeStateMethod,
+                    prefix: new HarmonyMethod(typeof(ModuleKeepSprint), nameof(ChangeStatePrefix)),
+                    postfix: new HarmonyMethod(typeof(ModuleKeepSprint), nameof(ChangeStatePostfix))
+                );
+            }
         }
 
         public override void Disable()
@@ -75,7 +93,9 @@ namespace AliceInCradleHack.module.modules.combat
                 && (!pr.isSpecialPunchState()
                     || (_instance.IncludeAirPunch.Get() && pr.isAirPunchState()));
 
-            if (!isLightAttack) return;
+            bool isMagicShotgun = _instance.IncludeMagicShotgun.Get() && pr.isMagicState();
+
+            if (!isLightAttack && !isMagicShotgun) return;
 
             int dir = pr.isRO(0, false) ? 1 : pr.isLO(0, false) ? -1 : 0;
             float speed = (float)CalcWalkSpeedMethod.Invoke(pr, new object[] { dir });
@@ -92,6 +112,28 @@ namespace AliceInCradleHack.module.modules.combat
             int dir = pr.isRO(0, false) ? 1 : pr.isLO(0, false) ? -1 : 0;
             float speed = (float)CalcWalkSpeedMethod.Invoke(pr, new object[] { dir });
             PhyAccessor(pr).walk_xspeed = speed;
+        }
+
+        private static void ChangeStatePrefix(PR __instance, object[] __args, out bool __state)
+        {
+            __state = false;
+            if (_instance == null || !_instance.IncludeMagicShotgun.Get()) return;
+            if (__args == null || __args.Length != 2) return;
+            if (__args[0]?.ToString() != "EVADE_SHOTGUN") return;
+            if (__args[1]?.ToString() != "PUNCH") return;
+
+            // A shotgun hit normally forces a long backwards evade. Keep the player in normal movement instead.
+            __args[0] = System.Enum.Parse(__args[0].GetType(), "NORMAL");
+            __state = true;
+        }
+
+        private static void ChangeStatePostfix(PR __instance, bool __state)
+        {
+            if (!__state) return;
+
+            int dir = __instance.isRO(0, false) ? 1 : __instance.isLO(0, false) ? -1 : 0;
+            float speed = (float)CalcWalkSpeedMethod.Invoke(__instance, new object[] { dir });
+            PhyAccessor(__instance).walk_xspeed = speed;
         }
     }
 }
