@@ -653,6 +653,7 @@
     <Compile Include="module\modules\combat\ModuleKeepSprint.cs" />
     <Compile Include="module\modules\combat\ModuleVelocity.cs" />
     <Compile Include="module\modules\combat\ModuleTpAura.cs" />
+    <Compile Include="module\modules\combat\ModuleRapidAttack.cs" />
     <Compile Include="module\modules\misc\ModuleDiscordRPC.cs" />
     <Compile Include="module\modules\misc\ModuleKillSound.cs" />
     <Compile Include="module\modules\misc\ModuleHitSound.cs" />
