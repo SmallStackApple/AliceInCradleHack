@@ -688,7 +688,7 @@
     <Folder Include="GameDLL\" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="resources\fonts\Minecraft.ttf" />
+    <EmbeddedResource Include="resources\fonts\Minecraft.otf" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateGitVersion" BeforeTargets="BeforeCompile">
