@@ -1,9 +1,20 @@
 using AliceInCradleHack.utils.client;
 using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using SdBitmap = System.Drawing.Bitmap;
+using SdBrushes = System.Drawing.Brushes;
+using SdColor = System.Drawing.Color;
+using SdFont = System.Drawing.Font;
+using SdFontFamily = System.Drawing.FontFamily;
+using SdGraphics = System.Drawing.Graphics;
+using SdImageLockMode = System.Drawing.Imaging.ImageLockMode;
+using SdPixelFormat = System.Drawing.Imaging.PixelFormat;
+using SdPrivateFontCollection = System.Drawing.Text.PrivateFontCollection;
+using SdStringFormat = System.Drawing.StringFormat;
+using SdTextRenderingHint = System.Drawing.Text.TextRenderingHint;
 
 namespace AliceInCradleHack.module.modules.visual.hypixel
 {
@@ -33,9 +44,6 @@ namespace AliceInCradleHack.module.modules.visual.hypixel
         private static Color _titleColor = Color.white;
         private static Color _subtitleColor = Color.white;
         private static float _elapsed;
-
-        private static Font _font;
-        private static bool _fontResolved;
 
         private static readonly Color ColorCountdownTitle = new(1f, 0.333f, 0.333f);
         private static readonly Color ColorCountdownSubtitle = new(1f, 1f, 0.333f);
@@ -127,12 +135,53 @@ namespace AliceInCradleHack.module.modules.visual.hypixel
 
         private static void Draw()
         {
-            var font = GetFont();
             float alpha = ComputeAlpha();
             if (alpha <= 0f) return;
 
-            var titleStyle = MakeStyle(font, TitleFontSize, _titleColor);
-            var subtitleStyle = MakeStyle(font, SubtitleFontSize, _subtitleColor);
+            if (!MinecraftFontRenderer.IsAvailable)
+            {
+                DrawWithDefaultFont(alpha);
+                return;
+            }
+
+            const float spacing = 10f;
+            float centerX = Screen.width * 0.5f;
+            float anchorY = Screen.height * 0.5f + Offset;
+
+            var title = MinecraftFontRenderer.Render(_title, TitleFontSize);
+            var subtitle = string.IsNullOrEmpty(_subtitle) ? null : MinecraftFontRenderer.Render(_subtitle, SubtitleFontSize);
+
+            float totalHeight = title.Height + spacing + (subtitle?.Height ?? 0);
+            float titleTop = anchorY - totalHeight * 0.5f;
+
+            var previous = GUI.color;
+
+            GUI.color = Tinted(_titleColor, alpha);
+            GUI.DrawTexture(new Rect(centerX - title.Width * 0.5f, titleTop, title.Width, title.Height), title.Texture, ScaleMode.StretchToFill, true);
+
+            if (subtitle != null)
+            {
+                float subTop = titleTop + title.Height + spacing;
+                GUI.color = Tinted(_subtitleColor, alpha);
+                GUI.DrawTexture(new Rect(centerX - subtitle.Width * 0.5f, subTop, subtitle.Width, subtitle.Height), subtitle.Texture, ScaleMode.StretchToFill, true);
+            }
+
+            GUI.color = previous;
+        }
+
+        private static Color Tinted(Color color, float alpha)
+        {
+            return new Color(color.r, color.g, color.b, color.a * alpha);
+        }
+
+        /// <summary>
+        /// Fallback path used when the embedded Minecraft font failed to load:
+        /// renders with the default IMGUI font instead.
+        /// </summary>
+        private static void DrawWithDefaultFont(float alpha)
+        {
+            var titleStyle = MakeStyle(null, TitleFontSize, _titleColor);
+            var subtitleStyle = MakeStyle(null, SubtitleFontSize, _subtitleColor);
 
             float titleWidth = titleStyle.CalcSize(new GUIContent(_title)).x;
             float subtitleWidth = 0f;
@@ -189,143 +238,149 @@ namespace AliceInCradleHack.module.modules.visual.hypixel
             return Mathf.Clamp01(_elapsed / 0.1f);
         }
 
-        private static Font GetFont()
-        {
-            if (_font != null) return _font;
-            if (_fontResolved) return null;
-            _fontResolved = true;
-            try
-            {
-                _font = MinecraftFontLoader.Create();
-            }
-            catch (Exception ex)
-            {
-                Log.Error("Failed to load the Minecraft font", ex);
-                _font = null;
-            }
-            return _font;
-        }
-
         /// <summary>
-        /// Extracts the embedded Minecraft.ttf to a temp file, registers it with the
-        /// Windows font API and loads it as a dynamic Unity font.
+        /// Renders text with the embedded Minecraft font via GDI+ (System.Drawing)
+        /// into textures, bypassing Unity's OS font lookup entirely: Unity 2021+
+        /// cannot enumerate fonts registered with AddFontResource, so
+        /// Font.CreateDynamicFontFromOSFont silently falls back to a default font.
         /// </summary>
-        private static class MinecraftFontLoader
+        private static class MinecraftFontRenderer
         {
             private const string ResourceName = "AliceInCradleHack.resources.fonts.Minecraft.ttf";
-            private const string FontFamilyName = "Minecraft";
 
-            private const uint FR_PRIVATE = 0x10;
-            private const uint HWND_BROADCAST = 0xFFFF;
-            private const uint WM_FONTCHANGE = 0x001D;
-
-            [DllImport("gdi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-            private static extern int AddFontResourceEx(string lpszFilename, uint fl, IntPtr pdv);
-
-            [DllImport("gdi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-            private static extern int AddFontResource(string lpszFilename);
-
-            [DllImport("user32.dll")]
-            private static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam, uint flags, uint timeout, out IntPtr result);
-
-            private static string _fontPath;
-            private static bool _fontRegistered;
-
-            public static Font Create()
+            public sealed class Entry
             {
-                string path = ExtractFont();
-                if (path != null)
-                {
-                    RegisterFont(path);
-                }
-
-                int size = Mathf.Max(8, Mathf.RoundToInt(TitleFontSize));
-                for (int i = 0; i < 4; i++)
-                {
-                    var font = Font.CreateDynamicFontFromOSFont(FontFamilyName, size);
-                    if (font != null) return font;
-                }
-
-                var fallback = new Font(FontFamilyName);
-                return fallback;
+                public Texture2D Texture;
+                public int Width;
+                public int Height;
             }
 
-            private static void RegisterFont(string path)
+            private static readonly Dictionary<string, Entry> _cache = new();
+            private static SdPrivateFontCollection _collection;
+            private static SdFontFamily _family;
+            private static IntPtr _fontData; // must stay alive while the collection is used
+            private static bool _loadAttempted;
+
+            public static bool IsAvailable => EnsureLoaded();
+
+            public static Entry Render(string text, float sizePx)
             {
-                if (_fontRegistered)
-                {
-                    RefreshFontCaches();
-                    return;
-                }
+                if (string.IsNullOrEmpty(text)) text = " ";
+                int size = Mathf.Max(8, Mathf.RoundToInt(sizePx));
+                string key = size + "|" + text;
+                if (_cache.TryGetValue(key, out var entry)) return entry;
 
-                // AddFontResource first: it adds the font to the session font table so it is
-                // enumerable by Unity's CreateDynamicFontFromOSFont. AddFontResourceEx with
-                // FR_PRIVATE registers a private font that cannot be enumerated, which makes
-                // Unity fail to find it and silently fall back to a default font.
-                if (AddFontResource(path) != 0)
-                {
-                    _fontRegistered = true;
-                }
-                else if (AddFontResourceEx(path, FR_PRIVATE, IntPtr.Zero) != 0)
-                {
-                    _fontRegistered = true;
-                }
-
-                RefreshFontCaches();
+                entry = RenderUncached(text, size);
+                _cache[key] = entry;
+                return entry;
             }
 
-            private static void RefreshFontCaches()
+            private static bool EnsureLoaded()
             {
-                SendMessageTimeout(new IntPtr(HWND_BROADCAST), WM_FONTCHANGE, IntPtr.Zero, IntPtr.Zero, 0, 1000, out _);
-            }
-
-            private static string ExtractFont()
-            {
-                if (_fontPath != null && File.Exists(_fontPath)) return _fontPath;
-
-                var assembly = typeof(MinecraftFontLoader).Assembly;
-                var stream = assembly.GetManifestResourceStream(ResourceName);
-                if (stream == null)
-                {
-                    foreach (var name in assembly.GetManifestResourceNames())
-                    {
-                        if (name.EndsWith("Minecraft.ttf", StringComparison.OrdinalIgnoreCase))
-                        {
-                            stream = assembly.GetManifestResourceStream(name);
-                            break;
-                        }
-                    }
-                }
-
-                if (stream == null)
-                {
-                    Log.Error("Minecraft font resource not found in assembly");
-                    return null;
-                }
+                if (_family != null) return true;
+                if (_loadAttempted) return false;
+                _loadAttempted = true;
 
                 try
                 {
-                    using (stream)
-                    using (var file = new FileStream(FontPath(), FileMode.Create, FileAccess.Write))
+                    var assembly = typeof(MinecraftFontRenderer).Assembly;
+                    var stream = assembly.GetManifestResourceStream(ResourceName);
+                    if (stream == null)
                     {
-                        stream.CopyTo(file);
+                        foreach (var name in assembly.GetManifestResourceNames())
+                        {
+                            if (name.EndsWith("Minecraft.ttf", StringComparison.OrdinalIgnoreCase))
+                            {
+                                stream = assembly.GetManifestResourceStream(name);
+                                break;
+                            }
+                        }
                     }
+
+                    if (stream == null)
+                    {
+                        Log.Error("Minecraft font resource not found in assembly");
+                        return false;
+                    }
+
+                    byte[] data;
+                    using (stream)
+                    {
+                        using var ms = new MemoryStream();
+                        stream.CopyTo(ms);
+                        data = ms.ToArray();
+                    }
+
+                    // AddMemoryFont does not copy the font data; the buffer must
+                    // stay valid for the lifetime of the collection.
+                    _fontData = Marshal.AllocCoTaskMem(data.Length);
+                    Marshal.Copy(data, 0, _fontData, data.Length);
+
+                    _collection = new SdPrivateFontCollection();
+                    _collection.AddMemoryFont(_fontData, data.Length);
+                    _family = _collection.Families[0];
+                    Log.Info($"Loaded the embedded Minecraft font family '{_family.Name}' via GDI+");
+                    return true;
                 }
                 catch (Exception ex)
                 {
-                    Log.Error("Failed to extract the Minecraft font", ex);
-                    return null;
+                    Log.Error("Failed to load the Minecraft font", ex);
+                    return false;
                 }
-
-                _fontPath = FontPath();
-                return _fontPath;
             }
 
-            private static string FontPath()
+            private static Entry RenderUncached(string text, int sizePx)
             {
-                string dir = Path.Combine(Path.GetTempPath(), "AliceInCradleHack");
-                Directory.CreateDirectory(dir);
-                return Path.Combine(dir, "Minecraft.ttf");
+                using var font = new SdFont(_family, sizePx, System.Drawing.GraphicsUnit.Pixel);
+
+                int width, height;
+                using (var probe = new SdBitmap(1, 1))
+                using (var g = SdGraphics.FromImage(probe))
+                {
+                    var measured = g.MeasureString(text, font, System.Drawing.PointF.Empty, SdStringFormat.GenericTypographic);
+                    width = Math.Max(1, (int)Math.Ceiling(measured.Width));
+                    height = Math.Max(1, (int)Math.Ceiling(measured.Height));
+                }
+
+                byte[] pixels;
+                using (var bitmap = new SdBitmap(width, height, SdPixelFormat.Format32bppArgb))
+                {
+                    using (var g = SdGraphics.FromImage(bitmap))
+                    {
+                        g.Clear(SdColor.Transparent);
+                        g.TextRenderingHint = SdTextRenderingHint.SingleBitPerPixelGridFit;
+                        g.DrawString(text, font, SdBrushes.White, 0f, 0f, SdStringFormat.GenericTypographic);
+                    }
+
+                    var rect = new System.Drawing.Rectangle(0, 0, width, height);
+                    var data = bitmap.LockBits(rect, SdImageLockMode.ReadOnly, SdPixelFormat.Format32bppArgb);
+                    try
+                    {
+                        pixels = new byte[width * height * 4];
+                        var row = new byte[width * 4];
+                        for (int y = 0; y < height; y++)
+                        {
+                            // GDI+ bitmaps are top-down, Unity textures bottom-up: flip rows.
+                            Marshal.Copy(data.Scan0 + y * data.Stride, row, 0, row.Length);
+                            Buffer.BlockCopy(row, 0, pixels, (height - 1 - y) * row.Length, row.Length);
+                        }
+                    }
+                    finally
+                    {
+                        bitmap.UnlockBits(data);
+                    }
+                }
+
+                var texture = new Texture2D(width, height, TextureFormat.BGRA32, false)
+                {
+                    hideFlags = HideFlags.HideAndDontSave,
+                    filterMode = FilterMode.Point,
+                    wrapMode = TextureWrapMode.Clamp
+                };
+                texture.LoadRawTextureData(pixels);
+                texture.Apply(false, false);
+
+                return new Entry { Texture = texture, Width = width, Height = height };
             }
         }
     }
