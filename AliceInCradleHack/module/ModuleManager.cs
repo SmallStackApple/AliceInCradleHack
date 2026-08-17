@@ -52,6 +52,7 @@ namespace AliceInCradleHack.module
                 new ModuleVelocity(),
                 new ModuleKeepSprint(),
                 new ModuleTpAura(),
+                new ModuleRapidAttack(),
                 new ModuleWebUi(),
                 new ModuleGui(),
                 new ModuleDynamicIsland(),
