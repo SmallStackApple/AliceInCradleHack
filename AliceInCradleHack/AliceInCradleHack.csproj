@@ -671,6 +671,7 @@
     <Compile Include="utils\client\MainFolder.cs" />
     <Compile Include="utils\client\ConsoleHost.cs" />
     <Compile Include="utils\client\DependencyResolver.cs" />
+    <Compile Include="utils\client\IntroSplash.cs" />
     <Compile Include="utils\client\Notification.cs" />
     <Compile Include="utils\client\OnGuiRenderer.cs" />
     <Compile Include="utils\game\M2Attackable.cs" />

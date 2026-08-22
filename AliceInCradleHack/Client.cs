@@ -68,6 +68,9 @@ namespace AliceInCradleHack
                 Log.Info("Applying patches...");
                 Start(PatchManager.Instance);
 
+                Log.Info("Scheduling intro splash...");
+                Start(IntroSplash.Controller);
+
                 Log.Info("Registering commands...");
                 Start(CommandManager.Instance);
 
