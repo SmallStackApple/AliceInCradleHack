@@ -146,7 +146,7 @@ namespace AliceInCradleHack.utils.client
             GUI.Label(new Rect(prefixX + prefixWidth, suffixY, suffixWidth + 4f, suffixStyle.fontSize * 1.3f), Suffix, suffixStyle);
         }
 
-        private GUIStyle PrefixStyle => _prefixStyle ??= CreateStyle(64);
+        private GUIStyle PrefixStyle => _prefixStyle ??= CreateStyle(42);
         private GUIStyle SuffixStyle => _suffixStyle ??= CreateStyle(42);
 
         private static GUIStyle CreateStyle(int fontSize)
