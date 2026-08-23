@@ -4,6 +4,7 @@ using AliceInCradleHack.module.modules.client;
 using AliceInCradleHack.module.modules.client.island;
 using AliceInCradleHack.module.modules.combat;
 using AliceInCradleHack.module.modules.misc;
+using AliceInCradleHack.module.modules.movement;
 using AliceInCradleHack.module.modules.visual;
 using AliceInCradleHack.module.modules.visual.hypixel;
 using AliceInCradleHack.utils.client;
@@ -53,6 +54,7 @@ namespace AliceInCradleHack.module
                 new ModuleKeepSprint(),
                 new ModuleTpAura(),
                 new ModuleRapidAttack(),
+                new ModuleInfiniteJump(),
                 new ModuleWebUi(),
                 new ModuleGui(),
                 new ModuleDynamicIsland(),
