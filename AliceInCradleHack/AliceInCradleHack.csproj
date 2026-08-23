@@ -668,6 +668,7 @@
     <Compile Include="module\modules\misc\ModuleDiscordRPC.cs" />
     <Compile Include="module\modules\misc\ModuleKillSound.cs" />
     <Compile Include="module\modules\misc\ModuleHitSound.cs" />
+    <Compile Include="module\modules\misc\ModuleBAGachaBGM.cs" />
     <Compile Include="module\modules\visual\ModuleMosaicRemove.cs" />
     <Compile Include="module\modules\visual\hypixel\ModuleHypixel.cs" />
     <Compile Include="module\modules\visual\hypixel\HypixelHud.cs" />
@@ -702,6 +703,8 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="resources\fonts\Minecraft.otf" />
+    <EmbeddedResource Include="resources\audio\Connected_Sky.wav" />
+    <EmbeddedResource Include="resources\audio\Theme_338.wav" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateGitVersion" BeforeTargets="BeforeCompile">
