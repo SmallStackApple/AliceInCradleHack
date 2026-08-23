@@ -659,6 +659,8 @@
     <Compile Include="script\LuaScriptManager.cs" />
     <Compile Include="module\modules\combat\ModuleCritical.cs" />
     <Compile Include="module\modules\combat\ModuleKeepSprint.cs" />
+    <Compile Include="module\modules\combat\ModuleInfiniteShield.cs" />
+    <Compile Include="module\modules\combat\ModuleKeepShield.cs" />
     <Compile Include="module\modules\combat\ModuleVelocity.cs" />
     <Compile Include="module\modules\combat\ModuleTpAura.cs" />
     <Compile Include="module\modules\combat\ModuleRapidAttack.cs" />

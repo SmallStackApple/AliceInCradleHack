@@ -52,6 +52,8 @@ namespace AliceInCradleHack.module
                 new ModuleCritical(),
                 new ModuleVelocity(),
                 new ModuleKeepSprint(),
+                new ModuleInfiniteShield(),
+                new ModuleKeepShield(),
                 new ModuleTpAura(),
                 new ModuleRapidAttack(),
                 new ModuleInfiniteJump(),

@@ -31,10 +31,30 @@ namespace AliceInCradleHack.module.modules.combat
         /// </summary>
         public readonly Value<bool> IncludeMagicShotgun = new(true, "Apply to magic shotgun (magic explode) as well.");
 
+        /// <summary>
+        /// Keep movement input during shield attacks, without changing ordinary shield movement.
+        /// </summary>
+        public readonly Value<bool> IncludeShieldAttacks = new(true, "Apply to shield bush and shield lariat attacks.");
+
         private readonly Harmony _harmony = new("aliceincradlehack.modules.combat.keepsprint");
 
         private static readonly MethodInfo RefineMoveKeyMethod = AccessTools.Method(typeof(M2MoverPr), "refineMoveKey", new[] { typeof(bool) });
         private static readonly MethodInfo RunDashPunchMethod = AccessTools.Method(typeof(M2PrSkill), "runDashPunch");
+        private static readonly MethodInfo RunEvadeInputtingMethod = AccessTools.Method(
+            typeof(M2PrSkillShieldEvade), "runEvadeInputting",
+            new[]
+            {
+                typeof(float), AccessTools.Inner(typeof(M2MoverPr), "DECL"), typeof(float), typeof(float),
+                typeof(bool), typeof(float), typeof(bool).MakeByRefType(), typeof(bool).MakeByRefType(), typeof(bool)
+            });
+        private static readonly MethodInfo RunEvadeInputtingWithVelocityMethod = AccessTools.Method(
+            typeof(M2PrSkillShieldEvade), "runEvadeInputting",
+            new[]
+            {
+                typeof(float), AccessTools.Inner(typeof(M2MoverPr), "DECL"), typeof(float), typeof(float),
+                typeof(bool), typeof(float), typeof(bool).MakeByRefType(), typeof(bool).MakeByRefType(),
+                typeof(float).MakeByRefType(), typeof(bool)
+            });
         private static readonly MethodInfo ChangeStateMethod = AccessTools.Method(
             typeof(PR),
             "changeState",
@@ -42,6 +62,7 @@ namespace AliceInCradleHack.module.modules.combat
         );
         private static readonly MethodInfo CalcWalkSpeedMethod = AccessTools.Method(typeof(PR), "calcWalkSpeed", new[] { typeof(int) });
         private static readonly AccessTools.FieldRef<M2Mover, M2Phys> PhyAccessor = AccessTools.FieldRefAccess<M2Mover, M2Phys>("Phy");
+        private static readonly FieldInfo StateField = AccessTools.Field(typeof(PR), "state");
 
         private static ModuleKeepSprint _instance;
 
@@ -64,6 +85,20 @@ namespace AliceInCradleHack.module.modules.combat
                 _harmony.Patch(
                     RunDashPunchMethod,
                     postfix: new HarmonyMethod(typeof(ModuleKeepSprint), nameof(DashPunchPostfix))
+                );
+            }
+            if (RunEvadeInputtingMethod != null)
+            {
+                _harmony.Patch(
+                    RunEvadeInputtingMethod,
+                    prefix: new HarmonyMethod(typeof(ModuleKeepSprint), nameof(RunEvadeInputtingPrefix))
+                );
+            }
+            if (RunEvadeInputtingWithVelocityMethod != null)
+            {
+                _harmony.Patch(
+                    RunEvadeInputtingWithVelocityMethod,
+                    prefix: new HarmonyMethod(typeof(ModuleKeepSprint), nameof(RunEvadeInputtingPrefix))
                 );
             }
             if (ChangeStateMethod != null)
@@ -112,6 +147,22 @@ namespace AliceInCradleHack.module.modules.combat
             int dir = pr.isRO(0, false) ? 1 : pr.isLO(0, false) ? -1 : 0;
             float speed = (float)CalcWalkSpeedMethod.Invoke(pr, new object[] { dir });
             PhyAccessor(pr).walk_xspeed = speed;
+        }
+
+        private static bool IsShieldAttackState(PR pr)
+        {
+            if (pr == null || StateField == null) return false;
+            object state = StateField.GetValue(pr);
+            string name = state?.ToString();
+            return name == "SHIELD_BUSH" || name == "SHIELD_LARIAT";
+        }
+
+        private static void RunEvadeInputtingPrefix(M2PrSkillShieldEvade __instance, ref bool use_walkspeed)
+        {
+            if (_instance == null || !_instance.IncludeShieldAttacks.Get()) return;
+            if (__instance?.Pr == null || !__instance.Pr.is_alive) return;
+            if (IsShieldAttackState(__instance.Pr))
+                use_walkspeed = true;
         }
 
         private static void ChangeStatePrefix(PR __instance, object[] __args, out bool __state)
