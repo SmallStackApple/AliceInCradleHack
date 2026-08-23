@@ -1,5 +1,5 @@
 # Default: normalize text files to LF in the repository.
-* text=auto eol=lf
+* text=auto eol=crlf
 
 # Explicitly mark binary formats so they are never normalized.
 *.dll binary
