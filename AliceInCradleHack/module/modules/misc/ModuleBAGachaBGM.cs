@@ -78,13 +78,11 @@ namespace AliceInCradleHack.module.modules.misc
 
         private static void InitPostfix()
         {
-            Log.Debug($"{_instance.Name}: InitPostfix called.");
             if (IsEnabledAndReady) _instance.StartBgm();
         }
 
         private static void DeactivatePostfix()
         {
-            Log.Debug($"{_instance.Name}: DeactivatePostfix called.");
             _instance?.StopBgm();
         }
 
