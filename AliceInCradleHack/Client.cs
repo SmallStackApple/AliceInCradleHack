@@ -2,6 +2,7 @@ using AliceInCradleHack.command;
 using AliceInCradleHack.extension;
 using AliceInCradleHack.module;
 using AliceInCradleHack.patch;
+using AliceInCradleHack.script;
 using AliceInCradleHack.utils.client;
 using System;
 using System.Collections.Generic;
@@ -75,7 +76,8 @@ namespace AliceInCradleHack
                 Start(CommandManager.Instance);
 
                 Log.Info("Initializing modules...");
-                Start(ModuleManager.Instance);
+                 Start(ModuleManager.Instance);
+                 Start(LuaScriptManager.Instance);
 
                 Log.Info("Loading extensions...");
                 Start(ExtensionManager.Instance);

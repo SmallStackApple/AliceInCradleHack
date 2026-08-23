@@ -1,5 +1,6 @@
 using AliceInCradleHack.config;
 using AliceInCradleHack.config.group;
+using AliceInCradleHack.script;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -152,6 +153,42 @@ namespace AliceInCradleHack.module.modules.client.webui
                     }
 
                     WriteJson(context, new { path = settingPath, value = manager.GetSettingValue(moduleName, settingPath) });
+                    return;
+                }
+            }
+
+            // /api/config/...
+            if (segments.Length >= 2 && segments[1] == "scripts")
+            {
+                var scripts = LuaScriptManager.Instance;
+                if (context.Request.HttpMethod == "GET" && segments.Length == 2)
+                {
+                    scripts.Scan();
+                    WriteJson(context, scripts.GetScripts());
+                    return;
+                }
+                if (context.Request.HttpMethod == "POST" && segments.Length == 3 && segments[2] == "reload-all")
+                {
+                    scripts.ReloadAll();
+                    WriteJson(context, new { ok = true, scripts = scripts.GetScripts() });
+                    return;
+                }
+                if (context.Request.HttpMethod == "POST" && segments.Length == 3)
+                {
+                    var payload = ParseBody(context);
+                    if (payload == null) return;
+                    string name = payload["name"]?.ToString();
+                    if (string.IsNullOrWhiteSpace(name)) { WriteError(context, 400, "Missing 'name' field"); return; }
+                    bool ok;
+                    switch (segments[2])
+                    {
+                        case "load": ok = scripts.LoadScript(name); break;
+                        case "unload": ok = scripts.UnloadScript(name); break;
+                        case "reload": ok = scripts.ReloadScript(name); break;
+                        default: WriteError(context, 404, "Not found"); return;
+                    }
+                    if (!ok) { WriteError(context, 400, "Script operation failed"); return; }
+                    WriteJson(context, scripts.GetScripts().FirstOrDefault(s => s.Name.Equals(name, StringComparison.OrdinalIgnoreCase)));
                     return;
                 }
             }

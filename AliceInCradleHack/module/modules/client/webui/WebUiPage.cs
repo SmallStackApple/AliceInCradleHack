@@ -101,6 +101,12 @@ h1 .sub { color: var(--muted); font-size: 13px; font-weight: 400; margin-left: 8
 .setting-control .suffix { color: var(--muted); font-size: 12px; min-width: 18px; }
 .readonly-tag { color: var(--muted); font-size: 12px; }
 .empty { color: var(--muted); padding: 12px 16px; font-size: 13px; }
+.scripts { margin-top: 22px; }
+.script-row { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+.script-row:last-child { border-bottom: none; }
+.script-name { flex: 1; min-width: 0; font-size: 13px; }
+.script-state { color: var(--muted); font-size: 12px; }
+.script-error { color: var(--danger); font-size: 11px; white-space: pre-wrap; max-width: 420px; overflow: hidden; }
 #toast {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
   background: var(--panel2); border: 1px solid var(--border); border-radius: 6px;
@@ -116,6 +122,8 @@ h1 .sub { color: var(--muted); font-size: 13px; font-weight: 400; margin-left: 8
   <h1>AliceInCradle Hack<span class=""sub"">WebUI</span></h1>
   <div style=""display:flex;gap:8px;flex-wrap:wrap;"">
     <button class=""btn"" onclick=""loadModules()"">Refresh</button>
+    <button class=""btn"" onclick=""loadScripts()"">Scripts</button>
+    <button class=""btn"" onclick=""reloadAllScripts()"">Reload Scripts</button>
     <button class=""btn"" onclick=""exportConfig()"">Export</button>
     <button class=""btn"" onclick=""document.getElementById('importFile').click()"">Import</button>
     <button class=""btn"" onclick=""saveConfig()"">Save</button>
@@ -128,6 +136,10 @@ h1 .sub { color: var(--muted); font-size: 13px; font-weight: 400; margin-left: 8
 </div>
 <input type=""file"" id=""importFile"" accept="".json,application/json"" style=""display:none"">
 <div id=""content""><div class=""empty"">Loading…</div></div>
+<section class=""scripts"">
+  <div class=""category"">Lua Scripts</div>
+  <div class=""card""><div id=""scripts"" class=""empty"">Loading…</div></div>
+</section>
 <div id=""toast""></div>
 <script>
 const content = document.getElementById('content');
@@ -174,6 +186,40 @@ async function loadModules() {
     content.appendChild(h);
     for (const m of groups[cat]) content.appendChild(renderModule(m));
   }
+}
+
+async function loadScripts() {
+  const box = document.getElementById('scripts');
+  try {
+    const list = await api('/api/scripts');
+    box.innerHTML = '';
+    if (!list.length) { box.textContent = 'No .lua files found in the Script folder.'; return; }
+    for (const s of list) {
+      const row = document.createElement('div'); row.className = 'script-row';
+      const name = document.createElement('div'); name.className = 'script-name'; name.textContent = s.name;
+      const state = document.createElement('span'); state.className = 'script-state'; state.textContent = s.isLoaded ? 'Loaded' : (s.error ? 'Failed' : 'Unloaded');
+      const action = document.createElement('button'); action.className = 'btn'; action.textContent = s.isLoaded ? 'Reload' : 'Load';
+      action.onclick = () => scriptAction(s.name, s.isLoaded ? 'reload' : 'load');
+      row.appendChild(name); row.appendChild(state); row.appendChild(action);
+      if (s.isLoaded) { const unload = document.createElement('button'); unload.className = 'btn'; unload.textContent = 'Unload'; unload.onclick = () => scriptAction(s.name, 'unload'); row.appendChild(unload); }
+      if (s.error) { const error = document.createElement('div'); error.className = 'script-error'; error.textContent = s.error; row.appendChild(error); }
+      box.appendChild(row);
+    }
+  } catch (e) { box.textContent = 'Failed to load scripts: ' + e.message; }
+}
+
+async function scriptAction(name, action) {
+  try {
+    await api('/api/scripts/' + action, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
+    toast(name + ' ' + action + 'ed'); loadScripts();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function reloadAllScripts() {
+  try {
+    await api('/api/scripts/reload-all', { method: 'POST' });
+    toast('Lua scripts reloaded'); loadScripts();
+  } catch (e) { toast(e.message, true); }
 }
 
 function renderModule(m) {
@@ -653,6 +699,7 @@ function esc(s) {
 
 loadModules();
 loadSavedFiles();
+loadScripts();
 </script>
 </body>
 </html>";
