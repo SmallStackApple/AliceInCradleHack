@@ -226,8 +226,8 @@ namespace AliceInCradleHack.module.modules.combat
             if (!IsLocalPlayerSkill(__instance)) return;
 
             PR pr = __instance.Pr;
-            // Attack key released: let the charge deplete (and the exhaust path finishes it).
-            if (pr == null || !IsAttackHeld(pr)) return;
+
+            if (pr == null) return;
 
             try
             {
