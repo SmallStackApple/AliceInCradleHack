@@ -8,10 +8,6 @@ namespace AliceInCradleHack.module.modules.combat
         {
         }
 
-        public override void Initialize()
-        {
-        }
-
         public override void Enable()
         {
             DamageEvents.Knockback.EventPreKnockback += OnPreKnockback;

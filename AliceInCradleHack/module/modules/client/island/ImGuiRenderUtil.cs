@@ -115,11 +115,6 @@ namespace AliceInCradleHack.module.modules.client.island
             GUI.color = previous;
         }
 
-        public static float MeasureWidth(string text)
-        {
-            return LabelStyle.CalcSize(new GUIContent(text)).x;
-        }
-
         public static Vector2 MeasureSize(string title, string subtitle, float titleFontSize = -1f)
         {
             var titleStyle = titleFontSize >= 0f ? LabelStyleFor(titleFontSize) : LabelStyle;

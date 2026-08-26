@@ -26,7 +26,7 @@ namespace AliceInCradleHack.config
             {
                 if (_rootFolder == null)
                 {
-                    _rootFolder = Path.Combine(utils.client.MainFolder.GetMainFolder(), "AliceInCradleHack");
+                    _rootFolder = Path.Combine(utils.client.MainFolder.GetMainFolder(), Client.ClientName);
                     Directory.CreateDirectory(_rootFolder);
                     Directory.CreateDirectory(ConfigsFolder);
                     Directory.CreateDirectory(BackupFolder);

@@ -31,10 +31,6 @@ namespace AliceInCradleHack.module.modules.combat
             HpDamage.EventPreNotPlayerGetDamageHandler -= DoCriticalHit;
         }
 
-        public override void Initialize()
-        {
-        }
-
         private void DoCriticalHit(object sender, HpDamage.PreDamageEventArgs e)
         {
             if (!ReferenceEquals(e.AttackInfo.AttackFrom, NelM2DBase.PlayerNoel)) return;

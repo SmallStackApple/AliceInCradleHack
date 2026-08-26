@@ -20,10 +20,6 @@ namespace AliceInCradleHack.module.modules.client
 
         private readonly WebUiServer _server = new WebUiServer();
 
-        public override void Initialize()
-        {
-        }
-
         public override void Enable()
         {
             int port = Port;

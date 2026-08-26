@@ -18,17 +18,21 @@ namespace AliceInCradleHack.events
             Invoke(EventPostUpdate, instance);
         }
 
-        private static void Invoke(EventHandler<UpdateEventArgs> handler, object instance)
+        private static void Invoke(EventHandler<UpdateEventArgs> handlers, object instance)
         {
-            if (handler == null) return;
+            if (handlers == null) return;
 
-            try
+            var args = new UpdateEventArgs(instance);
+            foreach (EventHandler<UpdateEventArgs> handler in handlers.GetInvocationList())
             {
-                handler.Invoke(instance, new UpdateEventArgs(instance));
-            }
-            catch (Exception ex)
-            {
-                Log.Error("XxINEvents handler exception", ex);
+                try
+                {
+                    handler.Invoke(instance, args);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("XxINEvents handler exception", ex);
+                }
             }
         }
 

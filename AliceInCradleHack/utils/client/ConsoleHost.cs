@@ -32,7 +32,7 @@ namespace AliceInCradleHack.utils.client
             // Redirect input and output to the new console.
             Console.SetOut(new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
             Console.SetIn(new StreamReader(Console.OpenStandardInput()));
-            Console.Title = "AliceInCradleHack Console";
+            Console.Title = Client.ClientName + " Console";
 
             // Swallow Ctrl+C so the host game process is not terminated.
             Console.CancelKeyPress += (sender, e) => e.Cancel = true;

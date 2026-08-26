@@ -27,8 +27,7 @@ namespace AliceInCradleHack.utils.client
         private bool _waitingForUnityUpdate;
         private bool _running;
         private float _startedAt;
-        private GUIStyle _prefixStyle;
-        private GUIStyle _suffixStyle;
+        private GUIStyle _logoStyle;
 
         public static IntroSplash Controller => LazyInstance.Value;
 
@@ -127,8 +126,8 @@ namespace AliceInCradleHack.utils.client
                 ? 0f
                 : EaseOutCubic((elapsed - suffixStart) / SuffixAppearDuration) * fadeFactor;
 
-            GUIStyle prefixStyle = ScaledStyle(PrefixStyle, prefixScale);
-            GUIStyle suffixStyle = SuffixStyle;
+            GUIStyle prefixStyle = ScaledStyle(LogoStyle, prefixScale);
+            GUIStyle suffixStyle = LogoStyle;
             float prefixWidth = prefixStyle.CalcSize(new GUIContent(Prefix)).x;
             float suffixWidth = suffixStyle.CalcSize(new GUIContent(Suffix)).x;
             float centeredPrefixX = Screen.width * 0.5f - prefixWidth * 0.5f;
@@ -146,8 +145,8 @@ namespace AliceInCradleHack.utils.client
             GUI.Label(new Rect(prefixX + prefixWidth, suffixY, suffixWidth + 4f, suffixStyle.fontSize * 1.3f), Suffix, suffixStyle);
         }
 
-        private GUIStyle PrefixStyle => _prefixStyle ??= CreateStyle(42);
-        private GUIStyle SuffixStyle => _suffixStyle ??= CreateStyle(42);
+        // Prefix and suffix share the same base style; the prefix is scaled per frame.
+        private GUIStyle LogoStyle => _logoStyle ??= CreateStyle(42);
 
         private static GUIStyle CreateStyle(int fontSize)
         {

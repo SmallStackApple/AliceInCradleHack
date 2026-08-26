@@ -66,10 +66,6 @@ namespace AliceInCradleHack.module.modules.combat
 
         private static ModuleKeepSprint _instance;
 
-        public override void Initialize()
-        {
-        }
-
         public override void Enable()
         {
             _instance = this;

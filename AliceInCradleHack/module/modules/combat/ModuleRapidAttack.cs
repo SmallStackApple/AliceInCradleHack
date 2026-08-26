@@ -85,11 +85,10 @@ namespace AliceInCradleHack.module.modules.combat
         private static readonly AccessTools.FieldRef<M2PrSkill, NelPlayerCursor> CursorAccessor = AccessTools.FieldRefAccess<M2PrSkill, NelPlayerCursor>("Cursor");
         private static readonly FieldInfo InputKeyAccessor = AccessTools.Field(typeof(IN), "KA");
         private static readonly FieldInfo InputActionsAccessor = AccessTools.Field(typeof(KEY), "AInputs");
-        private static readonly MethodInfo AttackInputIsOnMethod = AccessTools.Method(InputActionsAccessor.FieldType.GetElementType(), "isOn", new[] { typeof(bool) });
-
-        public override void Initialize()
-        {
-        }
+        private static readonly MethodInfo AttackInputIsOnMethod =
+            InputActionsAccessor?.FieldType.GetElementType() is Type inputActionType
+                ? AccessTools.Method(inputActionType, "isOn", new[] { typeof(bool) })
+                : null;
 
         public override void Enable()
         {
@@ -283,16 +282,18 @@ namespace AliceInCradleHack.module.modules.combat
             return skill != null && ReferenceEquals(skill.Pr, AliceInCradleHack.utils.game.NelM2DBase.PlayerNoel);
         }
 
+        // Index of the game's light-attack InputAction in KEY.AInputs. It includes its
+        // current keyboard/controller binding and therefore stays correct after rebinding.
+        private const int LightAttackInputIndex = 18;
+
         private static bool IsAttackHeld(PR pr)
         {
             if (pr == null) return false;
-            // AInputs[18] is the game's light-attack InputAction. It includes its current
-            // keyboard/controller binding and therefore stays correct after rebinding.
             try
             {
                 object key = InputKeyAccessor?.GetValue(null);
                 Array inputs = InputActionsAccessor?.GetValue(key) as Array;
-                object attackInput = inputs?.Length > 18 ? inputs.GetValue(18) : null;
+                object attackInput = inputs?.Length > LightAttackInputIndex ? inputs.GetValue(LightAttackInputIndex) : null;
                 return attackInput != null && AttackInputIsOnMethod != null &&
                     (bool)AttackInputIsOnMethod.Invoke(attackInput, new object[] { false });
             }

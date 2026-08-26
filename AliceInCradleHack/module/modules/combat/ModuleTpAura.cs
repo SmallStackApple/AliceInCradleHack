@@ -4,7 +4,6 @@ using HarmonyLib;
 using m2d;
 using nel;
 using System;
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using XX;
 
@@ -41,10 +40,6 @@ namespace AliceInCradleHack.module.modules.combat
 
         private static ModuleTpAura _instance;
         private static readonly Random _rng = new Random();
-
-        public override void Initialize()
-        {
-        }
 
         public override void Enable()
         {

@@ -25,6 +25,7 @@ namespace AliceInCradleHack.config
 
         /// <summary>
         /// If true, the value can never be changed and always keeps its default.
+        /// Reserved for extensions; no built-in module sets this.
         /// </summary>
         public bool IsImmutable { get; set; }
 
@@ -150,6 +151,7 @@ namespace AliceInCradleHack.config
 
         /// <summary>
         /// Adds an interceptor that can transform (or veto, by throwing) an incoming value before it is applied.
+        /// Reserved for extensions; no built-in module registers interceptors.
         /// </summary>
         public Value<T> OnChange(Func<T, T> interceptor)
         {

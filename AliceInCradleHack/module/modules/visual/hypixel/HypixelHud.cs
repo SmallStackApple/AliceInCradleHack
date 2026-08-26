@@ -133,6 +133,8 @@ namespace AliceInCradleHack.module.modules.visual.hypixel
             Draw();
         }
 
+        private const float LineSpacing = 10f;
+
         private static void Draw()
         {
             float alpha = ComputeAlpha();
@@ -144,26 +146,23 @@ namespace AliceInCradleHack.module.modules.visual.hypixel
                 return;
             }
 
-            const float spacing = 10f;
-            float centerX = Screen.width * 0.5f;
-            float anchorY = Screen.height * 0.5f + Offset;
-
             var title = MinecraftFontRenderer.Render(_title, TitleFontSize);
             var subtitle = string.IsNullOrEmpty(_subtitle) ? null : MinecraftFontRenderer.Render(_subtitle, SubtitleFontSize);
 
-            float totalHeight = title.Height + spacing + (subtitle?.Height ?? 0);
-            float titleTop = anchorY - totalHeight * 0.5f;
+            ComputeCenteredLayout(
+                new Vector2(title.Width, title.Height),
+                subtitle == null ? Vector2.zero : new Vector2(subtitle.Width, subtitle.Height),
+                out var titleRect, out var subtitleRect);
 
             var previous = GUI.color;
 
             GUI.color = Tinted(_titleColor, alpha);
-            GUI.DrawTexture(new Rect(centerX - title.Width * 0.5f, titleTop, title.Width, title.Height), title.Texture, ScaleMode.StretchToFill, true);
+            GUI.DrawTexture(titleRect, title.Texture, ScaleMode.StretchToFill, true);
 
             if (subtitle != null)
             {
-                float subTop = titleTop + title.Height + spacing;
                 GUI.color = Tinted(_subtitleColor, alpha);
-                GUI.DrawTexture(new Rect(centerX - subtitle.Width * 0.5f, subTop, subtitle.Width, subtitle.Height), subtitle.Texture, ScaleMode.StretchToFill, true);
+                GUI.DrawTexture(subtitleRect, subtitle.Texture, ScaleMode.StretchToFill, true);
             }
 
             GUI.color = previous;
@@ -183,31 +182,41 @@ namespace AliceInCradleHack.module.modules.visual.hypixel
             var titleStyle = MakeStyle(null, TitleFontSize, _titleColor);
             var subtitleStyle = MakeStyle(null, SubtitleFontSize, _subtitleColor);
 
-            float titleWidth = titleStyle.CalcSize(new GUIContent(_title)).x;
-            float subtitleWidth = 0f;
-            if (!string.IsNullOrEmpty(_subtitle))
-            {
-                subtitleWidth = subtitleStyle.CalcSize(new GUIContent(_subtitle)).x;
-            }
+            var titleSize = titleStyle.CalcSize(new GUIContent(_title));
+            bool hasSubtitle = !string.IsNullOrEmpty(_subtitle);
+            var subtitleSize = hasSubtitle ? subtitleStyle.CalcSize(new GUIContent(_subtitle)) : Vector2.zero;
 
-            const float spacing = 10f;
-            float totalWidth = Mathf.Max(titleWidth, subtitleWidth);
-            float centerX = Screen.width * 0.5f;
-            float anchorY = Screen.height * 0.5f + Offset;
-
-            float titleTop = anchorY - (titleStyle.CalcSize(new GUIContent(_title)).y + spacing + (string.IsNullOrEmpty(_subtitle) ? 0f : subtitleStyle.CalcSize(new GUIContent(_subtitle)).y)) * 0.5f;
+            ComputeCenteredLayout(titleSize, subtitleSize, out var titleRect, out var subtitleRect);
 
             var previous = GUI.color;
             GUI.color = new Color(1f, 1f, 1f, alpha);
 
-            GUI.Label(new Rect(centerX - totalWidth * 0.5f, titleTop, totalWidth, titleStyle.CalcSize(new GUIContent(_title)).y), _title, titleStyle);
-            if (!string.IsNullOrEmpty(_subtitle))
+            GUI.Label(titleRect, _title, titleStyle);
+            if (hasSubtitle)
             {
-                float subTop = titleTop + titleStyle.CalcSize(new GUIContent(_title)).y + spacing;
-                GUI.Label(new Rect(centerX - totalWidth * 0.5f, subTop, totalWidth, subtitleStyle.CalcSize(new GUIContent(_subtitle)).y), _subtitle, subtitleStyle);
+                GUI.Label(subtitleRect, _subtitle, subtitleStyle);
             }
 
             GUI.color = previous;
+        }
+
+        /// <summary>
+        /// Computes the rects of a centered title/subtitle stack anchored slightly
+        /// below the screen center. <paramref name="subtitleRect"/> is <c>default</c>
+        /// when there is no subtitle (pass <see cref="Vector2.zero"/>).
+        /// </summary>
+        private static void ComputeCenteredLayout(Vector2 titleSize, Vector2 subtitleSize, out Rect titleRect, out Rect subtitleRect)
+        {
+            bool hasSubtitle = subtitleSize.y > 0f;
+            float centerX = Screen.width * 0.5f;
+            float anchorY = Screen.height * 0.5f + Offset;
+            float totalHeight = titleSize.y + (hasSubtitle ? LineSpacing + subtitleSize.y : 0f);
+            float titleTop = anchorY - totalHeight * 0.5f;
+
+            titleRect = new Rect(centerX - titleSize.x * 0.5f, titleTop, titleSize.x, titleSize.y);
+            subtitleRect = hasSubtitle
+                ? new Rect(centerX - subtitleSize.x * 0.5f, titleTop + titleSize.y + LineSpacing, subtitleSize.x, subtitleSize.y)
+                : default;
         }
 
         private static GUIStyle MakeStyle(Font font, float fontSize, Color color)
@@ -246,7 +255,7 @@ namespace AliceInCradleHack.module.modules.visual.hypixel
         /// </summary>
         private static class MinecraftFontRenderer
         {
-            private const string ResourceName = "AliceInCradleHack.resources.fonts.Minecraft.otf";
+            private const string ResourceName = Client.ClientName + ".resources.fonts.Minecraft.otf";
 
             public sealed class Entry
             {

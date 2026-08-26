@@ -1,7 +1,0 @@
-namespace AliceInCradleHack.utils.game
-{
-    public static class NelItemManager
-    {
-        public static nel.NelItemManager Instance => NelM2DBase.Instance?.IMNG;
-    }
-}

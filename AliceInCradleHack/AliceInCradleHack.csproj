@@ -637,7 +637,6 @@
     <Compile Include="InjectEntry.cs" />
     <Compile Include="module\Module.cs" />
     <Compile Include="module\ModuleManager.cs" />
-    <Compile Include="module\ModuleSoundBase.cs" />
     <Compile Include="module\SettingAttributes.cs" />
     <Compile Include="module\modules\client\island\DynamicIsland.cs" />
     <Compile Include="module\modules\client\island\GuiBehaviour.cs" />
@@ -703,6 +702,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="resources\fonts\Minecraft.otf" />
+    <EmbeddedResource Include="resources\webui\index.html" />
     <EmbeddedResource Include="resources\audio\Connected_Sky.wav" />
     <EmbeddedResource Include="resources\audio\Theme_338.wav" />
   </ItemGroup>

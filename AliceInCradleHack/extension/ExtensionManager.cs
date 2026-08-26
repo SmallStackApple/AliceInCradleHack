@@ -81,7 +81,7 @@ namespace AliceInCradleHack.extension
             foreach (var dllPath in Directory.GetFiles(directory, "*.dll").OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
             {
                 var fileName = Path.GetFileName(dllPath);
-                if (fileName.Equals("AliceInCradleHack.dll", StringComparison.OrdinalIgnoreCase))
+                if (fileName.Equals(Client.ClientName + ".dll", StringComparison.OrdinalIgnoreCase))
                     continue;
 
                 try

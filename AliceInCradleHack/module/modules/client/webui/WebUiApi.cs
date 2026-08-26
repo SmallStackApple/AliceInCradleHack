@@ -34,19 +34,87 @@ namespace AliceInCradleHack.module.modules.client.webui
 
             if (segments.Length >= 1 && segments[0] == "api")
             {
-                HandleApiRequest(context, segments);
+                if (segments.Length >= 2 && segments[1] == "modules")
+                {
+                    HandleModulesApi(context, segments);
+                    return;
+                }
+
+                if (segments.Length >= 2 && segments[1] == "config")
+                {
+                    HandleConfigApi(context, segments);
+                    return;
+                }
+
+                if (segments.Length >= 2 && segments[1] == "scripts")
+                {
+                    HandleScriptsApi(context, segments);
+                    return;
+                }
+            }
+
+            WriteError(context, 404, "Not found");
+        }
+
+        // /api/scripts/...
+        private static void HandleScriptsApi(HttpListenerContext context, string[] segments)
+        {
+            var scripts = LuaScriptManager.Instance;
+
+            // GET /api/scripts  -> scan the Script folder and list all scripts
+            if (context.Request.HttpMethod == "GET" && segments.Length == 2)
+            {
+                scripts.Scan();
+                WriteJson(context, scripts.GetScripts());
+                return;
+            }
+
+            // POST /api/scripts/reload-all
+            if (context.Request.HttpMethod == "POST" && segments.Length == 3 && segments[2] == "reload-all")
+            {
+                scripts.ReloadAll();
+                WriteJson(context, new { ok = true, scripts = scripts.GetScripts() });
+                return;
+            }
+
+            // POST /api/scripts/{load|unload|reload}  body: {"name": "..."}
+            if (context.Request.HttpMethod == "POST" && segments.Length == 3)
+            {
+                var payload = ParseBody(context);
+                if (payload == null) return;
+                string name = payload["name"]?.ToString();
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    WriteError(context, 400, "Missing 'name' field");
+                    return;
+                }
+                bool ok;
+                switch (segments[2])
+                {
+                    case "load": ok = scripts.LoadScript(name); break;
+                    case "unload": ok = scripts.UnloadScript(name); break;
+                    case "reload": ok = scripts.ReloadScript(name); break;
+                    default: WriteError(context, 404, "Not found"); return;
+                }
+                if (!ok)
+                {
+                    WriteError(context, 400, "Script operation failed");
+                    return;
+                }
+                WriteJson(context, scripts.GetScripts().FirstOrDefault(s => s.Name.Equals(name, StringComparison.OrdinalIgnoreCase)));
                 return;
             }
 
             WriteError(context, 404, "Not found");
         }
 
-        private static void HandleApiRequest(HttpListenerContext context, string[] segments)
+        // /api/modules/...
+        private static void HandleModulesApi(HttpListenerContext context, string[] segments)
         {
             var manager = ModuleManager.Instance;
 
             // GET /api/modules
-            if (context.Request.HttpMethod == "GET" && segments.Length == 2 && segments[1] == "modules")
+            if (context.Request.HttpMethod == "GET" && segments.Length == 2)
             {
                 var modules = manager.GetAllModules()
                     .OrderBy(m => m.Category)
@@ -55,17 +123,17 @@ namespace AliceInCradleHack.module.modules.client.webui
                     {
                         name = m.Name,
                         description = m.Description,
-                         category = m.Category,
-                         isEnabled = m.IsEnabled,
-                         keybind = m.Keybind.Get(),
-                         isSelf = m.Name == SelfModuleName
+                        category = m.Category,
+                        isEnabled = m.IsEnabled,
+                        keybind = m.Keybind.Get(),
+                        isSelf = m.Name == SelfModuleName
                     });
                 WriteJson(context, modules);
                 return;
             }
 
             // /api/modules/{name}/...
-            if (segments.Length >= 3 && segments[1] == "modules")
+            if (segments.Length >= 3)
             {
                 string moduleName = segments[2];
                 var module = manager.GetModuleByName(moduleName);
@@ -157,114 +225,88 @@ namespace AliceInCradleHack.module.modules.client.webui
                 }
             }
 
-            // /api/config/...
-            if (segments.Length >= 2 && segments[1] == "scripts")
+            WriteError(context, 404, "Not found");
+        }
+
+        // /api/config/...
+        private static void HandleConfigApi(HttpListenerContext context, string[] segments)
+        {
+            var manager = ModuleManager.Instance;
+
+            if (segments.Length != 3)
             {
-                var scripts = LuaScriptManager.Instance;
-                if (context.Request.HttpMethod == "GET" && segments.Length == 2)
-                {
-                    scripts.Scan();
-                    WriteJson(context, scripts.GetScripts());
-                    return;
-                }
-                if (context.Request.HttpMethod == "POST" && segments.Length == 3 && segments[2] == "reload-all")
-                {
-                    scripts.ReloadAll();
-                    WriteJson(context, new { ok = true, scripts = scripts.GetScripts() });
-                    return;
-                }
-                if (context.Request.HttpMethod == "POST" && segments.Length == 3)
-                {
-                    var payload = ParseBody(context);
-                    if (payload == null) return;
-                    string name = payload["name"]?.ToString();
-                    if (string.IsNullOrWhiteSpace(name)) { WriteError(context, 400, "Missing 'name' field"); return; }
-                    bool ok;
-                    switch (segments[2])
-                    {
-                        case "load": ok = scripts.LoadScript(name); break;
-                        case "unload": ok = scripts.UnloadScript(name); break;
-                        case "reload": ok = scripts.ReloadScript(name); break;
-                        default: WriteError(context, 404, "Not found"); return;
-                    }
-                    if (!ok) { WriteError(context, 400, "Script operation failed"); return; }
-                    WriteJson(context, scripts.GetScripts().FirstOrDefault(s => s.Name.Equals(name, StringComparison.OrdinalIgnoreCase)));
-                    return;
-                }
+                WriteError(context, 404, "Not found");
+                return;
             }
 
-            // /api/config/...
-            if (segments.Length >= 2 && segments[1] == "config")
+            // GET /api/config/export  -> download a single merged JSON
+            if (context.Request.HttpMethod == "GET" && segments[2] == "export")
             {
-                // GET /api/config/export  -> download a single merged JSON
-                if (context.Request.HttpMethod == "GET" && segments.Length == 3 && segments[2] == "export")
-                {
-                    WriteDownload(context, ConfigSystem.ExportAllToJson(), "aic-hack-config.json");
-                    return;
-                }
+                WriteDownload(context, ConfigSystem.ExportAllToJson(), "aic-hack-config.json");
+                return;
+            }
 
-                // POST /api/config/import  body: merged JSON
-                if (context.Request.HttpMethod == "POST" && segments.Length == 3 && segments[2] == "import")
+            // POST /api/config/import  body: merged JSON
+            if (context.Request.HttpMethod == "POST" && segments[2] == "import")
+            {
+                string body = ReadBody(context);
+                if (!ConfigSystem.ImportAllFromJson(body))
                 {
-                    string body = ReadBody(context);
-                    if (!ConfigSystem.ImportAllFromJson(body))
-                    {
-                        WriteError(context, 400, "Import failed: invalid or incompatible JSON");
-                        return;
-                    }
-                    manager.ReapplyEnabledStates();
-                    WriteJson(context, new { ok = true, message = "Config imported." });
+                    WriteError(context, 400, "Import failed: invalid or incompatible JSON");
                     return;
                 }
+                manager.ReapplyEnabledStates();
+                WriteJson(context, new { ok = true, message = "Config imported." });
+                return;
+            }
 
-                // GET /api/config/files  -> list saved single-file configs
-                if (context.Request.HttpMethod == "GET" && segments.Length == 3 && segments[2] == "files")
-                {
-                    WriteJson(context, ConfigSystem.ListSavedFiles());
-                    return;
-                }
+            // GET /api/config/files  -> list saved single-file configs
+            if (context.Request.HttpMethod == "GET" && segments[2] == "files")
+            {
+                WriteJson(context, ConfigSystem.ListSavedFiles());
+                return;
+            }
 
-                // POST /api/config/save  body: {"name": "..."}
-                if (context.Request.HttpMethod == "POST" && segments.Length == 3 && segments[2] == "save")
+            // POST /api/config/save  body: {"name": "..."}
+            if (context.Request.HttpMethod == "POST" && segments[2] == "save")
+            {
+                var payload = ParseBody(context);
+                if (payload == null) return;
+                string name = payload["name"]?.ToString();
+                if (string.IsNullOrWhiteSpace(name))
                 {
-                    var payload = ParseBody(context);
-                    if (payload == null) return;
-                    string name = payload["name"]?.ToString();
-                    if (string.IsNullOrWhiteSpace(name))
-                    {
-                        WriteError(context, 400, "Missing 'name' field");
-                        return;
-                    }
-                    string saved = ConfigSystem.SaveAllToFile(name);
-                    if (saved == null)
-                    {
-                        WriteError(context, 400, "Failed to save config");
-                        return;
-                    }
-                    WriteJson(context, new { ok = true, name = saved, message = $"Config saved as '{saved}'." });
+                    WriteError(context, 400, "Missing 'name' field");
                     return;
                 }
+                string saved = ConfigSystem.SaveAllToFile(name);
+                if (saved == null)
+                {
+                    WriteError(context, 400, "Failed to save config");
+                    return;
+                }
+                WriteJson(context, new { ok = true, name = saved, message = $"Config saved as '{saved}'." });
+                return;
+            }
 
-                // POST /api/config/load  body: {"name": "..."}
-                if (context.Request.HttpMethod == "POST" && segments.Length == 3 && segments[2] == "load")
+            // POST /api/config/load  body: {"name": "..."}
+            if (context.Request.HttpMethod == "POST" && segments[2] == "load")
+            {
+                var payload = ParseBody(context);
+                if (payload == null) return;
+                string name = payload["name"]?.ToString();
+                if (string.IsNullOrWhiteSpace(name))
                 {
-                    var payload = ParseBody(context);
-                    if (payload == null) return;
-                    string name = payload["name"]?.ToString();
-                    if (string.IsNullOrWhiteSpace(name))
-                    {
-                        WriteError(context, 400, "Missing 'name' field");
-                        return;
-                    }
-                    if (!ConfigSystem.LoadAllFromFile(name))
-                    {
-                        WriteError(context, 400, "Failed to load config");
-                        return;
-                    }
-                    manager.ReapplyEnabledStates();
-                    WriteJson(context, new { ok = true, name = name, message = $"Config '{name}' loaded." });
+                    WriteError(context, 400, "Missing 'name' field");
                     return;
                 }
+                if (!ConfigSystem.LoadAllFromFile(name))
+                {
+                    WriteError(context, 400, "Failed to load config");
+                    return;
+                }
+                manager.ReapplyEnabledStates();
+                WriteJson(context, new { ok = true, name = name, message = $"Config '{name}' loaded." });
+                return;
             }
 
             WriteError(context, 404, "Not found");

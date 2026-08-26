@@ -5,6 +5,7 @@ namespace AliceInCradleHack.module.modules.client.island
         public enum Alignment
         {
             Top,
+            // Reserved for future HUD anchors; only Top and Center are currently consumed.
             Bottom,
             Left,
             Right,

@@ -11,10 +11,6 @@ namespace AliceInCradleHack.module.modules.visual
 
         private readonly Harmony _harmony = new("aliceincradlehack.modules.visual.mosaicremove");
 
-        public override void Initialize()
-        {
-        }
-
         public override void Enable()
         {
             var original = AccessTools.Method("nel.MosaicShower:FnDrawMosaic");
