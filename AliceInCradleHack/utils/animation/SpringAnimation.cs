@@ -1,8 +1,8 @@
 namespace AliceInCradleHack.utils.animation
 {
     /// <summary>
-    /// Spring physics animation (semi-implicit Euler integration).
-    /// Ported from openzen's shit.zen.utils.animation.SpringAnimation.
+    /// Damped spring animation driven by Hooke's law, integrated with the
+    /// semi-implicit (symplectic) Euler method for unconditional stability.
     /// </summary>
     public class SpringAnimation
     {

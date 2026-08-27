@@ -34,4 +34,7 @@ jobs:
         name: release-build
         path: |
           AliceInCradleHack/bin/x64/Release/**/*.dll
+          THIRD-PARTY-NOTICES.md
+          LICENSE
+          licenses/**
         retention-days: 7

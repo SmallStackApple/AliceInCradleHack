@@ -1,3 +1,7 @@
+// The configuration system under config/ (including the Value mechanism) is
+// adapted from LiquidBounce (https://github.com/CCBlueX/LiquidBounce),
+// licensed under GPL-3.0. Copyright (c) CCBlueX.
+// See THIRD-PARTY-NOTICES.md for details.
 using AliceInCradleHack.utils.client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
