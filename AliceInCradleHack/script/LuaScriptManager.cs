@@ -1,3 +1,4 @@
+using AliceInCradleHack.config;
 using AliceInCradleHack.utils.client;
 using MoonSharp.Interpreter;
 using System;
@@ -18,6 +19,8 @@ namespace AliceInCradleHack.script
         private static readonly HashSet<Type> RegisteredUserDataTypes = new();
         private bool _initialized;
         private string _scriptFolder;
+        private Config _scriptConfig;
+        private StringListValue _enabledValue;
 
         private static readonly Lazy<LuaScriptManager> _instance = new(() => new LuaScriptManager());
         public static LuaScriptManager Instance => _instance.Value;
@@ -28,13 +31,35 @@ namespace AliceInCradleHack.script
             if (_initialized) return;
             _scriptFolder = Path.Combine(MainFolder.GetMainFolder(), "Script");
             Directory.CreateDirectory(_scriptFolder);
+
+            _scriptConfig = ConfigSystem.Root(new Config("Scripts", "Lua script enabled states"));
+            _enabledValue = _scriptConfig.List("Enabled", null, "Scripts that are loaded automatically");
+            bool firstRun = !File.Exists(_scriptConfig.JsonFile);
+            ConfigSystem.Load(_scriptConfig);
+
             Scan();
+            PruneMissingScripts();
+            if (firstRun)
+            {
+                // Legacy behavior: without a saved state every script is loaded and recorded as enabled.
+                foreach (var info in GetScripts())
+                {
+                    if (LoadScriptInternal(info.Name, false))
+                        SetRecordedEnabled(info.Name, true, store: false);
+                }
+                ConfigSystem.Store(_scriptConfig);
+            }
+            else
+            {
+                foreach (string name in EnabledSnapshot())
+                    LoadScriptInternal(name, false);
+            }
             _initialized = true;
         }
 
         public void Dispose()
         {
-            foreach (var name in _contexts.Keys.ToArray()) UnloadScript(name);
+            foreach (var name in _contexts.Keys.ToArray()) UnloadInternal(name);
             _initialized = false;
         }
 
@@ -43,32 +68,56 @@ namespace AliceInCradleHack.script
             lock (_lock) return _scripts.Values.Select(Copy).OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase).ToArray();
         }
 
+        /// <summary>
+        /// Registers newly appeared script files. Does not load anything.
+        /// </summary>
         public void Scan()
         {
-            Directory.CreateDirectory(_scriptFolder);
-            var files = Directory.GetFiles(_scriptFolder, "*.lua", SearchOption.TopDirectoryOnly);
-            var newScripts = new List<string>();
-            lock (_lock)
-            {
-                foreach (var file in files)
-                {
-                    string name = Path.GetFileName(file);
-                    if (_scripts.ContainsKey(name)) continue;
-                    _scripts[name] = new LuaScriptInfo { Name = name, Path = file };
-                    newScripts.Add(name);
-                }
-            }
-            foreach (var name in newScripts) LoadScript(name);
+            ScanFilesOnly();
         }
 
-        public bool LoadScript(string name) => LoadScriptInternal(name, false);
-        public bool ReloadScript(string name) { UnloadScript(name); return LoadScriptInternal(name, true); }
+        public bool LoadScript(string name)
+        {
+            if (!LoadScriptInternal(name, false)) return false;
+            SetRecordedEnabled(name, true);
+            return true;
+        }
+
+        public bool ReloadScript(string name) { UnloadInternal(name); return LoadScriptInternal(name, true); }
 
         public bool UnloadScript(string name)
+        {
+            if (!UnloadInternal(name)) return false;
+            SetRecordedEnabled(name, false);
+            return true;
+        }
+
+        /// <summary>
+        /// Whether the script is recorded to load automatically on startup.
+        /// </summary>
+        public bool IsScriptEnabled(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name) || _enabledValue == null) return false;
+            return _enabledValue.Items.Any(item => string.Equals(item, name, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public void ReloadAll()
+        {
+            ScanFilesOnly();
+            foreach (var name in _contexts.Keys.ToArray()) UnloadInternal(name);
+            foreach (string name in EnabledSnapshot()) LoadScriptInternal(name, false);
+        }
+
+        /// <summary>
+        /// Unloads a script without touching the persisted enabled state.
+        /// Used by Dispose/Reload paths where the recorded state must survive.
+        /// </summary>
+        private bool UnloadInternal(string name)
         {
             LuaScriptContext context;
             lock (_lock) if (!_contexts.TryGetValue(name, out context)) return false;
             try { CallLifecycle(context, "OnUnload"); } catch (Exception ex) { Log.Error($"Lua OnUnload failed: {name}", ex); }
+            LuaHookManager.RemoveAll(context);
             UnsubscribeAll(context);
             context.Dispose();
             lock (_lock) _contexts.Remove(name);
@@ -76,11 +125,40 @@ namespace AliceInCradleHack.script
             return true;
         }
 
-        public void ReloadAll()
+        private string[] EnabledSnapshot()
         {
-            ScanFilesOnly();
-            foreach (var name in _contexts.Keys.ToArray()) UnloadScript(name);
-            foreach (var info in GetScripts()) LoadScript(info.Name);
+            return _enabledValue?.Items.ToArray() ?? Array.Empty<string>();
+        }
+
+        private void SetRecordedEnabled(string name, bool enabled, bool store = true)
+        {
+            if (_enabledValue == null || string.IsNullOrWhiteSpace(name)) return;
+            var items = _enabledValue.Items.ToList();
+            int index = items.FindIndex(item => string.Equals(item, name, StringComparison.OrdinalIgnoreCase));
+            if (enabled && index < 0) items.Add(name);
+            else if (!enabled && index >= 0) items.RemoveAt(index);
+            else
+            {
+                lock (_lock) if (_scripts.TryGetValue(name, out var unchanged)) unchanged.IsEnabled = enabled;
+                return;
+            }
+            _enabledValue.Set(items);
+            lock (_lock) if (_scripts.TryGetValue(name, out var info)) info.IsEnabled = enabled;
+            if (store) ConfigSystem.Store(_scriptConfig);
+        }
+
+        /// <summary>
+        /// Drops recorded entries whose script file no longer exists.
+        /// </summary>
+        private void PruneMissingScripts()
+        {
+            if (_enabledValue == null) return;
+            var items = _enabledValue.Items.ToList();
+            int removed = items.RemoveAll(item =>
+            {
+                lock (_lock) return !_scripts.ContainsKey(item);
+            });
+            if (removed > 0) _enabledValue.Set(items);
         }
 
         private bool LoadScriptInternal(string name, bool known)
@@ -97,6 +175,7 @@ namespace AliceInCradleHack.script
                     info = new LuaScriptInfo { Name = name, Path = path };
                     _scripts[name] = info;
                 }
+                info.IsEnabled = IsScriptEnabled(name);
             }
             var context = new LuaScriptContext(name, path);
             try
@@ -192,6 +271,6 @@ namespace AliceInCradleHack.script
             return DynValue.FromObject(script, value);
         }
 
-        private static LuaScriptInfo Copy(LuaScriptInfo source) => new LuaScriptInfo { Name = source.Name, Path = source.Path, IsLoaded = source.IsLoaded, Error = source.Error, LoadedAt = source.LoadedAt };
+        private static LuaScriptInfo Copy(LuaScriptInfo source) => new LuaScriptInfo { Name = source.Name, Path = source.Path, IsLoaded = source.IsLoaded, IsEnabled = source.IsEnabled, Error = source.Error, LoadedAt = source.LoadedAt };
     }
 }

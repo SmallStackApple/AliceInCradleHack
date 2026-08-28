@@ -39,6 +39,13 @@ namespace AliceInCradleHack.script
             events.Set("Off", DynValue.NewCallback((c, a) => { LuaScriptManager.Unsubscribe(context, a); return DynValue.Nil; }));
             events.Set("OffAll", DynValue.NewCallback((c, a) => { LuaScriptManager.UnsubscribeAll(context); return DynValue.Nil; }));
             script.Globals.Set("Event", DynValue.NewTable(events));
+
+            var harmony = new Table(script);
+            harmony.Set("Patch", DynValue.NewCallback((c, a) => DynValue.NewBoolean(LuaHookManager.PatchFromLua(context, a))));
+            harmony.Set("Unpatch", DynValue.NewCallback((c, a) => DynValue.NewBoolean(LuaHookManager.UnpatchFromLua(context, a))));
+            script.Globals.Set("Harmony", DynValue.NewTable(harmony));
+
+            LuaGameApi.Register(context);
             LuaReflection.Register(script);
         }
 

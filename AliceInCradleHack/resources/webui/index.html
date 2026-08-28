@@ -20,7 +20,7 @@
 body {
   background: var(--bg); color: var(--text);
   font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
-  padding: 24px; max-width: 900px; margin: 0 auto;
+  padding: 24px; max-width: 1100px; margin: 0 auto;
 }
 header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
 h1 { font-size: 20px; font-weight: 600; }
@@ -33,7 +33,7 @@ h1 .sub { color: var(--muted); font-size: 13px; font-weight: 400; margin-left: 8
 .config-bar {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
   background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
-  padding: 10px 14px; margin-bottom: 6px;
+  padding: 10px 14px; margin-bottom: 14px;
 }
 .config-bar label { color: var(--muted); font-size: 13px; }
 .config-bar select {
@@ -41,7 +41,22 @@ h1 .sub { color: var(--muted); font-size: 13px; font-weight: 400; margin-left: 8
   border-radius: 5px; padding: 5px 8px; font-size: 13px; flex: 1; min-width: 140px;
 }
 .config-bar select:focus { outline: none; border-color: var(--accent); }
-.category { color: var(--accent); font-size: 14px; margin: 18px 0 8px; }
+.layout { display: flex; gap: 16px; align-items: flex-start; }
+.sidebar {
+  width: 180px; flex-shrink: 0; position: sticky; top: 16px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+}
+.side-item {
+  display: flex; align-items: center; padding: 10px 14px; cursor: pointer;
+  font-size: 13px; color: var(--text); border-left: 3px solid transparent; user-select: none;
+}
+.side-item:hover { background: var(--panel2); }
+.side-item.active { background: var(--panel2); border-left-color: var(--accent); color: var(--accent); }
+.side-item .side-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side-item .side-count { color: var(--muted); font-size: 11px; margin-left: 8px; }
+.side-item.active .side-count { color: var(--accent); }
+.side-sep { height: 1px; background: var(--border); margin: 4px 0; }
+.pane { flex: 1; min-width: 0; }
 .card {
   background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
   margin-bottom: 10px; overflow: hidden;
@@ -94,12 +109,13 @@ h1 .sub { color: var(--muted); font-size: 13px; font-weight: 400; margin-left: 8
 .setting-control .suffix { color: var(--muted); font-size: 12px; min-width: 18px; }
 .readonly-tag { color: var(--muted); font-size: 12px; }
 .empty { color: var(--muted); padding: 12px 16px; font-size: 13px; }
-.scripts { margin-top: 22px; }
-.script-row { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+.scripts-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.scripts-head .title { color: var(--accent); font-size: 14px; }
+.script-row { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
 .script-row:last-child { border-bottom: none; }
 .script-name { flex: 1; min-width: 0; font-size: 13px; }
 .script-state { color: var(--muted); font-size: 12px; }
-.script-error { color: var(--danger); font-size: 11px; white-space: pre-wrap; max-width: 420px; overflow: hidden; }
+.script-error { color: var(--danger); font-size: 11px; white-space: pre-wrap; width: 100%; overflow: hidden; }
 #toast {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
   background: var(--panel2); border: 1px solid var(--border); border-radius: 6px;
@@ -108,6 +124,13 @@ h1 .sub { color: var(--muted); font-size: 13px; font-weight: 400; margin-left: 8
 }
 #toast.show { opacity: 1; }
 #toast.err { border-color: var(--danger); color: var(--danger); }
+@media (max-width: 720px) {
+  .layout { flex-direction: column; }
+  .sidebar { width: 100%; position: static; display: flex; overflow-x: auto; }
+  .side-item { border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; }
+  .side-item.active { border-bottom-color: var(--accent); }
+  .side-sep { width: 1px; height: auto; margin: 0 4px; }
+}
 </style>
 </head>
 <body>
@@ -115,8 +138,6 @@ h1 .sub { color: var(--muted); font-size: 13px; font-weight: 400; margin-left: 8
   <h1>AliceInCradle Hack<span class="sub">WebUI</span></h1>
   <div style="display:flex;gap:8px;flex-wrap:wrap;">
     <button class="btn" onclick="loadModules()">Refresh</button>
-    <button class="btn" onclick="loadScripts()">Scripts</button>
-    <button class="btn" onclick="reloadAllScripts()">Reload Scripts</button>
     <button class="btn" onclick="exportConfig()">Export</button>
     <button class="btn" onclick="document.getElementById('importFile').click()">Import</button>
     <button class="btn" onclick="saveConfig()">Save</button>
@@ -128,19 +149,23 @@ h1 .sub { color: var(--muted); font-size: 13px; font-weight: 400; margin-left: 8
   <button class="btn" onclick="loadConfig()">Load</button>
 </div>
 <input type="file" id="importFile" accept=".json,application/json" style="display:none">
-<div id="content"><div class="empty">Loading…</div></div>
-<section class="scripts">
-  <div class="category">Lua Scripts</div>
-  <div class="card"><div id="scripts" class="empty">Loading…</div></div>
-</section>
+<div class="layout">
+  <nav id="sidebar"></nav>
+  <div id="pane" class="pane"><div class="empty">Loading…</div></div>
+</div>
 <div id="toast"></div>
 <script>
-const content = document.getElementById('content');
+const sidebar = document.getElementById('sidebar');
+const pane = document.getElementById('pane');
 const toastEl = document.getElementById('toast');
 const savedSelect = document.getElementById('savedConfigs');
 const importFile = document.getElementById('importFile');
+const SCRIPTS_KEY = '__scripts';
 let toastTimer = null;
 const saveTimers = {};
+const pageCache = new Map();
+let scriptsPage = null;
+let selectedKey = null;
 
 function toast(msg, isErr) {
   toastEl.textContent = msg;
@@ -166,39 +191,187 @@ async function loadModules() {
   try {
     modules = await api('/api/modules');
   } catch (e) {
-    content.innerHTML = '<div class="empty">Failed to load modules: ' + esc(e.message) + '</div>';
+    pane.innerHTML = '<div class="empty">Failed to load modules: ' + esc(e.message) + '</div>';
     return;
   }
   const groups = {};
   for (const m of modules) (groups[m.category] = groups[m.category] || []).push(m);
-  content.innerHTML = '';
-  for (const cat of Object.keys(groups)) {
-    const h = document.createElement('div');
-    h.className = 'category';
-    h.textContent = cat;
-    content.appendChild(h);
-    for (const m of groups[cat]) content.appendChild(renderModule(m));
+  const cats = Object.keys(groups).sort((a, b) => a.localeCompare(b));
+  for (const cat of cats) groups[cat].sort((a, b) => a.name.localeCompare(b.name));
+
+  // Drop cached pages for categories that no longer exist.
+  for (const key of Array.from(pageCache.keys())) {
+    if (!groups[key]) pageCache.delete(key);
   }
+
+  renderSidebar(cats, groups);
+
+  if (!selectedKey || (selectedKey !== SCRIPTS_KEY && !groups[selectedKey])) {
+    selectedKey = cats.length ? cats[0] : SCRIPTS_KEY;
+  }
+  markActiveItem();
+  showPage(selectedKey, groups);
+}
+
+function renderSidebar(cats, groups) {
+  sidebar.innerHTML = '';
+  for (const cat of cats) {
+    sidebar.appendChild(makeSideItem(cat, cat, groups[cat].length));
+  }
+  const sep = document.createElement('div');
+  sep.className = 'side-sep';
+  sidebar.appendChild(sep);
+  sidebar.appendChild(makeSideItem(SCRIPTS_KEY, 'Scripts', null));
+}
+
+function makeSideItem(key, label, count) {
+  const item = document.createElement('div');
+  item.className = 'side-item';
+  item.dataset.key = key;
+  const name = document.createElement('span');
+  name.className = 'side-name';
+  name.textContent = label;
+  item.appendChild(name);
+  if (count != null) {
+    const badge = document.createElement('span');
+    badge.className = 'side-count';
+    badge.textContent = count;
+    item.appendChild(badge);
+  }
+  item.addEventListener('click', () => selectPage(key));
+  return item;
+}
+
+async function selectPage(key) {
+  selectedKey = key;
+  markActiveItem();
+  if (key === SCRIPTS_KEY) {
+    showScriptsPage();
+  } else {
+    const groups = {};
+    try {
+      const modules = await api('/api/modules');
+      for (const m of modules) (groups[m.category] = groups[m.category] || []).push(m);
+      showPage(key, groups);
+    } catch (e) {
+      pane.innerHTML = '<div class="empty">Failed to load modules: ' + esc(e.message) + '</div>';
+    }
+  }
+}
+
+function markActiveItem() {
+  for (const item of sidebar.querySelectorAll('.side-item')) {
+    item.classList.toggle('active', item.dataset.key === selectedKey);
+  }
+}
+
+function showPage(category, groups) {
+  let page = pageCache.get(category);
+  if (!page) {
+    const mods = (groups[category] || []).slice().sort((a, b) => a.name.localeCompare(b.name));
+    page = document.createElement('div');
+    if (!mods.length) {
+      page.innerHTML = '<div class="empty">No modules in this category.</div>';
+    } else {
+      for (const m of mods) page.appendChild(renderModule(m));
+    }
+    pageCache.set(category, page);
+  }
+  pane.innerHTML = '';
+  pane.appendChild(page);
+}
+
+function showScriptsPage() {
+  if (!scriptsPage) {
+    scriptsPage = document.createElement('div');
+    const head = document.createElement('div');
+    head.className = 'scripts-head';
+    head.innerHTML =
+      '<div class="title">Lua Scripts</div>' +
+      '<div style="display:flex;gap:8px;">' +
+        '<button class="btn" id="scriptsRefresh">Refresh</button>' +
+        '<button class="btn" id="scriptsReloadAll">Reload Scripts</button>' +
+      '</div>';
+    scriptsPage.appendChild(head);
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = '<div id="scripts" class="empty">Loading…</div>';
+    scriptsPage.appendChild(card);
+    head.querySelector('#scriptsRefresh').addEventListener('click', loadScripts);
+    head.querySelector('#scriptsReloadAll').addEventListener('click', reloadAllScripts);
+  }
+  pane.innerHTML = '';
+  pane.appendChild(scriptsPage);
+  loadScripts();
 }
 
 async function loadScripts() {
   const box = document.getElementById('scripts');
+  if (!box) return;
   try {
     const list = await api('/api/scripts');
     box.innerHTML = '';
-    if (!list.length) { box.textContent = 'No .lua files found in the Script folder.'; return; }
-    for (const s of list) {
-      const row = document.createElement('div'); row.className = 'script-row';
-      const name = document.createElement('div'); name.className = 'script-name'; name.textContent = s.name;
-      const state = document.createElement('span'); state.className = 'script-state'; state.textContent = s.isLoaded ? 'Loaded' : (s.error ? 'Failed' : 'Unloaded');
-      const action = document.createElement('button'); action.className = 'btn'; action.textContent = s.isLoaded ? 'Reload' : 'Load';
-      action.onclick = () => scriptAction(s.name, s.isLoaded ? 'reload' : 'load');
-      row.appendChild(name); row.appendChild(state); row.appendChild(action);
-      if (s.isLoaded) { const unload = document.createElement('button'); unload.className = 'btn'; unload.textContent = 'Unload'; unload.onclick = () => scriptAction(s.name, 'unload'); row.appendChild(unload); }
-      if (s.error) { const error = document.createElement('div'); error.className = 'script-error'; error.textContent = s.error; row.appendChild(error); }
-      box.appendChild(row);
+    if (!list.length) { box.textContent = 'No .lua files found in the Script folder.'; box.className = 'empty'; return; }
+    box.className = '';
+    for (const s of list) box.appendChild(renderScriptRow(s));
+  } catch (e) { box.textContent = 'Failed to load scripts: ' + e.message; box.className = 'empty'; }
+}
+
+function renderScriptRow(s) {
+  const row = document.createElement('div');
+  row.className = 'script-row';
+
+  const name = document.createElement('div');
+  name.className = 'script-name';
+  name.textContent = s.name;
+
+  const state = document.createElement('span');
+  state.className = 'script-state';
+  state.textContent = s.isLoaded ? 'Loaded' : (s.error ? 'Failed' : 'Unloaded');
+
+  const reload = document.createElement('button');
+  reload.className = 'btn';
+  reload.textContent = 'Reload';
+  reload.style.display = s.isLoaded ? '' : 'none';
+  reload.addEventListener('click', () => scriptAction(s.name, 'reload'));
+
+  const toggle = document.createElement('label');
+  toggle.className = 'switch';
+  toggle.title = 'Enabled scripts load automatically on startup';
+  const cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.checked = !!s.isEnabled;
+  const track = document.createElement('span'); track.className = 'track';
+  const thumb = document.createElement('span'); thumb.className = 'thumb';
+  toggle.appendChild(cb); toggle.appendChild(track); toggle.appendChild(thumb);
+  cb.addEventListener('change', async () => {
+    cb.disabled = true;
+    try {
+      const r = await api('/api/scripts/' + (cb.checked ? 'load' : 'unload'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: s.name })
+      });
+      toast(s.name + (cb.checked ? ' loaded' : ' unloaded'));
+      loadScripts();
+    } catch (e) {
+      cb.checked = !cb.checked;
+      toast(e.message, true);
     }
-  } catch (e) { box.textContent = 'Failed to load scripts: ' + e.message; }
+    cb.disabled = false;
+  });
+
+  row.appendChild(name);
+  row.appendChild(state);
+  row.appendChild(reload);
+  row.appendChild(toggle);
+  if (s.error) {
+    const error = document.createElement('div');
+    error.className = 'script-error';
+    error.textContent = s.error;
+    row.appendChild(error);
+  }
+  return row;
 }
 
 async function scriptAction(name, action) {
@@ -622,6 +795,7 @@ importFile.addEventListener('change', async () => {
       body: text
     });
     toast(r.message || 'Config imported.');
+    pageCache.clear();
     loadModules();
     loadSavedFiles();
   } catch (e) {
@@ -680,6 +854,7 @@ async function loadConfig() {
       body: JSON.stringify({ name })
     });
     toast(r.message || 'Config loaded.');
+    pageCache.clear();
     loadModules();
   } catch (e) {
     toast(e.message, true);
@@ -692,7 +867,6 @@ function esc(s) {
 
 loadModules();
 loadSavedFiles();
-loadScripts();
 </script>
 </body>
 </html>

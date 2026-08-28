@@ -65,7 +65,7 @@ namespace AliceInCradleHack.module.modules.client.webui
             if (context.Request.HttpMethod == "GET" && segments.Length == 2)
             {
                 scripts.Scan();
-                WriteJson(context, scripts.GetScripts());
+                WriteJson(context, scripts.GetScripts().Select(ToScriptJson));
                 return;
             }
 
@@ -73,7 +73,7 @@ namespace AliceInCradleHack.module.modules.client.webui
             if (context.Request.HttpMethod == "POST" && segments.Length == 3 && segments[2] == "reload-all")
             {
                 scripts.ReloadAll();
-                WriteJson(context, new { ok = true, scripts = scripts.GetScripts() });
+                WriteJson(context, new { ok = true, scripts = scripts.GetScripts().Select(ToScriptJson) });
                 return;
             }
 
@@ -101,12 +101,22 @@ namespace AliceInCradleHack.module.modules.client.webui
                     WriteError(context, 400, "Script operation failed");
                     return;
                 }
-                WriteJson(context, scripts.GetScripts().FirstOrDefault(s => s.Name.Equals(name, StringComparison.OrdinalIgnoreCase)));
+                var info = scripts.GetScripts().FirstOrDefault(s => s.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+                WriteJson(context, info == null ? null : ToScriptJson(info));
                 return;
             }
 
             WriteError(context, 404, "Not found");
         }
+
+        private static object ToScriptJson(LuaScriptInfo s) => new
+        {
+            name = s.Name,
+            isLoaded = s.IsLoaded,
+            isEnabled = s.IsEnabled,
+            error = s.Error,
+            loadedAt = s.LoadedAt
+        };
 
         // /api/modules/...
         private static void HandleModulesApi(HttpListenerContext context, string[] segments)

@@ -652,6 +652,8 @@
     <Compile Include="module\modules\client\webui\WebUiPage.cs" />
     <Compile Include="module\modules\client\webui\WebUiServer.cs" />
     <Compile Include="script\LuaApi.cs" />
+    <Compile Include="script\LuaGameApi.cs" />
+    <Compile Include="script\LuaHookManager.cs" />
     <Compile Include="script\LuaReflection.cs" />
     <Compile Include="script\LuaScriptContext.cs" />
     <Compile Include="script\LuaScriptInfo.cs" />
