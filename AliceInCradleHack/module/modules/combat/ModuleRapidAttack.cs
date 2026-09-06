@@ -85,9 +85,11 @@ namespace AliceInCradleHack.module.modules.combat
         private static readonly AccessTools.FieldRef<M2PrSkill, NelPlayerCursor> CursorAccessor = AccessTools.FieldRefAccess<M2PrSkill, NelPlayerCursor>("Cursor");
         private static readonly FieldInfo InputKeyAccessor = AccessTools.Field(typeof(IN), "KA");
         private static readonly FieldInfo InputActionsAccessor = AccessTools.Field(typeof(KEY), "AInputs");
+        // Resolved by name only: the isOn signature differs between game versions
+        // (isOn(bool) before ver030, isOn(bool, float) since ver030).
         private static readonly MethodInfo AttackInputIsOnMethod =
             InputActionsAccessor?.FieldType.GetElementType() is Type inputActionType
-                ? AccessTools.Method(inputActionType, "isOn", new[] { typeof(bool) })
+                ? AccessTools.Method(inputActionType, "isOn")
                 : null;
 
         public override void Enable()
@@ -282,8 +284,8 @@ namespace AliceInCradleHack.module.modules.combat
             return skill != null && ReferenceEquals(skill.Pr, AliceInCradleHack.utils.game.NelM2DBase.PlayerNoel);
         }
 
-        // Index of the game's light-attack InputAction in KEY.AInputs. It includes its
-        // current keyboard/controller binding and therefore stays correct after rebinding.
+        // Index of the game's light-attack InputAction in KEY.AInputs (KEY.IPT.Z). It includes
+        // its current keyboard/controller binding and therefore stays correct after rebinding.
         private const int LightAttackInputIndex = 18;
 
         private static bool IsAttackHeld(PR pr)
@@ -291,11 +293,22 @@ namespace AliceInCradleHack.module.modules.combat
             if (pr == null) return false;
             try
             {
+                // Read the raw physical key state via InputHolder.isOn (InputAction.IsPressed).
+                // Do NOT use IN.isAtkO (mvZ > 0): forcePunchQuit -> clearAttackPushDown locks
+                // mvZ negative while the key stays held, which would stop the auto-fire loop
+                // after the first punch.
                 object key = InputKeyAccessor?.GetValue(null);
                 Array inputs = InputActionsAccessor?.GetValue(key) as Array;
                 object attackInput = inputs?.Length > LightAttackInputIndex ? inputs.GetValue(LightAttackInputIndex) : null;
-                return attackInput != null && AttackInputIsOnMethod != null &&
-                    (bool)AttackInputIsOnMethod.Invoke(attackInput, new object[] { false });
+                if (attackInput == null || AttackInputIsOnMethod == null) return false;
+
+                ParameterInfo[] parameters = AttackInputIsOnMethod.GetParameters();
+                object[] args = new object[parameters.Length];
+                for (int i = 0; i < parameters.Length; i++)
+                {
+                    args[i] = i == 0 ? false : parameters[i].DefaultValue;
+                }
+                return (bool)AttackInputIsOnMethod.Invoke(attackInput, args);
             }
             catch
             {
